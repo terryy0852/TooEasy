@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>孟子《與民同樂》框架化練習</title>
+    <style>
+        body {
+            font-family: "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            line-height: 1.8;
+        }
+        .header {
+            background: linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            margin: 0 0 10px 0;
+            font-size: 2.2em;
+        }
+        .header p {
+            margin: 5px 0;
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+        .text-section {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+            border-left: 4px solid #84fab0;
+        }
+        .text-section h2 {
+            color: #2c3e50;
+            border-bottom: 2px solid #84fab0;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+        .original-text {
+            font-size: 1.1em;
+            line-height: 2;
+            color: #34495e;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .question-section {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+        }
+        .layer-title {
+            background: linear-gradient(120deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .question {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        .question-header {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 12px;
+            font-size: 1.1em;
+        }
+        .input-area {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 1em;
+            font-family: inherit;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+        .input-area:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        textarea.input-area {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .options {
+            margin: 10px 0;
+        }
+        .option {
+            display: block;
+            margin: 8px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .option:hover {
+            background: #e8f4f8;
+        }
+        .option input[type="radio"],
+        .option input[type="checkbox"] {
+            margin-right: 10px;
+        }
+        .answer-section {
+            margin-top: 15px;
+            padding: 15px;
+            background: #e8f5e9;
+            border-radius: 6px;
+            border-left: 4px solid #4caf50;
+            display: none;
+        }
+        .answer-section.show {
+            display: block;
+        }
+        .answer-title {
+            font-weight: bold;
+            color: #2e7d32;
+            margin-bottom: 8px;
+        }
+        .score-points {
+            color: #1565c0;
+            font-size: 0.95em;
+            margin-top: 8px;
+            padding: 8px;
+            background: #e3f2fd;
+            border-radius: 4px;
+            display: none;
+        }
+        .score-points.show {
+            display: block;
+        }
+        .button-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .btn {
+            padding: 12px 30px;
+            margin: 0 10px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+        }
+        .btn-primary {
+            background: linear-gradient(120deg, #667eea 0%, #764ba2 100%);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .btn-secondary {
+            background: linear-gradient(120deg, #f093fb 0%, #f5576c 100%);
+        }
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 87, 108, 0.4);
+        }
+        .score-display {
+            background: linear-gradient(120deg, #ffecd2 0%, #fcb69f 100%);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #d84315;
+            margin: 20px 0;
+            display: none;
+        }
+        .score-display.show {
+            display: block;
+        }
+        .framework-info {
+            background: #f8f9ff;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #667eea;
+            border-radius: 5px;
+            font-size: 0.95em;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>孟子《與民同樂》</h1>
+        <p>出處：《孟子·梁惠王下》</p>
+        <p>框架化古文練習 | 總分：40分</p>
+    </div>
+
+    <div class="text-section">
+        <h2>📖 原文呈現</h2>
+        <div class="original-text">
+            齊宣王見孟子於雪宮。王曰：「賢者亦有此樂乎？」<br><br>
+            
+            孟子對曰：「有。不得，則非其上矣。不得而非其上者，非也；為民上而不與民同樂者，亦非也。樂民之樂者，民亦樂其樂；憂民之憂者，民亦憂其憂。樂以天下，憂以天下。然而不王者，未之有也。<br><br>
+            
+            昔者齊景公問於晏子曰：『吾欲觀於轉附、朝舞，遵海而南，放於琅邪，吾何修而可以比於先王觀也？』<br><br>
+            
+            晏子對曰：『善哉問也！天子適諸侯曰巡狩。巡狩者，巡所守也。諸侯朝於天子曰述職。述職者，述所職也。無非事者。春省耕而補不足，秋省斂而助不給。夏諺曰：「吾王不遊，吾何以休？吾王不豫，吾何以助？」一遊一豫，為諸侯度。<br><br>
+            
+            今也不然，師行而糧食，飢者弗食，勞者弗息。民乃作慝。方命虐民，飲食若流。流連荒亡，為諸侯憂。從流下而忘反，謂之流；從流上而忘反，謂之連；從獸無厭謂之荒；樂酒無厭謂之亡。先王無流連之樂，荒亡之行。惟君所行也。』<br><br>
+            
+            景公悅，大戒於國，出舍於郊，於是始興發補不足。召大師曰：『為我作君臣相說之樂！』蓋《徵招》、《角招》是也。其《詩》曰：『畜君何尤？』畜君者，好君也。」
+        </div>
+        
+        <div class="framework-info">
+            <strong>📋 框架說明（哲理議論文適配版）</strong><br>
+            第二層：基礎理解（20%）| 第三層：內容把握（20%）| 第四層：寫法分析（15%）| 第五層：深度思辨（25%）| 第六層：拓展應用（20%）<br>
+            <strong>修辭特色</strong>：排比、對比
+        </div>
+    </div>
+
+    <!-- 第二層：基礎理解（20% - 8分） -->
+    <div class="question-section">
+        <div class="layer-title">
+            <span>第二層：基礎理解</span>
+            <span>8分</span>
+        </div>
+
+        <div class="question">
+            <div class="question-header">1. 解釋下列詞語在文中的意思：（每個1分，共6分）</div>
+            <p>a) 非其上：<input type="text" class="input-area" id="q1a" placeholder="請輸入答案" style="width: 400px;"></p>
+            <p>b) 巡狩：<input type="text" class="input-area" id="q1b" placeholder="請輸入答案" style="width: 400px;"></p>
+            <p>c) 述職：<input type="text" class="input-area" id="q1c" placeholder="請輸入答案" style="width: 400px;"></p>
+            <p>d) 作慝：<input type="text" class="input-area" id="q1d" placeholder="請輸入答案" style="width: 400px;"></p>
+            <p>e) 方命：<input type="text" class="input-area" id="q1e" placeholder="請輸入答案" style="width: 400px;"></p>
+            <p>f) 流連荒亡：<input type="text" class="input-area" id="q1f" placeholder="請輸入答案" style="width: 400px;"></p>
+            
+            <div class="answer-section">
+                <div class="answer-title">📌 標準答案：</div>
+                a) 非其上：責怪、埋怨他們的君主<br>
+                b) 巡狩：天子巡視諸侯國（巡視諸侯守護的地方）<br>
+                c) 述職：諸侯朝見天子陳述職責（報告職責內的事）<br>
+                d) 作慝：產生怨恨、心生怨怼<br>
+                e) 方命：違抗命令、不聽從命令<br>
+                f) 流連荒亡：順流忘返、沉迷打獵和飲酒（泛指沉溺享樂）
+                <div class="score-points">
+                    【得分點】a) 答出「責怪」或「埋怨」1分；b) 答出「天子巡視諸侯」1分；c) 答出「諸侯報告職責」1分；d) 答出「產生怨恨」1分；e) 答出「違抗命令」1分；f) 答出「沉溺享樂」或具體解釋1分
+                </div>
+            </div>
+        </div>
+
+        <div class="question">
+            <div class="question-header">2. 將下列句子翻譯成現代漢語：（2分）</div>
+            <p>「樂民之樂者，民亦樂其樂；憂民之憂者，民亦憂其憂。」</p>
+            <textarea class="input-area" id="q2" placeholder="請輸入翻譯"></textarea>
+            
+            <div class="answer-section">
+                <div class="answer-title">📌 標準答案：</div>
+                以百姓的快樂為快樂的人，百姓也會以他的快樂為快樂；以百姓的憂愁為憂愁的人，百姓也會以他的憂愁為憂愁。
+                <div class="score-points">
+                    【得分點】①前半句譯為「以百姓的快樂為快樂，百姓也以他的快樂為快樂」1分；②後半句譯為「以百姓的憂愁為憂愁，百姓也以他的憂愁為憂愁」1分
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 第三層：內容把握（20% - 8分） -->
+    <div class="question-section">
+        <div class="layer-title">
+            <span>第三層：內容把握</span>
+            <span>8分</span>
+        </div>
+
+        <div class="question">
+            <div class="question-header">3. 孟子認為什麼樣的君主是「非也」（不對的）？請列舉兩種情況。（2分）</div>
+            <textarea class="input-area" id="q3" placeholder="請輸入答案"></textarea>
+            
+            <div class="answer-section">
+                <div class="answer-title">📌 標準答案：</div>
+                孟子認為兩種君主都是不對的：<br>
+                ①<strong>百姓方面的「非」</strong>：「不得而非其上者，非也」——百姓得不到快樂就責怪君主，這是不對的（但孟子對此理解同情）。<br>
+                ②<strong>君主方面的「非」</strong>：「為民上而不與民同樂者，亦非也」——身為君主卻不與百姓同樂，這也是不對的（這是孟子批評的重點）。
+                <div class="score-points">
+                    【得分點】①答出「百姓得不到快樂就責怪君主」1分；②答出「君主不與民同樂」1分
+                </div>
+            </div>
+        </div>
+
+        <div class="question">
+            <div class="question-header">4. 晏子通過對比「先王巡狩」與「今日出遊」，批評了什麼問題？請概括先王與當今君主的不同之處。（3分）</div>
+            <textarea class="input-area" id="q4" placeholder="請輸入答案"></textarea>
+            
+            <div class="answer-section">
+                <div class="answer-title">📌 標準答案：</div>
+                <strong>先王巡狩的特點</strong>（正面）：<br>
+                ①<strong>目的為民</strong>：「無非事者」，巡視是為了辦實事。<br>
+                ②<strong>體恤百姓</strong>：春天視察耕種補助不足，秋天視察收成幫助不夠。<br>
+                ③<strong>讓民休息</strong>：百姓說「吾王不遊，吾何以休」，君王出遊讓百姓得到休息。<br>
+                ④<strong>成為法度</strong>：「一遊一豫，為諸侯度」，成為諸侯的榜樣。<br><br>
+                
+                <strong>當今君主出遊的問題</strong>（反面）：<br>
+                ①<strong>勞民傷財</strong>：「師行而糧食」，大軍出動要供應糧食。<br>
+                ②<strong>不恤百姓</strong>：「飢者弗食，勞者弗息」，飢餓的人得不到食物，勞累的人得不到休息。<br>
+                ③<strong>沉溺享樂</strong>：「流連荒亡」，順流忘返、沉迷打獵飲酒。<br>
+                ④<strong>虐待百姓</strong>：「方命虐民」，違抗命令、虐待百姓。<br><br>
+                
+                <strong>晏子批評的核心</strong>：當今君主的出遊只顧自己享樂，不顧百姓疾苦，與先王體恤民情、為民辦事的巡狩截然相反。
+                <div class="score-points">
+                    【得分點】①概括先王巡狩特點（為民辦事、體恤百姓）1分；②概括當今出遊問題（勞民傷財、沉溺享樂）1分；③指出對比的核心（為民vs為己）1分
+                </div>
+            </div>
+        </div>
+
+        <div class="question">
+            <div class="question-header">5. 根據文章內容，判斷下列說法的正誤：（每個0.5分，共3分）</div>
+            <div class="options">
+                <label class="option">
+                    <input type="checkbox" id="q5a">
+                    A. 孟子認為賢人不應該有享樂的快樂
+                </label>
+                <label class="option">
+                    <input type="checkbox" id="q5b">
+                    B. 「樂以天下，憂以天下」是孟子仁政思想的核心
+                </label>
+                <label class="option">
+                    <input type="checkbox" id="q5c">
+                    C. 晏子認為先王的巡狩只是為了遊玩享樂
+                </label>
+                <label class="option">
+                    <input type="checkbox" id="q5d">
+                    D. 齊景公聽了晏子的話後進行了改革，開始關心百姓
+                </label>
+                <label class="option">
+                    <input type="checkbox" id="q5e">
+                    E. 夏代諺語「吾王不遊，吾何以休」說明先王出遊讓百姓得到休息
+                </label>
+                <label class="option">
+                    <input type="checkbox" id="q5f">
+                    F. 「流連荒亡」四個字分別指順流忘返、打獵無厭、飲酒無厭
+                </label>
+            </div>
+            
+            <div class="answer-section">
+                <div class="answer-title">📌 標準答案：</div>
+                正確的選項：B、D、E、F<br>
+                錯誤的選項：A（孟子認為賢人也有快樂，但要與民同樂）、C（先王巡狩是為了體恤百姓、辦實事）
+                <div class="score-points">
+                    【得分點】每選對一個0.5分，選錯一個扣0.5分，最低0分
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 第四層：寫法分析（15% - 6分） -->
+    <div class="question-section">
+        <div class="layer-title">
+            <span>第四層：寫法分析</span>
+            <span>6分</span>
+        </div>
+
+        <div class="question">
+            <div class="question-header">6. 本文運用了哪些修辭手法？請舉例說明其作用。（3分）</div>
+            <textarea class="input-area" id="q6" placeholder="請輸入答案"></textarea>
+            
+            <div class="answer-section">
+                <div class="answer-title">📌 標準答案：</div>
+                <strong>主要修辭手法：</strong><br><br>
+                
+                ①<strong>排比</strong>：<br>
+                • 「樂民之樂者，民亦樂其樂；憂民之憂者，民亦憂其憂。樂以天下，憂以天下。」連用多個結構相似的句子，形成排比。<br>
+                • 「從流下而忘反，謂之流；從流上而忘反，謂之連；從獸無厭謂之荒；樂酒無厭謂之亡。」四個「謂之」句式形成排比。<br>
+                <strong>作用</strong>：增強語勢，強調「與民同樂」的重要性和「流連荒亡」的嚴重性，使論證更有說服力。<br><br>
+                
+                ②<strong>對比</strong>：<br>
+                • 晏子對比「先王巡狩」與「今日出遊」，一個為民辦事、體恤百姓，一個勞民傷財、沉溺享樂。<br>
+                • 對比「樂民之樂」與「不與民同樂」的不同結果。<br>
+                <strong>作用</strong>：通過鮮明對比，突出「與民同樂」的正確性和「獨樂其樂」的錯誤性，使道理更加清晰明了。<br><br>
+                
+                ③<strong>反覆</strong>：<br>
+                • 「樂」字在「樂民之樂者，民亦樂其樂」中反覆出現。<br>
+                <strong>作用</strong>：強調君主與百姓快樂的互動關係，突出「與民同樂」的互惠性。
+                <div class="score-points">
+                    【得分點】①識別排比並舉例1分；②識別對比並舉例1分；③說明修辭作用1分
+                </div>
+            </div>
+        </div>
+
+        <div class="question">
+            <div class="question-header">7. 本文採用了什麼論證方法？請分析其論證結構。（3分）</div>
+            <textarea class="input-area" id="q7" placeholder="請輸入答案"></textarea>
+            
+            <div class="answer-section">
+                <div class="answer-title">📌 標準答案：</div>
+                <strong>主要論證方法：</strong><br><br>
+                
+                ①<strong>引用論證</strong>：孟子引用齊景公與晏子的對話，借晏子之口闡述「與民同樂」的道理，增強權威性和說服力。<br><br>
+                
+                ②<strong>對比論證</strong>：通過「先王巡狩」與「今日出遊」的對比，正反兩方面論證「與民同樂」的重要性。<br><br>
+                
+                ③<strong>舉例論證</strong>：舉齊景公改過自新的例子，證明實行「與民同樂」能夠得到百姓擁護。<br><br>
+                
+                <strong>論證結構：</strong><br>
+                ①<strong>提出論點</strong>：齊宣王問「賢者亦有此樂乎」，孟子回答「有」，引出「與民同樂」的主題。<br>
+                ②<strong>正面論證</strong>：「樂民之樂者，民亦樂其樂」，說明與民同樂的互惠關係。<br>
+                ③<strong>引用對比</strong>：引用晏子對齊景公的勸諫，通過先王與當今的對比，論證「與民同樂」vs「獨樂其樂」的優劣。<br>
+                ④<strong>舉例佐證</strong>：齊景公聽從晏子建議，改過自新，得到百姓愛戴，證明論點的正確性。<br>
+                ⑤<strong>歸結論點</strong>：隱含「樂以天下，憂以天下。然而不王者，未之有也」的結論。
+                <div class="score-points">
+                    【得分點】①識別論證方法（引用、對比、舉例）1.5分；②分析論證結構（提出論點→論證→結論）1.5分
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 第五層：深度思辨（25% - 10分） -->
+    <div class="question-section">
+        <div class="layer-title">
+            <span>第五層：深度思辨</span>
+            <span>10分</span>
+        </div>
+
+        <div class="question">
+            <div class="question-header">8. 請深入闡釋「與民同樂」這個核心概念，並說明它與「獨樂其樂」「樂以天下」的關係。（4分）</div>
+            <textarea class="input-area" id="q8" placeholder="請輸入答案" style="min-height: 120px;"></textarea>
+            
+            <div class="answer-section">
+                <div class="answer-title">📌 標準答案：</div>
+                <strong>「與民同樂」的深層含義：</strong><br><br>
+                
+                ①<strong>情感共鳴</strong>：「樂民之樂者，民亦樂其樂；憂民之憂者，民亦憂其憂。」君主與百姓的快樂和憂愁是相互關聯的，不是孤立的。君主要能夠感受百姓的情感，與百姓產生情感共鳴。<br><br>
+                
+                ②<strong>利益一致</strong>：君主的快樂應該建立在百姓快樂的基礎上，而不是建立在百姓痛苦之上。君主與百姓的利益應該是一致的，而非對立的。<br><br>
+                
+                ③<strong>互惠關係</strong>：君主為民謀利，百姓就會擁護君主；君主只顧自己享樂，百姓就會怨恨君主。這是一種互惠互利的雙向關係。<br><br>
+                
+                <strong>與「獨樂其樂」的對比：</strong><br>
+                • <strong>獨樂其樂</strong>：君主只顧自己享樂，不顧百姓疾苦，如齊景公「流連荒亡」的出遊。結果是「民乃作慝」，百姓產生怨恨。<br>
+                • <strong>與民同樂</strong>：君主把百姓的快樂當作自己的快樂，如先王巡狩「春省耕而補不足，秋省斂而助不給」。結果是「民亦樂其樂」，百姓擁護君主。<br><br>
+                
+                <strong>與「樂以天下」的關係：</strong><br>
+                • 「與民同樂」是實踐方法，「樂以天下」是最高境界。<br>
+                • 「樂以天下，憂以天下」是將「與民同樂」的範圍擴大到天下百姓，體現了孟子「推恩」的思想——從與本國百姓同樂，推廣到與天下百姓同樂。<br>
+                • 「樂以天下，憂以天下。然而不王者，未之有也」，說明這是實現王道政治的必由之路。<br><br>
+                
+                <strong>哲學意義：</strong><br>
+                「與民同樂」體現了孟子「民貴君輕」的思想，認為君主的地位和快樂都來源於百姓的支持，君主必須以百姓的利益為重。這是對君主專制的批判，是對民本思想的深刻闡發。
+                <div class="score-points">
+                    【得分點】①闡釋「與民同樂」的含義（情感共鳴、利益一致、互惠關係）1.5分；②對比「獨樂其樂」1分；③說明與「樂以天下」的關係1分；④上升到哲學層面（民貴君輕）0.5分
+                </div>
+            </div>
+        </div>
+
+        <div class="question">
+            <div class="question-header">9. 晏子批評「流連荒亡」，這四個字分別指什麼？它們反映了怎樣的政治問題？（3分）</div>
+            <textarea class="input-area" id="q9" placeholder="請輸入答案"></textarea>
+            
+            <div class="answer-section">
+                <div class="answer-title">📌 標準答案：</div>
+                <strong>「流連荒亡」的具體含義：</strong><br>
+                ①<strong>流</strong>：「從流下而忘反」，順流而下忘記返回。比喻順從享樂而不知節制。<br>
+                ②<strong>連</strong>：「從流上而忘反」，順流而上忘記返回。比喻執著追求享樂而忘記本分。<br>
+                ③<strong>荒</strong>：「從獸無厭」，打獵沒有滿足。比喻沉迷狩獵之樂。<br>
+                ④<strong>亡</strong>：「樂酒無厭」，飲酒沒有滿足。比喻沉溺酒色之樂。<br><br>
+                
+                <strong>反映的政治問題：</strong><br><br>
+                
+                ①<strong>君主昏庸</strong>：君主沉溺享樂，不理政事，是昏君的典型表現。「流連荒亡」就是「荒廢政事」「喪失國家」的前兆。<br><br>
+                
+                ②<strong>本末倒置</strong>：君主的本職是治理國家、照顧百姓，而不是追求個人享樂。「流連荒亡」是將享樂當作目的，將政事拋在腦後，完全本末倒置。<br><br>
+                
+                ③<strong>民怨沸騰</strong>：君主享樂需要大量人力物力，「師行而糧食，飢者弗食，勞者弗息」，導致百姓不堪重負，「民乃作慝」，產生怨恨。<br><br>
+                
+                ④<strong>政權危機</strong>：「為諸侯憂」，君主沉溺享樂會成為諸侯的憂患，不僅本國百姓不滿，周邊諸侯也會擔憂，最終可能導致政權不穩甚至亡國。<br><br>
+                
+                <strong>晏子的警示</strong>：<br>
+                晏子通過解釋「流連荒亡」，警告齊景公不要重蹈覆轍。「先王無流連之樂，荒亡之行。惟君所行也」，意思是先王沒有這樣的行為，現在就看您怎麼選擇了。這是一種委婉但嚴厲的批評和勸諫。
+                <div class="score-points">
+                    【得分點】①解釋四字含義1分；②分析反映的政治問題（君主昏庸、本末倒置、民怨沸騰）1.5分；③理解晏子的警示意義0.5分
+                </div>
+            </div>
+        </div>
+
+        <div class="question">
+            <div class="question-header">10. 「與民同樂」體現了儒家什麼樣的政治哲學？與法家、道家的治國理念有何不同？（3分）</div>
+            <textarea class="input-area" id="q10" placeholder="請輸入答案"></textarea>
+            
+            <div class="answer-section">
+                <div class="answer-title">📌 標準答案：</div>
+                <strong>「與民同樂」體現的儒家政治哲學：</strong><br><br>
+                
+                ①<strong>民本思想</strong>：「民貴君輕」，認為百姓是國家的根本，君主的地位和權力來源於百姓的支持。「樂民之樂者，民亦樂其樂」，君主必須以民為本。<br><br>
+                
+                ②<strong>仁政理念</strong>：「仁者愛人」，君主要有同理心，能夠感受百姓的疾苦。「憂民之憂者，民亦憂其憂」，君主與百姓共命運、同呼吸。<br><br>
+                
+                ③<strong>德治主張</strong>：通過道德感化而非暴力強制來治理國家。君主以德行感化百姓，百姓自然歸心，「樂以天下，憂以天下。然而不王者，未之有也」。<br><br>
+                
+                ④<strong>推恩之道</strong>：從愛自己的親人推廣到愛天下的百姓，從與本國百姓同樂推廣到與天下百姓同樂，體現了儒家「推己及人」的修養方法。<br><br>
+                
+                <strong>與法家的區別：</strong><br>
+                • <strong>法家</strong>：主張「以法治國」，強調嚴刑峻法，認為人性本惡，需要用法律和刑罰來約束。君主高高在上，與百姓是統治與被統治的關係。<br>
+                • <strong>儒家</strong>：主張「以德治國」，強調道德教化，認為人性本善，需要用仁義禮智來引導。君主應該「與民同樂」，與百姓是相互關愛的關係。<br><br>
+                
+                <strong>與道家的區別：</strong><br>
+                • <strong>道家</strong>：主張「無為而治」，認為最好的治理就是不治理，「無為而無不為」。君主應該順應自然，不要過多干預百姓生活。<br>
+                • <strong>儒家</strong>：主張「有為而治」，君主要積極作為，「春省耕而補不足，秋省斂而助不給」，主動關心百姓疾苦，為民辦實事。<br><br>
+                
+                <strong>儒家的獨特性：</strong><br>
+                儒家既不像法家那樣片面強調統治者的權威和法律的強制，也不像道家那樣消極無為。儒家主張君主要以身作則、以德化人，同時也要積極有為、為民謀利。「與民同樂」正是這種理念的集中體現——既強調君主的道德修養（樂民之樂、憂民之憂），又強調君主的實際作為（省耕、省斂、補不足、助不給）。
+                <div class="score-points">
+                    【得分點】①闡述儒家政治哲學（民本、仁政、德治、推恩）1分；②對比法家（法治vs德治）1分；③對比道家（有為vs無為）0.5分；④總結儒家獨特性0.5分
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 第六層：拓展應用（20% - 8分） -->
+    <div class="question-section">
+        <div class="layer-title">
+            <span>第六層：拓展應用</span>
+            <span>8分</span>
+        </div>
+
+        <div class="question">
+            <div class="question-header">11. 比較孟子的「與民同樂」與范仲淹「先天下之憂而憂，後天下之樂而樂」的異同。（3分）</div>
+            <textarea class="input-area" id="q11" placeholder="請輸入答案"></textarea>
+            
+            <div class="answer-section">
+                <div class="answer-title">📌 標準答案：</div>
+                <strong>相同點：</strong><br><br>
+                
+                ①<strong>核心精神相同</strong>：都強調關心天下百姓的疾苦，把天下人的利益放在個人利益之上。<br><br>
+                
+                ②<strong>憂樂觀一致</strong>：都認為個人的憂樂應該與天下人的憂樂聯繫在一起，不能只顧個人享樂而不管百姓疾苦。<br><br>
+                
+                ③<strong>儒家傳統</strong>：都繼承和發揚了儒家「仁者愛人」「民貴君輕」的思想，體現了儒家士大夫的社會責任感。<br><br>
+                
+                <strong>不同點：</strong><br><br>
+                
+                ①<strong>針對對象不同</strong>：<br>
+                • 孟子的「與民同樂」主要是對君主說的，要求君主與百姓同憂同樂。<br>
+                • 范仲淹的「先憂後樂」主要是對士大夫（包括他自己）說的，是一種自我要求和自我期許。<br><br>
+                
+                ②<strong>時間順序不同</strong>：<br>
+                • 孟子強調「樂民之樂」「憂民之憂」，是同時的、互動的關係，沒有明確的先後順序。<br>
+                • 范仲淹強調「先憂後樂」，明確提出憂在前、樂在後，有明顯的時間順序，體現了更高的道德要求——「先」憂慮天下，「後」享樂天下，甚至可能永遠不享樂。<br><br>
+                
+                ③<strong>境界層次不同</strong>：<br>
+                • 孟子的「與民同樂」強調君主與百姓的互惠關係，「民亦樂其樂」，百姓也會因君主的快樂而快樂，有一定的功利性（為了得到百姓擁護）。<br>
+                • 范仲淹的「先憂後樂」更強調個人的犧牲精神和無私奉獻，「後天下之樂而樂」意味著可能永遠得不到快樂，但仍然堅持為天下謀福利，境界更高、更純粹。<br><br>
+                
+                ④<strong>政治背景不同</strong>：<br>
+                • 孟子處於戰國時期，諸侯混戰，他主張「仁政」「王道」，希望君主能夠以民為本，停止戰爭，實現統一。<br>
+                • 范仲淹處於北宋中期，面臨外患內憂，他主張改革，希望士大夫能夠勇於擔當，先天下之憂而憂。<br><br>
+                
+                <strong>歷史意義：</strong><br>
+                孟子的「與民同樂」是對君主的要求，是自上而下的；范仲淹的「先憂後樂」是對士大夫的要求，是自下而上的。兩者相互補充，共同構成了中國傳統士大夫的憂樂觀和責任感，對後世影響深遠。
+                <div class="score-points">
+                    【得分點】①說明相同點（核心精神、憂樂觀、儒家傳統）1分；②分析不同點（對象、時間順序、境界層次）1.5分；③總結意義0.5分
+                </div>
+            </div>
+        </div>
+
+        <div class="question">
+            <div class="question-header">12. 「與民同樂」對當代政治有什麼啟示？請結合現實談談你的理解。（5分）</div>
+            <textarea class="input-area" id="q12" placeholder="請輸入答案" style="min-height: 150px;"></textarea>
+            
+            <div class="answer-section">
+                <div class="answer-title">📌 標準答案：</div>
+                <strong>當代政治的現實問題：</strong><br><br>
+                
+                在當代社會，我們仍然面臨一些與「與民同樂」精神相違背的現象：<br>
+                ①<strong>官民對立</strong>：一些官員高高在上，脫離群眾，不了解民情民意。<br>
+                ②<strong>特權腐敗</strong>：少數官員濫用權力，追求個人享樂，侵害百姓利益。<br>
+                ③<strong>形式主義</strong>：一些政府工作流於形式，不能真正解決百姓的實際問題。<br>
+                ④<strong>利益衝突</strong>：在一些地方，政府利益與百姓利益發生衝突，如強制拆遷、環境污染等。<br><br>
+                
+                <strong>「與民同樂」的當代啟示：</strong><br><br>
+                
+                ①<strong>以人民為中心的發展理念</strong>：<br>
+                孟子的「與民同樂」與當代「以人民為中心」的發展思想高度契合。政府的一切工作都應該以人民利益為出發點和落腳點，「樂民之樂，憂民之憂」。發展的目的不是GDP增長本身，而是讓人民過上更好的生活。這要求政府在制定政策時，必須充分考慮人民的需求和感受，不能只追求表面政績。<br><br>
+                
+                ②<strong>密切聯繫群眾</strong>：<br>
+                「與民同樂」要求領導幹部要深入基層，了解群眾疾苦。就像先王「春省耕而補不足，秋省斂而助不給」一樣，現代政府官員也應該經常下基層調研，傾聽群眾呼聲，而不是坐在辦公室裡閉門造車。「不與民同樂者」，最終會失去民心，失去執政基礎。<br><br>
+                
+                ③<strong>反對官僚主義和特權思想</strong>：<br>
+                「流連荒亡」在當代的表現就是官僚主義、形式主義、享樂主義和奢靡之風。政府官員如果只顧自己享受，「飲食若流」，而不顧百姓疾苦，「飢者弗食，勞者弗息」，最終會「民乃作慝」，引發社會矛盾。因此必須堅持反腐敗、反特權，建設廉潔政府。<br><br>
+                
+                ④<strong>共同富裕理念</strong>：<br>
+                「與民同樂」不是少數人的富裕，而是全體人民的共同富裕。孟子批評「為民上而不與民同樂者」，在當代就是要批評那種只讓少數人富起來、而忽視大多數人利益的發展模式。共同富裕要求「先富帶後富」，讓發展成果惠及全體人民，這正是「與民同樂」思想的當代實踐。<br><br>
+                
+                ⑤<strong>民主政治建設</strong>：<br>
+                「與民同樂」要求君主要傾聽百姓的聲音，百姓得不到快樂就會「非其上」。在當代，這啟示我們要建設民主政治，保障人民的知情權、參與權、表達權、監督權。政府決策要經過民主程序，廣泛聽取民意，而不是官員拍腦袋決定。只有讓人民真正參與到國家治理中來，才能實現真正的「與民同樂」。<br><br>
+                
+                ⑥<strong>政府績效評估機制</strong>：<br>
+                「民亦樂其樂」說明百姓的滿意度是評價政府工作的重要標準。當代政府績效評估不應只看經濟指標，更要看民生改善、百姓滿意度、社會和諧程度。就像齊景公「召大師曰：為我作君臣相說之樂」一樣，政府與人民的關係應該是和諧愉悅的，而不是對立緊張的。<br><br>
+                
+                <strong>具體實踐建議：</strong><br>
+                ①建立健全民意調查機制，定期了解百姓需求；<br>
+                ②推行領導幹部基層調研制度化；<br>
+                ③完善信訪制度，暢通民意表達渠道；<br>
+                ④加強政務公開，提高政府透明度；<br>
+                ⑤建立以民生改善為導向的政府考核體系；<br>
+                ⑥嚴懲腐敗行為，杜絕「流連荒亡」式的官員。<br><br>
+                
+                <strong>結論：</strong><br>
+                「與民同樂」雖然是兩千多年前的思想，但其核心理念——以民為本、關心民生、官民一體——在當代仍然具有重要的指導意義。它提醒我們，任何政府都不能脫離人民，只有真正做到「樂民之樂、憂民之憂」，才能得到人民的擁護和支持，實現長治久安。在全面建設社會主義現代化國家的新征程中，我們更應該繼承和發揚「與民同樂」的優秀傳統，建設人民滿意的服務型政府。
+                <div class="score-points">
+                    【得分點】①指出現實問題1分；②提出具體啟示（以人民為中心、密切聯繫群眾、反腐倡廉、共同富裕、民主政治等）2.5分；③聯繫實踐建議1分；④分析深入、邏輯清晰0.5分
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="button-container">
+        <button class="btn btn-primary" onclick="toggleAnswers()">顯示標準答案</button>
+        <button class="btn btn-secondary" onclick="calculateScore()">計算總分</button>
+    </div>
+
+    <div class="score-display" id="scoreDisplay"></div>
+
+    <script>
+        let answersVisible = false;
+
+        function toggleAnswers() {
+            answersVisible = !answersVisible;
+            const answerSections = document.querySelectorAll('.answer-section');
+            const scorePoints = document.querySelectorAll('.score-points');
+            const button = document.querySelector('.btn-primary');
+            
+            answerSections.forEach(section => {
+                if (answersVisible) {
+                    section.classList.add('show');
+                } else {
+                    section.classList.remove('show');
+                }
+            });
+            
+            scorePoints.forEach(point => {
+                if (answersVisible) {
+                    point.classList.add('show');
+                } else {
+                    point.classList.remove('show');
+                }
+            });
+            
+            button.textContent = answersVisible ? '隱藏標準答案' : '顯示標準答案';
+        }
+
+        function calculateScore() {
+            alert('總分：40分\n\n本練習採用框架化評分體系（哲理議論文適配版）：\n\n第二層（基礎理解）：8分（20%）\n第三層（內容把握）：8分（20%）\n第四層（寫法分析）：6分（15%）\n第五層（深度思辨）：10分（25%）\n第六層（拓展應用）：8分（20%）\n\n請參照標準答案中的得分點進行自評或師評。');
+            
+            const scoreDisplay = document.getElementById('scoreDisplay');
+            scoreDisplay.innerHTML = '📊 總分：40分 | 請對照標準答案進行評分';
+            scoreDisplay.classList.add('show');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grade 8 Conditional Grammar Exercise</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+      body {
+        font-family: 'Inter', 'Arial', sans-serif;
+        line-height: 1.6;
+        max-width: 880px;
+        margin: 0 auto;
+        padding: 32px 80px;
+        position: relative;
+        box-sizing: border-box;
+        background-color: #f9f9f9;
+      }
+
+      .container {
+        background-color: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .header {
+        text-align: center;
+        border-bottom: 2px solid #333;
+        padding-bottom: 15px;
+        margin-bottom: 25px;
+      }
+
+      .header h1 {
+        font-size: 24px;
+        color: #333;
+        margin: 0;
+      }
+
+      .score-display {
+        text-align: right;
+        font-weight: bold;
+        margin-bottom: 20px;
+        font-size: 16px;
+        color: #007acc;
+      }
+
+      .instruction {
+        background-color: #f5f5f5;
+        padding: 15px;
+        border-left: 4px solid #007acc;
+        margin-bottom: 25px;
+        font-size: 14px;
+      }
+
+      .question {
+        margin: 25px 0;
+        padding: 15px;
+        border-left: 3px solid #007acc;
+        background-color: #fafafa;
+      }
+
+      .question-number {
+        font-weight: bold;
+        font-size: 16px;
+        color: #007acc;
+        margin-bottom: 10px;
+      }
+
+      .sub-question {
+        margin: 15px 0;
+        padding-left: 20px;
+      }
+
+      .input-field {
+        border: 2px solid #ddd;
+        padding: 8px 12px;
+        font-size: 14px;
+        border-radius: 4px;
+        min-width: 150px;
+        font-family: inherit;
+        transition: border-color 0.3s;
+      }
+
+      .input-field[maxlength="1"] {
+        min-width: 25px;
+        width: 25px;
+        padding: 8px 4px;
+        text-align: center;
+      }
+
+      .input-field:focus {
+        outline: none;
+        border-color: #007acc;
+      }
+
+      .input-field.correct {
+        border-color: #28a745;
+        background-color: #d4edda;
+      }
+
+      .input-field.incorrect {
+        border-color: #dc3545;
+        background-color: #f8d7da;
+      }
+
+      .points {
+        color: #666;
+        font-weight: bold;
+      }
+
+      .options {
+        margin: 10px 0;
+        padding-left: 20px;
+      }
+
+      .option {
+        margin: 8px 0;
+        padding: 8px;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: background-color 0.3s;
+      }
+
+      .option:hover {
+        background-color: #e9ecef;
+      }
+
+      .option input[type='radio'] {
+        margin-right: 8px;
+      }
+
+      .option.correct {
+        background-color: #d4edda;
+        border: 2px solid #28a745;
+      }
+
+      .option.incorrect {
+        background-color: #f8d7da;
+        border: 2px solid #dc3545;
+      }
+
+      .separator {
+        border-top: 1px solid #ccc;
+        margin: 25px 0;
+      }
+
+      .control-buttons {
+        text-align: center;
+        margin: 30px 0;
+      }
+
+      .btn {
+        background-color: #007acc;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        font-size: 16px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 0 10px;
+        transition: background-color 0.3s;
+      }
+
+      .btn:hover {
+        background-color: #005a9e;
+      }
+
+      .btn:disabled {
+        background-color: #6c757d;
+        cursor: not-allowed;
+      }
+
+      .btn-secondary {
+        background-color: #6c757d;
+      }
+
+      .btn-secondary:hover {
+        background-color: #545b62;
+      }
+
+      .feedback {
+        margin-top: 20px;
+        padding: 15px;
+        border-radius: 5px;
+        font-weight: bold;
+      }
+
+      .feedback.excellent {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+
+      .feedback.good {
+        background-color: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+      }
+
+      .feedback.needs-improvement {
+        background-color: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+      }
+
+      .feedback.poor {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .result-summary {
+        background-color: #e8f4fd;
+        border: 1px solid #b3d9ff;
+        padding: 20px;
+        margin-top: 20px;
+        border-radius: 5px;
+      }
+
+      .result-summary h3 {
+        color: #0066cc;
+        margin-top: 0;
+      }
+
+      .student-info {
+        background-color: #f8f9fa;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+        border: 1px solid #dee2e6;
+      }
+
+      .student-info input {
+        margin: 5px 10px;
+        padding: 5px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+      }
+
+      .matching-table {
+        display: flex;
+        justify-content: space-between;
+        margin: 15px 0;
+      }
+
+      .matching-column {
+        width: 45%;
+      }
+
+      .matching-item {
+        margin: 8px 0;
+        padding: 8px;
+        border: 1px solid #ddd;
+        background-color: #f9f9f9;
+      }
+
+      .type-explanation {
+        background-color: #e3f2fd;
+        padding: 10px;
+        margin: 10px 0;
+        border-left: 4px solid #2196f3;
+        font-size: 13px;
+      }
+
+      .example-box {
+        background-color: #f8f9fa;
+        padding: 10px;
+        margin: 8px 0;
+        border-radius: 4px;
+        font-style: italic;
+      }
+    </style>
+</head>
+<body>
+    <div class="container">
+      <div class="header">
+        <h1>Grade 8 Conditional Grammar Exercise</h1>
+        <p style="margin: 10px 0; color: #666; font-size: 14px;">Based on "Practical English Grammar - Conditionals"</p>
+      </div>
+
+      <div class="student-info">
+        <label>Student Name: <input type="text" id="studentName" placeholder="Enter your name"></label>
+        <label>Class: <input type="text" id="studentClass" placeholder="Enter your class"></label>
+        <label>Student ID: <input type="text" id="studentId" placeholder="Enter your ID"></label>
+      </div>
+
+      <div class="score-display">
+        Total Points: 50 | Current Score: <span id="currentScore">0</span> points | Progress: <span id="progress">0</span>%
+      </div>
+
+      <div class="instruction">
+        <strong>Instructions:</strong> This exercise contains five parts with a total of 50 points. Please read each question carefully and answer based on your understanding of conditional sentences. Click "Check Answers" when finished to see your results.
+      </div>
+
+      <!-- Part A: Identify Conditional Types -->
+      <div class="question">
+        <div class="question-number">Part A: Identify the Type of Conditional (10 points)</div>
+        <p>Read each sentence and identify whether it is <strong>Type 1 (Probable)</strong>, <strong>Type 2 (Improbable)</strong>, or <strong>Type 3 (Impossible)</strong> conditional.</p>
+        
+        <div class="type-explanation">
+          <strong>Quick Reference:</strong><br>
+          • Type 1: If + present, will + verb (probable/likely conditions)<br>  
+          • Type 2: If + past, would + verb (improbable/imaginary conditions)<br>
+          • Type 3: If + past perfect, would have + past participle (impossible past conditions)
+        </div>
+
+        <div class="sub-question">
+          1. "If he goes to London, he will meet his sister."
+          <input type="text" class="input-field" id="type1" placeholder="Type 1, 2, or 3" style="min-width: 120px">
+        </div>
+
+        <div class="sub-question">
+          2. "If I saw him, I should speak to him."
+          <input type="text" class="input-field" id="type2" placeholder="Type 1, 2, or 3" style="min-width: 120px">
+        </div>
+
+        <div class="sub-question">
+          3. "If I had known of your arrival, I should have met you."
+          <input type="text" class="input-field" id="type3" placeholder="Type 1, 2, or 3" style="min-width: 120px">
+        </div>
+
+        <div class="sub-question">
+          4. "If you come into my garden, my dog will bite you."
+          <input type="text" class="input-field" id="type4" placeholder="Type 1, 2, or 3" style="min-width: 120px">
+        </div>
+
+        <div class="sub-question">
+          5. "If you fell into a whirlpool, you would be drowned."
+          <input type="text" class="input-field" id="type5" placeholder="Type 1, 2, or 3" style="min-width: 120px">
+        </div>
+
+        <div class="sub-question">
+          6. "If he had fallen into the river, he would have drowned."
+          <input type="text" class="input-field" id="type6" placeholder="Type 1, 2, or 3" style="min-width: 120px">
+        </div>
+
+        <div class="sub-question">
+          7. "If I were you, I'd cut down all those trees."
+          <input type="text" class="input-field" id="type7" placeholder="Type 1, 2, or 3" style="min-width: 120px">
+        </div>
+
+        <div class="sub-question">
+          8. "If you heat ice, it turns to water."
+          <input type="text" class="input-field" id="type8" placeholder="Type 1, 2, or 3" style="min-width: 120px">
+        </div>
+
+        <div class="sub-question">
+          9. "If the house should go on fire, I shall call the brigade."
+          <input type="text" class="input-field" id="type9" placeholder="Type 1, 2, or 3" style="min-width: 120px">
+        </div>
+
+        <div class="sub-question">
+          10. "If I were to pass the exam, I would be very happy."
+          <input type="text" class="input-field" id="type10" placeholder="Type 1, 2, or 3" style="min-width: 120px">
+        </div>
+      </div>
+
+      <div class="separator"></div>
+
+      <!-- Part B: Complete the Sentences -->
+      <div class="question">
+        <div class="question-number">Part B: Complete the Conditional Sentences (15 points)</div>
+        <p>Complete each sentence using the correct form of the verb in brackets. Choose the appropriate conditional type.</p>
+
+        <div class="sub-question">
+          1. If you __________ (go) now, you will be on time.
+          <input type="text" class="input-field" id="complete1" placeholder="Enter verb form">
+        </div>
+
+        <div class="sub-question">
+          2. If I __________ (be) you, I would study harder.
+          <input type="text" class="input-field" id="complete2" placeholder="Enter verb form">
+        </div>
+
+        <div class="sub-question">
+          3. If she __________ (know) about the party yesterday, she would have come.
+          <input type="text" class="input-field" id="complete3" placeholder="Enter verb form">
+        </div>
+
+        <div class="sub-question">
+          4. If you __________ (heat) water to 100°C, it __________ (boil).
+          <input type="text" class="input-field" id="complete4a" placeholder="First verb" style="min-width: 80px">
+          <input type="text" class="input-field" id="complete4b" placeholder="Second verb" style="min-width: 80px">
+        </div>
+
+        <div class="sub-question">
+          5. If he __________ (fall) off his bicycle, he would hurt himself.
+          <input type="text" class="input-field" id="complete5" placeholder="Enter verb form">
+        </div>
+
+        <div class="sub-question">
+          6. If they __________ (arrive) earlier, they wouldn't have missed the beginning.
+          <input type="text" class="input-field" id="complete6" placeholder="Enter verb form">
+        </div>
+
+        <div class="sub-question">
+          7. If you __________ (see) him tomorrow, please give him this message.
+          <input type="text" class="input-field" id="complete7" placeholder="Enter verb form">
+        </div>
+
+        <div class="sub-question">
+          8. If I __________ (have) more money, I would buy a new car.
+          <input type="text" class="input-field" id="complete8" placeholder="Enter verb form">
+        </div>
+
+        <div class="sub-question">
+          9. If you __________ (not study), you will fail the exam.
+          <input type="text" class="input-field" id="complete9" placeholder="Enter verb form">
+        </div>
+
+        <div class="sub-question">
+          10. If she __________ (be) more careful, she wouldn't have broken the vase.
+          <input type="text" class="input-field" id="complete10" placeholder="Enter verb form">
+        </div>
+
+        <div class="sub-question">
+          11. If it __________ (rain) tomorrow, we will cancel the picnic.
+          <input type="text" class="input-field" id="complete11" placeholder="Enter verb form">
+        </div>
+
+        <div class="sub-question">
+          12. If you __________ (win) the lottery, what would you do?
+          <input type="text" class="input-field" id="complete12" placeholder="Enter verb form">
+        </div>
+
+        <div class="sub-question">
+          13. If I __________ (meet) him last week, I would have told him the news.
+          <input type="text" class="input-field" id="complete13" placeholder="Enter verb form">
+        </div>
+
+        <div class="sub-question">
+          14. If you __________ (mix) red and blue, you __________ (get) purple.
+          <input type="text" class="input-field" id="complete14a" placeholder="First verb" style="min-width: 80px">
+          <input type="text" class="input-field" id="complete14b" placeholder="Second verb" style="min-width: 80px">
+        </div>
+
+        <div class="sub-question">
+          15. If he __________ (should/call), please tell him I'm not home.
+          <input type="text" class="input-field" id="complete15" placeholder="Enter verb form">
+        </div>
+      </div>
+
+      <div class="separator"></div>
+
+      <!-- Part C: Special Constructions -->
+      <div class="question">
+        <div class="question-number">Part C: Rewrite Using Special Constructions (10 points)</div>
+        <p>Rewrite each sentence using the word or construction given in brackets.</p>
+
+        <div class="sub-question">
+          1. "If you don't hurry, you will be late." (unless)<br>
+          <input type="text" class="input-field" id="rewrite1" placeholder="Rewrite the sentence" style="min-width: 400px">
+        </div>
+
+        <div class="sub-question">
+          2. "If it had not been for the storm, we should have arrived earlier." (but for)<br>
+          <input type="text" class="input-field" id="rewrite2" placeholder="Rewrite the sentence" style="min-width: 400px">
+        </div>
+
+        <div class="sub-question">
+          3. "If I were rich, I would travel the world." (inversion - omit 'if')<br>
+          <input type="text" class="input-field" id="rewrite3" placeholder="Rewrite the sentence" style="min-width: 400px">
+        </div>
+
+        <div class="sub-question">
+          4. "If he had known the truth, he would have acted differently." (inversion - omit 'if')<br>
+          <input type="text" class="input-field" id="rewrite4" placeholder="Rewrite the sentence" style="min-width: 400px">
+        </div>
+
+        <div class="sub-question">
+          5. "If you are in a hurry, you can take my car." (provided that)<br>
+          <input type="text" class="input-field" id="rewrite5" placeholder="Rewrite the sentence" style="min-width: 400px">
+        </div>
+      </div>
+
+      <div class="separator"></div>
+
+      <!-- Part D: Choose the Correct Modal -->
+      <div class="question">
+        <div class="question-number">Part D: Choose the Correct Modal (8 points)</div>
+        <p>Choose the most appropriate modal verb to complete each conditional sentence.</p>
+
+        <div class="sub-question">
+          <strong>1. If you are hungry, you __________ eat something now.</strong>
+          <div class="options">
+            <div class="option" onclick="selectOption('modal1', 'A')">
+              <input type="radio" name="modal1" value="A" id="modal1A">
+              <label for="modal1A">A. can</label>
+            </div>
+            <div class="option" onclick="selectOption('modal1', 'B')">
+              <input type="radio" name="modal1" value="B" id="modal1B">
+              <label for="modal1B">B. might</label>
+            </div>
+            <div class="option" onclick="selectOption('modal1', 'C')">
+              <input type="radio" name="modal1" value="C" id="modal1C">
+              <label for="modal1C">C. would</label>
+            </div>
+            <div class="option" onclick="selectOption('modal1', 'D')">
+              <input type="radio" name="modal1" value="D" id="modal1D">
+              <label for="modal1D">D. should</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="sub-question">
+          <strong>2. If he came to the party, I __________ see him there.</strong>
+          <div class="options">
+            <div class="option" onclick="selectOption('modal2', 'A')">
+              <input type="radio" name="modal2" value="A" id="modal2A">
+              <label for="modal2A">A. can</label>
+            </div>
+            <div class="option" onclick="selectOption('modal2', 'B')">
+              <input type="radio" name="modal2" value="B" id="modal2B">
+              <label for="modal2B">B. might</label>
+            </div>
+            <div class="option" onclick="selectOption('modal2', 'C')">
+              <input type="radio" name="modal2" value="C" id="modal2C">
+              <label for="modal2C">C. will</label>
+            </div>
+            <div class="option" onclick="selectOption('modal2', 'D')">
+              <input type="radio" name="modal2" value="D" id="modal2D">
+              <label for="modal2D">D. must</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="sub-question">
+          <strong>3. If I had studied harder, I __________ have passed the exam.</strong>
+          <div class="options">
+            <div class="option" onclick="selectOption('modal3', 'A')">
+              <input type="radio" name="modal3" value="A" id="modal3A">
+              <label for="modal3A">A. can</label>
+            </div>
+            <div class="option" onclick="selectOption('modal3', 'B')">
+              <input type="radio" name="modal3" value="B" id="modal3B">
+              <label for="modal3B">B. could</label>
+            </div>
+            <div class="option" onclick="selectOption('modal3', 'C')">
+              <input type="radio" name="modal3" value="C" id="modal3C">
+              <label for="modal3C">C. will</label>
+            </div>
+            <div class="option" onclick="selectOption('modal3', 'D')">
+              <input type="radio" name="modal3" value="D" id="modal3D">
+              <label for="modal3D">D. would</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="sub-question">
+          <strong>4. If you __________ kindly wait a moment, I'll get the manager.</strong>
+          <div class="options">
+            <div class="option" onclick="selectOption('modal4', 'A')">
+              <input type="radio" name="modal4" value="A" id="modal4A">
+              <label for="modal4A">A. can</label>
+            </div>
+            <div class="option" onclick="selectOption('modal4', 'B')">
+              <input type="radio" name="modal4" value="B" id="modal4B">
+              <label for="modal4B">B. might</label>
+            </div>
+            <div class="option" onclick="selectOption('modal4', 'C')">
+              <input type="radio" name="modal4" value="C" id="modal4C">
+              <label for="modal4C">C. would</label>
+            </div>
+            <div class="option" onclick="selectOption('modal4', 'D')">
+              <input type="radio" name="modal4" value="D" id="modal4D">
+              <label for="modal4D">D. should</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="separator"></div>
+
+      <!-- Part E: Correct the Errors -->
+      <div class="question">
+        <div class="question-number">Part E: Correct the Errors (7 points)</div>
+        <p>Each sentence contains one error related to conditional grammar. Find and correct the mistake.</p>
+
+        <div class="sub-question">
+          1. "If I will see him tomorrow, I will give him the message."<br>
+          <strong>Correction:</strong> <input type="text" class="input-field" id="error1" placeholder="Write the corrected sentence" style="min-width: 400px">
+        </div>
+
+        <div class="sub-question">
+          2. "If he would have more money, he will buy a new house."<br>
+          <strong>Correction:</strong> <input type="text" class="input-field" id="error2" placeholder="Write the corrected sentence" style="min-width: 400px">
+        </div>
+
+        <div class="sub-question">
+          3. "If she has studied harder, she would have passed."<br>
+          <strong>Correction:</strong> <input type="text" class="input-field" id="error3" placeholder="Write the corrected sentence" style="min-width: 400px">
+        </div>
+
+        <div class="sub-question">
+          4. "If you would come earlier, you wouldn't miss the show."<br>
+          <strong>Correction:</strong> <input type="text" class="input-field" id="error4" placeholder="Write the corrected sentence" style="min-width: 400px">
+        </div>
+
+        <div class="sub-question">
+          5. "If I was you, I will be more careful."<br>
+          <strong>Correction:</strong> <input type="text" class="input-field" id="error5" placeholder="Write the corrected sentence" style="min-width: 400px">
+        </div>
+
+        <div class="sub-question">
+          6. "If it will rain tomorrow, we would stay home."<br>
+          <strong>Correction:</strong> <input type="text" class="input-field" id="error6" placeholder="Write the corrected sentence" style="min-width: 400px">
+        </div>
+
+        <div class="sub-question">
+          7. "If he had called me, I will have helped him."<br>
+          <strong>Correction:</strong> <input type="text" class="input-field" id="error7" placeholder="Write the corrected sentence" style="min-width: 400px">
+        </div>
+      </div>
+
+      <div class="control-buttons">
+        <button class="btn" onclick="checkAnswers()">Check Answers</button>
+        <button class="btn btn-secondary" onclick="resetForm()">Reset Exercise</button>
+        <button class="btn" onclick="showAnswers()" id="showAnswersBtn" disabled>Show Correct Answers</button>
+        <button class="btn" onclick="printResults()">Print Results</button>
+      </div>
+
+      <div id="feedback" class="feedback hidden"></div>
+
+      <div id="resultSummary" class="result-summary hidden">
+        <h3>Exercise Results Summary</h3>
+        <div id="detailedResults"></div>
+      </div>
+    </div>
+
+    <script>
+      // Standard Answers
+      const answers = {
+        // Part A: Conditional Types
+        type1: ['Type 1', 'type 1', '1'],
+        type2: ['Type 2', 'type 2', '2'], 
+        type3: ['Type 3', 'type 3', '3'],
+        type4: ['Type 1', 'type 1', '1'],
+        type5: ['Type 2', 'type 2', '2'],
+        type6: ['Type 3', 'type 3', '3'],
+        type7: ['Type 2', 'type 2', '2'],
+        type8: ['Type 1', 'type 1', '1'],
+        type9: ['Type 1', 'type 1', '1'],
+        type10: ['Type 2', 'type 2', '2'],
+
+        // Part B: Complete the Sentences
+        complete1: ['go'],
+        complete2: ['were'],
+        complete3: ['had known'],
+        complete4a: ['heat'],
+        complete4b: ['boils'],
+        complete5: ['fell'],
+        complete6: ['had arrived'],
+        complete7: ['see'],
+        complete8: ['had'],
+        complete9: ['don\'t study', 'do not study'],
+        complete10: ['had been'],
+        complete11: ['rains'],
+        complete12: ['won'],
+        complete13: ['had met'],
+        complete14a: ['mix'],
+        complete14b: ['get'],
+        complete15: ['should call'],
+
+        // Part C: Special Constructions
+        rewrite1: ['Unless you hurry, you will be late.', 'Unless you hurry you will be late'],
+        rewrite2: ['But for the storm, we should have arrived earlier.', 'But for the storm we should have arrived earlier'],
+        rewrite3: ['Were I rich, I would travel the world.', 'Were I rich I would travel the world'],
+        rewrite4: ['Had he known the truth, he would have acted differently.', 'Had he known the truth he would have acted differently'],
+        rewrite5: ['Provided that you are in a hurry, you can take my car.', 'Provided that you are in a hurry you can take my car'],
+
+        // Part D: Multiple Choice (Modals)
+        modal1: 'A', // can
+        modal2: 'B', // might  
+        modal3: 'B', // could
+        modal4: 'C', // would
+
+        // Part E: Error Corrections
+        error1: ['If I see him tomorrow, I will give him the message.'],
+        error2: ['If he had more money, he would buy a new house.'],
+        error3: ['If she had studied harder, she would have passed.'],
+        error4: ['If you came earlier, you wouldn\'t miss the show.'],
+        error5: ['If I were you, I would be more careful.'],
+        error6: ['If it rains tomorrow, we will stay home.'],
+        error7: ['If he had called me, I would have helped him.']
+      };
+
+      // Points Distribution
+      const pointsMap = {
+        // Part A: 10 points (1 point each)
+        type1: 1, type2: 1, type3: 1, type4: 1, type5: 1,
+        type6: 1, type7: 1, type8: 1, type9: 1, type10: 1,
+        
+        // Part B: 15 points (1 point each)
+        complete1: 1, complete2: 1, complete3: 1, complete4a: 0.5, complete4b: 0.5,
+        complete5: 1, complete6: 1, complete7: 1, complete8: 1, complete9: 1,
+        complete10: 1, complete11: 1, complete12: 1, complete13: 1, 
+        complete14a: 0.5, complete14b: 0.5, complete15: 1,
+        
+        // Part C: 10 points (2 points each)
+        rewrite1: 2, rewrite2: 2, rewrite3: 2, rewrite4: 2, rewrite5: 2,
+        
+        // Part D: 8 points (2 points each)
+        modal1: 2, modal2: 2, modal3: 2, modal4: 2,
+        
+        // Part E: 7 points (1 point each)
+        error1: 1, error2: 1, error3: 1, error4: 1, error5: 1, error6: 1, error7: 1
+      };
+
+      let hasChecked = false;
+      let lastResults = null;
+
+      function selectOption(questionName, value) {
+        document.getElementById(questionName + value).checked = true;
+        updateProgress();
+      }
+
+      function checkAnswer(inputId, answerArray, isPartialMatch = false) {
+        const input = document.getElementById(inputId);
+        if (!input) return false;
+        
+        const userAnswer = input.value.trim();
+        if (!userAnswer) return false;
+
+        if (!answerArray || answerArray.length === 0) return false;
+
+        if (isPartialMatch) {
+          return answerArray.some(answer => 
+            userAnswer.toLowerCase().includes(answer.toLowerCase()) || 
+            answer.toLowerCase().includes(userAnswer.toLowerCase())
+          );
+        } else {
+          return answerArray.some(answer => 
+            userAnswer.toLowerCase() === answer.toLowerCase()
+          );
+        }
+      }
+
+      function updateProgress() {
+        // Update progress based on filled fields
+        let totalFields = Object.keys(answers).length;
+        let filledFields = 0;
+        
+        // Count filled text inputs
+        Object.keys(answers).forEach(fieldId => {
+          if (!fieldId.startsWith('modal')) {
+            const input = document.getElementById(fieldId);
+            if (input && input.value.trim()) filledFields++;
+          }
+        });
+        
+        // Count selected radio buttons
+        ['modal1', 'modal2', 'modal3', 'modal4'].forEach(modalName => {
+          if (document.querySelector(`input[name="${modalName}"]:checked`)) {
+            filledFields++;
+          }
+        });
+        
+        let progressPercent = Math.round((filledFields / totalFields) * 100);
+        document.getElementById('progress').textContent = progressPercent;
+      }
+
+      function checkAnswers() {
+        let score = 0;
+        let totalAnswered = 0;
+        let totalQuestions = Object.keys(answers).length;
+        let results = {};
+
+        // Check text input answers
+        for (let questionId of Object.keys(answers)) {
+          if (questionId.startsWith('modal')) continue; // Skip modal questions
+
+          const isPartialMatch = questionId.includes('rewrite') || questionId.includes('error');
+          const isCorrect = checkAnswer(questionId, answers[questionId], isPartialMatch);
+          results[questionId] = isCorrect;
+
+          if (document.getElementById(questionId).value.trim()) totalAnswered++;
+
+          if (isCorrect) {
+            score += pointsMap[questionId];
+            document.getElementById(questionId).classList.add('correct');
+            document.getElementById(questionId).classList.remove('incorrect');
+          } else {
+            if (document.getElementById(questionId).value.trim()) { // Only mark incorrect if answered
+              document.getElementById(questionId).classList.add('incorrect');
+              document.getElementById(questionId).classList.remove('correct');
+            }
+          }
+        }
+
+        // Check multiple choice answers
+        ['modal1', 'modal2', 'modal3', 'modal4'].forEach(q => {
+          const selected = document.querySelector(`input[name="${q}"]:checked`);
+          if (selected) {
+            totalAnswered++;
+            if (selected.value === answers[q]) {
+              score += pointsMap[q];
+              results[q] = true;
+              selected.parentElement.classList.add('correct');
+            } else {
+              results[q] = false;
+              selected.parentElement.classList.add('incorrect');
+            }
+            // Always show correct answer
+            document.querySelector(`#${q}${answers[q]}`).parentElement.classList.add('correct');
+          }
+        });
+
+        // Update score display
+        document.getElementById('currentScore').textContent = score.toFixed(1);
+        document.getElementById('progress').textContent = Math.round((totalAnswered / totalQuestions) * 100);
+
+        // Show feedback
+        showFeedback(score);
+        showDetailedResults(results, score);
+
+        hasChecked = true;
+        lastResults = results;
+        const btn = document.getElementById('showAnswersBtn');
+        btn.disabled = false;
+        btn.classList.remove('btn:disabled');
+        // Button is now enabled for showing answers
+        btn.style.backgroundColor = '#007acc'; // Ensure it looks enabled
+        btn.style.cursor = 'pointer';
+      }
+
+      function showFeedback(score) {
+        const feedback = document.getElementById('feedback');
+        const percentage = (score / 50) * 100;
+
+        feedback.classList.remove('hidden', 'excellent', 'good', 'needs-improvement', 'poor');
+
+        if (percentage >= 90) {
+          feedback.classList.add('excellent');
+          feedback.innerHTML = `🎉 Excellent! You scored ${score}/50 points (${percentage.toFixed(1)}%). You have a strong understanding of conditional grammar!`;
+        } else if (percentage >= 75) {
+          feedback.classList.add('good');
+          feedback.innerHTML = `👍 Good work! You scored ${score}/50 points (${percentage.toFixed(1)}%). Keep practicing to master all conditional forms!`;
+        } else if (percentage >= 60) {
+          feedback.classList.add('needs-improvement');
+          feedback.innerHTML = `📚 Needs improvement. You scored ${score}/50 points (${percentage.toFixed(1)}%). Review the grammar rules and practice more conditional sentences.`;
+        } else {
+          feedback.classList.add('poor');
+          feedback.innerHTML = `💪 Keep studying! You scored ${score}/50 points (${percentage.toFixed(1)}%). Focus on understanding the three types of conditionals and their structures.`;
+        }
+      }
+
+      function showDetailedResults(results, score) {
+        const resultDiv = document.getElementById('detailedResults');
+        const summary = document.getElementById('resultSummary');
+
+        let partAScore = 0, partBScore = 0, partCScore = 0, partDScore = 0, partEScore = 0;
+
+        // Calculate scores for each part
+        for (let i = 1; i <= 10; i++) {
+          if (results[`type${i}`]) partAScore += 1;
+        }
+        
+        Object.keys(results).forEach(key => {
+          if (key.startsWith('complete') && results[key]) {
+            partBScore += pointsMap[key];
+          }
+          if (key.startsWith('rewrite') && results[key]) {
+            partCScore += pointsMap[key];
+          }
+          if (key.startsWith('modal') && results[key]) {
+            partDScore += pointsMap[key];
+          }
+          if (key.startsWith('error') && results[key]) {
+            partEScore += pointsMap[key];
+          }
+        });
+
+        let html = `
+          <p><strong>Student Information:</strong></p>
+          <ul>
+            <li>Name: ${document.getElementById('studentName').value || 'Not provided'}</li>
+            <li>Class: ${document.getElementById('studentClass').value || 'Not provided'}</li>
+            <li>Student ID: ${document.getElementById('studentId').value || 'Not provided'}</li>
+            <li>Completion Time: ${new Date().toLocaleString()}</li>
+          </ul>
+          
+          <p><strong>Scores by Section:</strong></p>
+          <ul>
+            <li>Part A (Identify Types): ${partAScore}/10 points</li>
+            <li>Part B (Complete Sentences): ${partBScore}/15 points</li>
+            <li>Part C (Special Constructions): ${partCScore}/10 points</li>
+            <li>Part D (Choose Modals): ${partDScore}/8 points</li>
+            <li>Part E (Correct Errors): ${partEScore}/7 points</li>
+          </ul>
+          
+          <p><strong>Total Score: ${score}/50 points (${((score/50)*100).toFixed(1)}%)</strong></p>
+        `;
+
+        resultDiv.innerHTML = html;
+        summary.classList.remove('hidden');
+      }
+
+      function showAnswers() {
+        // Function called to show all correct answers
+        const btn = document.getElementById('showAnswersBtn');
+        
+        // Multiple checks to ensure we can show answers
+        if (!hasChecked && btn.disabled && !lastResults) {
+          alert('Please check your answers first!');
+          return;
+        }
+
+        try {
+          // Show all correct answers in text fields
+          Object.keys(answers).forEach(questionId => {
+            if (!questionId.startsWith('modal')) {
+              const input = document.getElementById(questionId);
+              if (input && answers[questionId] && answers[questionId][0]) {
+                input.value = answers[questionId][0];
+                input.classList.add('correct');
+                input.classList.remove('incorrect');
+              }
+            }
+          });
+
+          // Show correct radio button selections
+          ['modal1', 'modal2', 'modal3', 'modal4'].forEach(q => {
+            // First clear all selections for this question
+            document.querySelectorAll(`input[name="${q}"]`).forEach(radio => {
+              radio.checked = false;
+              radio.parentElement.classList.remove('correct', 'incorrect');
+            });
+            // Then select and highlight the correct answer
+            const correctRadio = document.getElementById(q + answers[q]);
+            if (correctRadio) {
+              correctRadio.checked = true;
+              correctRadio.parentElement.classList.add('correct');
+            }
+          });
+
+          // Update score display with full marks
+          document.getElementById('currentScore').textContent = '50.0';
+          document.getElementById('progress').textContent = '100';
+          
+          // All answers have been successfully filled in
+        } catch (error) {
+          alert('There was an error showing the answers. Please try again.');
+        }
+      }
+
+      function resetForm() {
+        // Clear all input fields
+        document.querySelectorAll('.input-field').forEach(input => {
+          input.value = '';
+          input.classList.remove('correct', 'incorrect');
+        });
+
+        // Clear all radio buttons
+        document.querySelectorAll('input[type="radio"]').forEach(radio => {
+          radio.checked = false;
+          radio.parentElement.classList.remove('correct', 'incorrect');
+        });
+
+        // Reset displays
+        document.getElementById('currentScore').textContent = '0';
+        document.getElementById('progress').textContent = '0';
+        document.getElementById('feedback').classList.add('hidden');
+        document.getElementById('resultSummary').classList.add('hidden');
+        
+        hasChecked = false;
+        document.getElementById('showAnswersBtn').disabled = true;
+      }
+
+      function printResults() {
+        window.print();
+      }
+
+      // Add event listeners to update progress when typing
+      document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.input-field').forEach(input => {
+          input.addEventListener('input', updateProgress);
+        });
+        
+        document.querySelectorAll('input[type="radio"]').forEach(radio => {
+          radio.addEventListener('change', updateProgress);
+        });
+      });
+    </script>
+</body>
+</html>

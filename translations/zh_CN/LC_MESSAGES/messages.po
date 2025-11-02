@@ -1,0 +1,74 @@
+msgid ""
+msgstr "Content-Type: text/plain; charset=utf-8\n"
+
+msgid "作业管理系统"
+msgstr "作业管理系统"
+
+msgid "用户登录"
+msgstr "用户登录"
+
+msgid "用户名"
+msgstr "用户名"
+
+msgid "密码"
+msgstr "密码"
+
+msgid "登录"
+msgstr "登录"
+
+msgid "还没有账号？"
+msgstr "还没有账号？"
+
+msgid "立即注册"
+msgstr "立即注册"
+
+msgid "Invalid username or password"
+msgstr "无效的用户名或密码"
+
+msgid "用户名已存在"
+msgstr "用户名已存在"
+
+msgid "邮箱已存在"
+msgstr "邮箱已存在"
+
+msgid "注册成功！请登录。"
+msgstr "注册成功！请登录。"
+
+msgid "退出登录"
+msgstr "退出登录"
+
+msgid "您没有权限访问此页面"
+msgstr "您没有权限访问此页面"
+
+msgid "仪表盘"
+msgstr "仪表盘"
+
+msgid "创建作业"
+msgstr "创建作业"
+
+msgid "作业创建成功！"
+msgstr "作业创建成功！"
+
+msgid "您没有权限查看这些提交"
+msgstr "您没有权限查看这些提交"
+
+msgid "您没有权限评分此提交"
+msgstr "您没有权限评分此提交"
+
+msgid "提交已评分成功！"
+msgstr "提交已评分成功！"
+
+msgid "您已经提交了此作业"
+msgstr "您已经提交了此作业"
+
+msgid "没有文件部分"
+msgstr "没有文件部分"
+
+msgid "没有选择文件"
+msgstr "没有选择文件"
+
+msgid "作业提交成功！"
+msgstr "作业提交成功！"
+
+msgid "无效的文件类型"
+msgstr "无效的文件类型"

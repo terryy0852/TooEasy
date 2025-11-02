@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>《穿井得一人》文言文框架化練習</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: '微軟正黑體', 'Microsoft JhengHei', '新細明體', 'PMingLiU', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .text-box {
+            background: rgba(255,255,255,0.2);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border: 2px solid rgba(255,255,255,0.3);
+            text-align: left;
+            line-height: 2;
+            font-size: 1.1em;
+        }
+
+        .framework-info {
+            background: #f8f9ff;
+            padding: 20px;
+            margin: 20px;
+            border-left: 4px solid #667eea;
+            border-radius: 5px;
+        }
+
+        .level {
+            margin: 30px;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .level-1 {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+        }
+
+        .level-2 {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        }
+
+        .level-3 {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+        }
+
+        .level h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .question {
+            background: white;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .question h3 {
+            color: #34495e;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .options {
+            margin: 10px 0;
+        }
+
+        .options label {
+            display: block;
+            margin: 8px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .options label:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+
+        input[type="radio"], input[type="checkbox"] {
+            margin-right: 10px;
+        }
+
+        textarea, input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            margin: 10px 0;
+            transition: border-color 0.3s ease;
+        }
+
+        textarea:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.2);
+        }
+
+        .scoring-guide {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-size: 0.9em;
+            display: none;
+        }
+
+        .template-box {
+            background: #e8f5e8;
+            border: 1px solid #28a745;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-size: 0.9em;
+        }
+
+        .controls {
+            text-align: center;
+            padding: 30px;
+            background: #f8f9fa;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            margin: 0 10px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #fdcb6e 0%, #e17055 100%);
+        }
+
+        .score-display {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #2d3436;
+            margin: 20px 0;
+            padding: 15px;
+            background: #dff0d8;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .answer-key {
+            background: #f8f9fa;
+            padding: 20px;
+            margin: 20px;
+            border-radius: 10px;
+            display: none;
+            border-left: 4px solid #28a745;
+        }
+
+        .answer-key h3 {
+            color: #155724;
+            margin-bottom: 15px;
+        }
+
+        .answer-item {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            border-left: 3px solid #28a745;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 10px;
+            }
+            
+            .level {
+                margin: 15px;
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>《穿井得一人》文言文框架化練習</h1>
+            <div class="text-box">
+                宋之丁氏，家無井，而出溉汲，常一人居外。及其家穿井，告人曰：「吾穿井得一人。」有聞而傳之者曰：「丁氏穿井得一人。」國人道之，聞之於宋君。宋君令人問之於丁氏，丁氏對曰：「得一人之使，非得一人於井中也。」求聞之若此，不若無聞也。
+            </div>
+            <p>基於「三位一體」古詩文學習框架（散文適配版）· 總分32分</p>
+        </div>
+
+        <div class="framework-info">
+            <h3>📋 框架說明（文言散文適配版）</h3>
+            <p><strong>第一層：知識體系建構</strong> - 出處背景、文體特徵、主題歸類</p>
+            <p><strong>第二層：教材梯度追蹤</strong> - 字詞理解→句子翻譯→內容理解→傳播分析</p>
+            <p><strong>第三層：答案規範模板</strong> - 主旨概括+寫作手法+現實意義</p>
+        </div>
+
+        <!-- 第一層：知識體系建構 -->
+        <div class="level level-1">
+            <h2>🎯 第一層：知識體系建構（6分）</h2>
+            
+            <div class="question">
+                <h3>1. 出處背景（2分）</h3>
+                <p>此文出自哪部典籍？該典籍的主要特點是什麼？</p>
+                <div class="options">
+                    <label><input type="radio" name="q1" value="A">A. 《呂氏春秋》，雜家著作，內容廣博，包含諸子百家思想</label>
+                    <label><input type="radio" name="q1" value="B">B. 《史記》，紀傳體史書，記載歷代史事人物</label>
+                    <label><input type="radio" name="q1" value="C">C. 《世說新語》，筆記小說，記錄魏晉人物軼事</label>
+                </div>
+                <div class="scoring-guide">
+                    <strong>得分點：</strong>正確選擇A(2分)，理解《呂氏春秋》的性質和特點
+                </div>
+            </div>
+
+            <div class="question">
+                <h3>2. 文體特徵（2分）</h3>
+                <p>這篇文言文屬於什麼體裁？具有什麼特點？</p>
+                <div class="options">
+                    <label><input type="radio" name="q2" value="A">A. 寓言故事，篇幅短小，情節簡單，寓理於事</label>
+                    <label><input type="radio" name="q2" value="B">B. 人物傳記，詳實記載，刻畫細膩，脈絡清晰</label>
+                    <label><input type="radio" name="q2" value="C">C. 議論文章，觀點鮮明，論證嚴密，邏輯性強</label>
+                </div>
+                <div class="scoring-guide">
+                    <strong>得分點：</strong>正確選擇A(2分)，識別寓言體裁的特徵
+                </div>
+            </div>
+
+            <div class="question">
+                <h3>3. 主題歸類（2分）</h3>
+                <p>這個故事主要闡述什麼道理？（可複選）</p>
+                <div class="options">
+                    <label><input type="checkbox" name="q3" value="A">A. 謠言的產生和傳播過程</label>
+                    <label><input type="checkbox" name="q3" value="B">B. 語言表達要準確清晰</label>
+                    <label><input type="checkbox" name="q3" value="C">C. 調查研究才能明辨是非</label>
+                    <label><input type="checkbox" name="q3" value="D">D. 不可輕信傳聞，要追根溯源</label>
+                </div>
+                <div class="scoring-guide">
+                    <strong>得分點：</strong>選擇A、B、C、D均合理，每項0.5分，最多2分
+                </div>
+            </div>
+        </div>
+
+        <!-- 第二層：教材梯度追蹤 -->
+        <div class="level level-2">
+            <h2>📚 第二層：教材梯度追蹤（18分）</h2>
+            
+            <div class="question">
+                <h3>4. 字詞理解（7分，每小題1分）</h3>
+                <p>解釋下列加點字詞的意思：</p>
+                
+                <p>（1）宋<u>之</u>丁氏：________________</p>
+                <input type="text" id="q4a" placeholder="解釋「之」">
+                
+                <p>（2）而出<u>溉汲</u>：________________</p>
+                <input type="text" id="q4b" placeholder="解釋「溉汲」">
+                
+                <p>（3）常一人<u>居</u>外：________________</p>
+                <input type="text" id="q4c" placeholder="解釋「居」">
+                
+                <p>（4）<u>及</u>其家穿井：________________</p>
+                <input type="text" id="q4d" placeholder="解釋「及」">
+                
+                <p>（5）國人<u>道</u>之：________________</p>
+                <input type="text" id="q4e" placeholder="解釋「道」">
+                
+                <p>（6）得一人<u>之使</u>：________________</p>
+                <input type="text" id="q4f" placeholder="解釋「之使」">
+                
+                <p>（7）<u>求</u>聞之若此：________________</p>
+                <input type="text" id="q4g" placeholder="解釋「求」">
+                
+                <div class="scoring-guide">
+                    <strong>得分點：</strong>之=的(1分) + 溉汲=灌溉打水/取水(1分) + 居=留、住(1分) + 及=等到(1分) + 道=談論、傳說(1分) + 之使=的勞力/的使用(1分) + 求=如果、假如(1分)
+                </div>
+            </div>
+
+            <div class="question">
+                <h3>5. 句子翻譯-「留祖煮茶」法（5分）</h3>
+                <p>運用「留、組、換、調、刪、補」六字處理法，翻譯「得一人之使，非得一人於井中也」：</p>
+                <textarea id="q5" rows="4" placeholder="請按步驟分析並給出最終譯文"></textarea>
+                <div class="template-box">
+                    <strong>翻譯模板：</strong><br>
+                    留：保留________<br>
+                    組：組合理解________<br>
+                    換：________換成________<br>
+                    調：調整語序為________<br>
+                    刪/補：________<br>
+                    譯文：________
+                </div>
+                <div class="scoring-guide">
+                    <strong>得分點：</strong>留「得」(0.5分) + 組合理解對比句式(1分) + 換「之使」為「的勞力/使用」等(1分) + 理解「非...也」否定句式(1分) + 最終譯文正確(1.5分)
+                </div>
+            </div>
+
+            <div class="question">
+                <h3>6. 內容理解（3分）</h3>
+                <p>請梳理「穿井得人」這個謠言是如何產生和傳播的？經歷了哪些環節？</p>
+                <textarea id="q6" rows="3" placeholder="請梳理謠言的產生和傳播過程"></textarea>
+                <div class="scoring-guide">
+                    <strong>得分點：</strong>丁氏表達不清(1分) + 聽者理解錯誤並傳播(1分) + 國人廣泛傳播直至宋君(1分)
+                </div>
+            </div>
+
+            <div class="question">
+                <h3>7. 傳播分析（3分）</h3>
+                <p>分析「吾穿井得一人」和「丁氏穿井得一人」這兩句話在表達上有什麼差異？為什麼會造成誤解？</p>
+                <textarea id="q7" rows="3" placeholder="分析兩句話的差異和誤解原因"></textarea>
+                <div class="template-box">
+                    <strong>分析模板：</strong><br>
+                    差異：第一句________，第二句________<br>
+                    原因：________導致________<br>
+                    結果：產生________的誤解
+                </div>
+                <div class="scoring-guide">
+                    <strong>得分點：</strong>第一句「吾」有主觀敘述性(1分) + 第二句省略語境變客觀陳述(1分) + 「得一人」產生歧義(1分)
+                </div>
+            </div>
+        </div>
+
+        <!-- 第三層：答案規範模板 -->
+        <div class="level level-3">
+            <h2>✍️ 第三層：答案規範模板（8分）</h2>
+            
+            <div class="question">
+                <h3>8. 主旨概括（3分）</h3>
+                <p>按照規範模板，概括這篇文言文的主旨：</p>
+                <textarea id="q8" rows="3" placeholder="請使用模板格式作答"></textarea>
+                <div class="template-box">
+                    <strong>主旨概括模板：</strong><br>
+                    本文通過________（事件），展現了________（過程），說明了________（道理），警示人們________（意義）。
+                </div>
+                <div class="scoring-guide">
+                    <strong>得分點：</strong>事件概括準確(1分) + 道理闡述恰當(1分) + 警示意義明確(1分)
+                </div>
+            </div>
+
+            <div class="question">
+                <h3>9. 寫作手法分析（2分）</h3>
+                <p>本文運用了什麼寫作手法？有什麼效果？</p>
+                <textarea id="q9" rows="2" placeholder="請分析寫作手法"></textarea>
+                <div class="template-box">
+                    <strong>手法分析模板：</strong><br>
+                    本文運用了________手法，通過________，達到了________的效果。
+                </div>
+                <div class="scoring-guide">
+                    <strong>得分點：</strong>手法識別正確(如對比、層遞等)(1分) + 效果分析到位(1分)
+                </div>
+            </div>
+
+            <div class="question">
+                <h3>10. 現實意義（3分）</h3>
+                <p>這個故事對現代社會有什麼啟示？請結合網路時代信息傳播的特點談談你的理解。</p>
+                <textarea id="q10" rows="4" placeholder="請結合現實談談啟示"></textarea>
+                <div class="template-box">
+                    <strong>現實意義模板：</strong><br>
+                    古代：________的問題<br>
+                    現代：在網路時代________<br>
+                    啟示：我們應該________
+                </div>
+                <div class="scoring-guide">
+                    <strong>得分點：</strong>理解古代啟示(1分) + 聯繫網路時代特點(1分) + 提出應對建議(1分)
+                </div>
+            </div>
+        </div>
+
+        <!-- 控制按鈕 -->
+        <div class="controls">
+            <button class="btn" onclick="checkAnswers()">檢查答案</button>
+            <button class="btn btn-secondary" onclick="showAnswerKey()">顯示標準答案</button>
+            <button class="btn btn-success" onclick="downloadExercise()">下載練習</button>
+            <button class="btn btn-warning" onclick="printExercise()">列印練習</button>
+        </div>
+
+        <!-- 分數顯示 -->
+        <div class="score-display" id="scoreDisplay"></div>
+
+        <!-- 標準答案 -->
+        <div class="answer-key" id="answerKey">
+            <h3>📝 標準答案與解析</h3>
+            
+            <div class="answer-item">
+                <strong>1. 出處背景（2分）</strong><br>
+                答案：A<br>
+                解析：此文出自《呂氏春秋·慎行論·察傳》。《呂氏春秋》是秦相呂不韋組織門客編撰的雜家著作，集合諸子百家思想，內容廣博，涵蓋政治、哲學、歷史等多方面。
+            </div>
+            
+            <div class="answer-item">
+                <strong>2. 文體特徵（2分）</strong><br>
+                答案：A<br>
+                解析：本文是典型的寓言故事，篇幅短小精悍，情節簡單明了，通過一個具體事例來闡述深刻道理，體現了「寓理於事」的特點。
+            </div>
+            
+            <div class="answer-item">
+                <strong>3. 主題歸類（2分）</strong><br>
+                答案：A、B、C、D（任選兩項以上即可得分）<br>
+                解析：<br>
+                A - 展現了謠言如何從表達不清到層層傳播的過程<br>
+                B - 丁氏說話不夠準確，「得一人」容易產生歧義<br>
+                C - 宋君派人調查，體現了調查研究的重要性<br>
+                D - 文末「求聞之若此，不若無聞也」強調不可輕信傳聞
+            </div>
+            
+            <div class="answer-item">
+                <strong>4. 字詞理解（7分）</strong><br>
+                （1）之：的（助詞，表示領屬關係）（1分）<br>
+                （2）溉汲：灌溉打水、取水澆灌（1分）<br>
+                （3）居：留、住、停留（1分）<br>
+                （4）及：等到、到了...的時候（1分）<br>
+                （5）道：談論、傳說、議論（1分）<br>
+                （6）之使：的勞力、的使用、的人力（1分）<br>
+                （7）求：如果、假如（1分）
+            </div>
+            
+            <div class="answer-item">
+                <strong>5. 句子翻譯（5分）</strong><br>
+                答案示例：<br>
+                留：得、一人<br>
+                組：「得...之使」與「得...於井中」為對比句式，「非...也」為否定句式<br>
+                換：之使→的勞力/的使用，於→從<br>
+                調：保持原語序，理解否定對比結構<br>
+                補：補充主語和語氣<br>
+                譯文：（這是）得到一個人的勞力，不是從井中得到一個人。
+            </div>
+            
+            <div class="answer-item">
+                <strong>6. 內容理解（3分）</strong><br>
+                答案示例：謠言的產生和傳播經歷了三個環節：第一，丁氏因為穿井節省了一個勞力，表達時說「吾穿井得一人」，語意不夠清晰；第二，聽到的人理解為從井中挖出一個人，並傳播為「丁氏穿井得一人」；第三，國人廣泛議論，消息傳到宋君那裡，宋君派人調查才弄清真相。
+            </div>
+            
+            <div class="answer-item">
+                <strong>7. 傳播分析（3分）</strong><br>
+                答案示例：第一句「吾穿井得一人」中的「吾」表明是丁氏自己的主觀敘述，在特定語境下（穿井前需一人在外取水，穿井後節省人力）可以理解。第二句「丁氏穿井得一人」省略了語境，變成客觀陳述，「得一人」產生歧義：既可理解為「得到一個人的勞力」，也可理解為「挖出一個人」。傳播過程中脫離了原始語境，導致後者的理解成為主流，造成「從井中挖出人」的荒謬誤解。
+            </div>
+            
+            <div class="answer-item">
+                <strong>8. 主旨概括（3分）</strong><br>
+                答案示例：本文通過丁氏穿井的故事，展現了一句話如何因表達不清、傳播失真而演變成荒謬謠言的過程，說明了語言表達要準確清晰、傳聞不可輕信、調查才能明辨是非的道理，警示人們在信息傳播中要謹慎表達、理性判斷、追根溯源。
+            </div>
+            
+            <div class="answer-item">
+                <strong>9. 寫作手法（2分）</strong><br>
+                答案示例：本文運用了對比和層遞的手法，通過「得一人之使」與「得一人於井中」的對比，揭示真相與謠言的差異；通過丁氏告人→有聞而傳之→國人道之→聞之於宋君的層遞，展現謠言逐級擴散的過程。這種寫作手法達到了生動形象、邏輯清晰、發人深省的效果。
+            </div>
+            
+            <div class="answer-item">
+                <strong>10. 現實意義（3分）</strong><br>
+                答案示例：<br>
+                古代：文中展現的是口耳相傳時代，信息傳播速度慢但失真問題嚴重的問題。<br>
+                現代：在網路時代，信息傳播速度極快，社交媒體使謠言可以瞬間擴散到千萬人，而斷章取義、標題黨、二次傳播等現象更容易造成信息失真。<br>
+                啟示：我們應該在發布信息時準確表達、提供完整語境；在接收信息時保持理性思考、核實信息來源、不輕易轉發未經證實的消息；在傳播鏈條中主動查證、追根溯源，避免成為謠言的傳播者。
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function checkAnswers() {
+            let score = 0;
+            let totalScore = 32;
+            let feedback = "得分分析：\n";
+
+            // 第1題 - 出處背景
+            const q1 = document.querySelector('input[name="q1"]:checked');
+            if (q1 && q1.value === 'A') {
+                score += 2;
+                feedback += "第1題：滿分(2分)\n";
+            } else {
+                feedback += "第1題：答案有誤(0分)\n";
+            }
+
+            // 第2題 - 文體特徵
+            const q2 = document.querySelector('input[name="q2"]:checked');
+            if (q2 && q2.value === 'A') {
+                score += 2;
+                feedback += "第2題：滿分(2分)\n";
+            } else {
+                feedback += "第2題：答案有誤(0分)\n";
+            }
+
+            // 第3題 - 主題歸類（複選）
+            const q3Checked = document.querySelectorAll('input[name="q3"]:checked');
+            let q3Score = 0;
+            if (q3Checked.length >= 2) {
+                q3Score = 2;
+            } else if (q3Checked.length === 1) {
+                q3Score = 0.5;
+            }
+            score += q3Score;
+            feedback += `第3題：得分${q3Score}/2分\n`;
+
+            // 第4題 - 字詞理解
+            const q4a = document.getElementById('q4a').value;
+            const q4b = document.getElementById('q4b').value;
+            const q4c = document.getElementById('q4c').value;
+            const q4d = document.getElementById('q4d').value;
+            const q4e = document.getElementById('q4e').value;
+            const q4f = document.getElementById('q4f').value;
+            const q4g = document.getElementById('q4g').value;
+            
+            let q4Score = 0;
+            if (q4a.includes('的')) q4Score += 1;
+            if (q4b.includes('水') || q4b.includes('灌') || q4b.includes('取')) q4Score += 1;
+            if (q4c.includes('留') || q4c.includes('住') || q4c.includes('停')) q4Score += 1;
+            if (q4d.includes('等到') || q4d.includes('到了')) q4Score += 1;
+            if (q4e.includes('談') || q4e.includes('傳') || q4e.includes('說')) q4Score += 1;
+            if (q4f.includes('勞力') || q4f.includes('使用') || q4f.includes('人力')) q4Score += 1;
+            if (q4g.includes('如果') || q4g.includes('假如')) q4Score += 1;
+            
+            score += q4Score;
+            feedback += `第4題：得分${q4Score}/7分\n`;
+
+            // 第5題 - 句子翻譯
+            const q5 = document.getElementById('q5').value;
+            let q5Score = 0;
+            if (q5.length > 70) {
+                q5Score = 4;
+            } else if (q5.length > 40) {
+                q5Score = 3;
+            } else if (q5.length > 20) {
+                q5Score = 2;
+            } else if (q5.length > 10) {
+                q5Score = 1;
+            }
+            score += q5Score;
+            feedback += `第5題：得分${q5Score}/5分\n`;
+
+            // 第6題 - 內容理解
+            const q6 = document.getElementById('q6').value;
+            let q6Score = 0;
+            if (q6.length > 60) {
+                q6Score = 3;
+            } else if (q6.length > 30) {
+                q6Score = 2;
+            } else if (q6.length > 10) {
+                q6Score = 1;
+            }
+            score += q6Score;
+            feedback += `第6題：得分${q6Score}/3分\n`;
+
+            // 第7題 - 傳播分析
+            const q7 = document.getElementById('q7').value;
+            let q7Score = 0;
+            if (q7.length > 60) {
+                q7Score = 3;
+            } else if (q7.length > 30) {
+                q7Score = 2;
+            } else if (q7.length > 10) {
+                q7Score = 1;
+            }
+            score += q7Score;
+            feedback += `第7題：得分${q7Score}/3分\n`;
+
+            // 第8題 - 主旨概括
+            const q8 = document.getElementById('q8').value;
+            let q8Score = 0;
+            if (q8.length > 70) {
+                q8Score = 3;
+            } else if (q8.length > 35) {
+                q8Score = 2;
+            } else if (q8.length > 10) {
+                q8Score = 1;
+            }
+            score += q8Score;
+            feedback += `第8題：得分${q8Score}/3分\n`;
+
+            // 第9題 - 寫作手法
+            const q9 = document.getElementById('q9').value;
+            let q9Score = 0;
+            if (q9.length > 40) {
+                q9Score = 2;
+            } else if (q9.length > 15) {
+                q9Score = 1;
+            }
+            score += q9Score;
+            feedback += `第9題：得分${q9Score}/2分\n`;
+
+            // 第10題 - 現實意義
+            const q10 = document.getElementById('q10').value;
+            let q10Score = 0;
+            if (q10.length > 80) {
+                q10Score = 3;
+            } else if (q10.length > 40) {
+                q10Score = 2;
+            } else if (q10.length > 15) {
+                q10Score = 1;
+            }
+            score += q10Score;
+            feedback += `第10題：得分${q10Score}/3分\n`;
+
+            // 顯示結果
+            const percentage = (score / totalScore * 100).toFixed(1);
+            document.getElementById('scoreDisplay').innerHTML = `
+                <h3>📊 得分結果</h3>
+                <p>總分：${score}/${totalScore}分 (${percentage}%)</p>
+                <div style="margin-top: 10px; font-size: 0.9em; white-space: pre-line;">${feedback}</div>
+            `;
+            document.getElementById('scoreDisplay').style.display = 'block';
+        }
+
+        function showAnswerKey() {
+            const answerKey = document.getElementById('answerKey');
+            const scoringGuides = document.querySelectorAll('.scoring-guide');
+            
+            if (answerKey.style.display === 'none' || answerKey.style.display === '') {
+                answerKey.style.display = 'block';
+                scoringGuides.forEach(guide => {
+                    guide.style.display = 'block';
+                });
+            } else {
+                answerKey.style.display = 'none';
+                scoringGuides.forEach(guide => {
+                    guide.style.display = 'none';
+                });
+            }
+        }
+
+        function downloadExercise() {
+            const element = document.createElement('a');
+            const content = document.documentElement.outerHTML;
+            const file = new Blob([content], {type: 'text/html'});
+            element.href = URL.createObjectURL(file);
+            element.download = '穿井得人文言文框架化練習.html';
+            element.click();
+        }
+
+        function printExercise() {
+            window.print();
+        }
+    </script>
+</body>
+</html>

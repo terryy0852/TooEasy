@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>虞美人在線練習四</title>
+    <style>
+        body {
+            font-family: "Microsoft YaHei", "SimSun", serif;
+            line-height: 1.6;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #333;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            color: #333;
+            margin: 0;
+        }
+        
+        .score-display {
+            text-align: right;
+            font-weight: bold;
+            margin-bottom: 20px;
+            font-size: 16px;
+            color: #007acc;
+        }
+        
+        .instruction {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-left: 4px solid #007acc;
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+        
+        .poem {
+            background-color: #fafafa;
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+            font-size: 18px;
+            line-height: 2;
+        }
+        
+        .poem .content {
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        .poem .author {
+            font-style: italic;
+            color: #666;
+            font-size: 16px;
+        }
+        
+        .notes {
+            background-color: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            padding: 15px;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        
+        .notes h3 {
+            margin-top: 0;
+            color: #333;
+            font-size: 16px;
+        }
+        
+        .question {
+            margin: 25px 0;
+            padding: 15px;
+            border-left: 3px solid #007acc;
+            background-color: #fafafa;
+        }
+        
+        .question-number {
+            font-weight: bold;
+            font-size: 16px;
+            color: #007acc;
+            margin-bottom: 10px;
+        }
+        
+        .sub-question {
+            margin: 15px 0;
+            padding-left: 20px;
+        }
+        
+        .input-field {
+            border: 2px solid #ddd;
+            padding: 8px 12px;
+            font-size: 14px;
+            border-radius: 4px;
+            min-width: 150px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: #007acc;
+        }
+        
+        .input-field.correct {
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+        
+        .input-field.incorrect {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+        
+        .points {
+            color: #666;
+            font-weight: bold;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        
+        table, th, td {
+            border: 1px solid #333;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        
+        th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+        }
+        
+        .options {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        
+        .option {
+            margin: 8px 0;
+            padding: 8px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        
+        .option:hover {
+            background-color: #e9ecef;
+        }
+        
+        .option input[type="radio"] {
+            margin-right: 8px;
+        }
+        
+        .option.correct {
+            background-color: #d4edda;
+            border: 2px solid #28a745;
+        }
+        
+        .option.incorrect {
+            background-color: #f8d7da;
+            border: 2px solid #dc3545;
+        }
+        
+        .bold {
+            font-weight: bold;
+        }
+        
+        .separator {
+            border-top: 1px solid #ccc;
+            margin: 25px 0;
+        }
+        
+        .control-buttons {
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .btn {
+            background-color: #007acc;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 10px;
+            transition: background-color 0.3s;
+        }
+        
+        .btn:hover {
+            background-color: #005a9e;
+        }
+        
+        .btn:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #545b62;
+        }
+        
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .feedback.excellent {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .feedback.good {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .feedback.needs-improvement {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .feedback.poor {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .result-summary {
+            background-color: #e8f4fd;
+            border: 1px solid #b3d9ff;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+        
+        .result-summary h3 {
+            color: #0066cc;
+            margin-top: 0;
+        }
+        
+        .student-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .student-info input {
+            margin: 5px 10px;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+        
+        @media print {
+            .control-buttons, .student-info {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>虞美人在線練習四</h1>
+        </div>
+        
+        <div class="student-info">
+            <label>學生姓名：<input type="text" id="studentName" placeholder="請輸入您的姓名"></label>
+            <label>班級：<input type="text" id="studentClass" placeholder="請輸入班級"></label>
+            <label>學號：<input type="text" id="studentId" placeholder="請輸入學號"></label>
+        </div>
+        
+        <div class="score-display">
+            總分：18分 | 當前得分：<span id="currentScore">0</span>分 | 完成進度：<span id="progress">0</span>%
+        </div>
+        
+        <div class="instruction">
+            試辨識以粗黑體標示的句子運用了哪種修辭手法，並完成閱讀理解題目。（如修辭手法可細分為不同類別，答案必須註明其分類，如明喻、暗喻、反襯等）
+        </div>
+        
+        <div class="poem">
+            <div class="content">
+                <span class="bold">春花秋月何時了？往事知多少！小樓昨夜又東風，故國不堪回首月明中！</span><br><br>
+                <span class="bold">雕闌玉砌應猶在，只是朱顏改。問君能有幾多愁？恰似一江春水向東流！</span>
+            </div>
+            <div class="author">（李煜《虞美人》）</div>
+        </div>
+        
+        <div class="notes">
+            <h3>【註釋】</h3>
+            (1) 春花秋月：指美好的時光。(2) 故國：指南唐。(3) 雕闌玉砌：雕刻的欄杆，玉石砌成的臺階，指昔日宮殿的華麗。(4) 朱顏：紅潤的面容，這裡指青春年華。
+        </div>
+        
+        <div class="separator"></div>
+        
+        <div class="question">
+            <div class="question-number">1. 修辭手法辨識題</div>
+            <div class="sub-question">
+                ① <span class="bold">「故國不堪回首月明中」</span>一句用了
+                <input type="text" class="input-field" id="q1a" placeholder="請填入修辭手法">
+                修辭手法。<span class="points">（2分）</span>
+            </div>
+            <div class="sub-question">
+                ② <span class="bold">「恰似一江春水向東流」</span>一句用了
+                <input type="text" class="input-field" id="q1b" placeholder="請填入修辭手法">
+                修辭手法。<span class="points">（2分）</span>
+            </div>
+            <div class="sub-question">
+                ③ <span class="bold">「問君能有幾多愁」</span>一句用了
+                <input type="text" class="input-field" id="q1c" placeholder="請填入修辭手法">
+                修辭手法。<span class="points">（2分）</span>
+            </div>
+        </div>
+        
+        <div class="separator"></div>
+        
+        <div class="question">
+            <div class="question-number">2. 本詞在時間層次上貫穿今昔，可分為三部分，試摘錄相關詞句，完成下表。<span class="points">（6分）</span></div>
+            
+            <table>
+                <tr>
+                    <th>部分</th>
+                    <th>詞句範圍</th>
+                    <th>內容</th>
+                </tr>
+                <tr>
+                    <td>第一部分</td>
+                    <td>
+                        <input type="text" class="input-field" id="q2a1" placeholder="起始句" style="width: 120px;">
+                        至
+                        <input type="text" class="input-field" id="q2a2" placeholder="結束句" style="width: 120px;">
+                    </td>
+                    <td>感嘆時光流逝<br><span class="points">（2分）</span></td>
+                </tr>
+                <tr>
+                    <td>第二部分</td>
+                    <td>
+                        <input type="text" class="input-field" id="q2b1" placeholder="起始句" style="width: 120px;">
+                        至
+                        <input type="text" class="input-field" id="q2b2" placeholder="結束句" style="width: 120px;">
+                    </td>
+                    <td>回憶昔日美好<br><span class="points">（2分）</span></td>
+                </tr>
+                <tr>
+                    <td>第三部分</td>
+                    <td>
+                        <input type="text" class="input-field" id="q2c1" placeholder="起始句" style="width: 120px;">
+                        至
+                        <input type="text" class="input-field" id="q2c2" placeholder="結束句" style="width: 120px;">
+                    </td>
+                    <td>抒發現實之愁<br><span class="points">（2分）</span></td>
+                </tr>
+            </table>
+        </div>
+        
+        <div class="separator"></div>
+        
+        <div class="question">
+            <div class="question-number">3. 全詞的主旨是：<span class="points">（2分）</span></div>
+            <div class="options">
+                <div class="option" onclick="selectOption('q3', 'A')">
+                    <input type="radio" name="q3" value="A" id="q3A">
+                    <label for="q3A">A. 表達對愛人的思念。</label>
+                </div>
+                <div class="option" onclick="selectOption('q3', 'B')">
+                    <input type="radio" name="q3" value="B" id="q3B">
+                    <label for="q3B">B. 感嘆時光易逝，青春不再。</label>
+                </div>
+                <div class="option" onclick="selectOption('q3', 'C')">
+                    <input type="radio" name="q3" value="C" id="q3C">
+                    <label for="q3C">C. 抒發亡國之痛和深沉愁思。</label>
+                </div>
+                <div class="option" onclick="selectOption('q3', 'D')">
+                    <input type="radio" name="q3" value="D" id="q3D">
+                    <label for="q3D">D. 描寫春花秋月的美好景象。</label>
+                </div>
+            </div>
+        </div>
+        
+        <div class="separator"></div>
+        
+        <div class="question">
+            <div class="question-number">4. 李煜善於運用對比手法來突出情感，試從本詞中舉出一個對比的例子並說明其作用。<span class="points">（2分）</span></div>
+            <div class="sub-question">
+                例子：<input type="text" class="input-field" id="q4a" placeholder="請舉出對比的詞句" style="min-width: 300px;">
+            </div>
+            <div class="sub-question">
+                作用：<input type="text" class="input-field" id="q4b" placeholder="請說明對比的作用" style="min-width: 300px;">
+            </div>
+        </div>
+        
+        <div class="control-buttons">
+            <button class="btn" onclick="checkAnswers()">檢查答案</button>
+            <button class="btn btn-secondary" onclick="resetForm()">重新作答</button>
+            <button class="btn" onclick="showAnswers()" id="showAnswersBtn" disabled>顯示標準答案</button>
+            <button class="btn" onclick="printResults()">打印結果</button>
+        </div>
+        
+        <div id="feedback" class="feedback hidden"></div>
+        
+        <div id="resultSummary" class="result-summary hidden">
+            <h3>作答結果總結</h3>
+            <div id="detailedResults"></div>
+        </div>
+    </div>
+
+    <script>
+        // 標準答案
+        const answers = {
+            q1a: ['擬人', '襯托'],
+            q1b: ['明喻'],
+            q1c: ['設問'],
+            q2a1: ['春花秋月何時了'],
+            q2a2: ['往事知多少'],
+            q2b1: ['小樓昨夜又東風'],
+            q2b2: ['只是朱顏改'],
+            q2c1: ['問君能有幾多愁'],
+            q2c2: ['恰似一江春水向東流'],
+            q3: 'C',
+            q4a: ['雕闌玉砌應猶在，只是朱顏改'],
+            q4b: ['通過宮殿依舊與人事變遷的對比，突出物是人非的悲涼和時光流逝的無情', '物是人非', '時光流逝', '對比']
+        };
+
+        // 分數分配
+        const pointsMap = {
+            q1a: 2, q1b: 2, q1c: 2,
+            q2a1: 1, q2a2: 1, q2b1: 1, q2b2: 1, q2c1: 1, q2c2: 1,
+            q3: 2,
+            q4a: 1, q4b: 1
+        };
+
+        let hasChecked = false;
+
+        function selectOption(questionName, value) {
+            document.getElementById(questionName + value).checked = true;
+            updateProgress();
+        }
+
+        function checkAnswer(inputId, answerArray, isExact = false) {
+            const input = document.getElementById(inputId);
+            const userAnswer = input.value.trim();
+            
+            if (!userAnswer) return false;
+            
+            if (isExact) {
+                return answerArray.includes(userAnswer);
+            } else {
+                // 模糊匹配，檢查是否包含關鍵詞
+                return answerArray.some(answer => 
+                    userAnswer.includes(answer) || answer.includes(userAnswer)
+                );
+            }
+        }
+
+        function checkAnswers() {
+            let score = 0;
+            let totalQuestions = 0;
+            let results = {};
+
+            // 檢查所有答案
+            for (let questionId of Object.keys(answers)) {
+                totalQuestions++;
+                const isCorrect = checkAnswer(questionId, answers[questionId]);
+                results[questionId] = isCorrect;
+                
+                if (isCorrect) {
+                    score += pointsMap[questionId];
+                    document.getElementById(questionId).classList.add('correct');
+                    document.getElementById(questionId).classList.remove('incorrect');
+                } else {
+                    document.getElementById(questionId).classList.add('incorrect');
+                    document.getElementById(questionId).classList.remove('correct');
+                }
+            }
+
+            // 檢查選擇題
+            const q3Selected = document.querySelector('input[name="q3"]:checked');
+            if (q3Selected && q3Selected.value === answers.q3) {
+                score += pointsMap.q3;
+                results.q3 = true;
+                document.querySelector(`#q3${answers.q3}`).parentElement.classList.add('correct');
+            } else if (q3Selected) {
+                results.q3 = false;
+                q3Selected.parentElement.classList.add('incorrect');
+                document.querySelector(`#q3${answers.q3}`).parentElement.classList.add('correct');
+            }
+
+            // 更新分數顯示
+            document.getElementById('currentScore').textContent = score;
+            document.getElementById('progress').textContent = Math.round((score / 18) * 100);
+
+            // 顯示反饋
+            showFeedback(score);
+            showDetailedResults(results, score);
+            
+            hasChecked = true;
+            document.getElementById('showAnswersBtn').disabled = false;
+        }
+
+        function showFeedback(score) {
+            const feedback = document.getElementById('feedback');
+            const percentage = (score / 18) * 100;
+            
+            feedback.classList.remove('hidden', 'excellent', 'good', 'needs-improvement', 'poor');
+            
+            if (percentage >= 90) {
+                feedback.classList.add('excellent');
+                feedback.innerHTML = `🎉 優秀！您獲得了 ${score}/18 分（${percentage.toFixed(1)}%）。您對古詩詞的理解很深刻！`;
+            } else if (percentage >= 75) {
+                feedback.classList.add('good');
+                feedback.innerHTML = `👍 良好！您獲得了 ${score}/18 分（${percentage.toFixed(1)}%）。繼續加油，您已經掌握了大部分內容！`;
+            } else if (percentage >= 60) {
+                feedback.classList.add('needs-improvement');
+                feedback.innerHTML = `📚 需要改進。您獲得了 ${score}/18 分（${percentage.toFixed(1)}%）。建議重新閱讀詩詞，理解其深層含義。`;
+            } else {
+                feedback.classList.add('poor');
+                feedback.innerHTML = `💪 繼續努力！您獲得了 ${score}/18 分（${percentage.toFixed(1)}%）。建議多讀多練，加深對古詩詞修辭手法的理解。`;
+            }
+        }
+
+        function showDetailedResults(results, score) {
+            const resultDiv = document.getElementById('detailedResults');
+            const summary = document.getElementById('resultSummary');
+            
+            let html = `
+                <p><strong>學生資訊：</strong></p>
+                <ul>
+                    <li>姓名：${document.getElementById('studentName').value || '未填寫'}</li>
+                    <li>班級：${document.getElementById('studentClass').value || '未填寫'}</li>
+                    <li>學號：${document.getElementById('studentId').value || '未填寫'}</li>
+                    <li>完成時間：${new Date().toLocaleString('zh-TW')}</li>
+                </ul>
+                
+                <p><strong>各題得分情況：</strong></p>
+                <ul>
+                    <li>第1題（修辭手法）：${(results.q1a ? 2 : 0) + (results.q1b ? 2 : 0) + (results.q1c ? 2 : 0)}/6分</li>
+                    <li>第2題（結構分析）：${(results.q2a1 ? 1 : 0) + (results.q2a2 ? 1 : 0) + (results.q2b1 ? 1 : 0) + (results.q2b2 ? 1 : 0) + (results.q2c1 ? 1 : 0) + (results.q2c2 ? 1 : 0)}/6分</li>
+                    <li>第3題（主旨理解）：${results.q3 ? 2 : 0}/2分</li>
+                    <li>第4題（對比手法）：${(results.q4a ? 1 : 0) + (results.q4b ? 1 : 0)}/2分</li>
+                </ul>
+                
+                <p><strong>總分：${score}/18分（${((score/18)*100).toFixed(1)}%）</strong></p>
+            `;
+            
+            resultDiv.innerHTML = html;
+            summary.classList.remove('hidden');
+        }
+
+        function showAnswers() {
+            if (!hasChecked) {
+                alert('請先檢查答案！');
+                return;
+            }
+            
+            // 顯示所有標準答案
+            document.getElementById('q1a').value = answers.q1a[0];
+            document.getElementById('q1b').value = answers.q1b[0];
+            document.getElementById('q1c').value = answers.q1c[0];
+            
+            document.getElementById('q2a1').value = answers.q2a1[0];
+            document.getElementById('q2a2').value = answers.q2a2[0];
+            document.getElementById('q2b1').value = answers.q2b1[0];
+            document.getElementById('q2b2').value = answers.q2b2[0];
+            document.getElementById('q2c1').value = answers.q2c1[0];
+            document.getElementById('q2c2').value = answers.q2c2[0];
+            
+            document.getElementById('q3C').checked = true;
+            
+            document.getElementById('q4a').value = answers.q4a[0];
+            document.getElementById('q4b').value = answers.q4b[0];
+        }
+
+        function resetForm() {
+            // 清除所有輸入
+            document.querySelectorAll('.input-field').forEach(input => {
+                input.value = '';
+                input.classList.remove('correct', 'incorrect');
+            });
+            
+            document.querySelectorAll('input[type="radio"]').forEach(radio => {
+                radio.checked = false;
+                radio.parentElement.classList.remove('correct', 'incorrect');
+            });
+            
+            // 重置顯示
+            document.getElementById('currentScore').textContent = '0';
+            document.getElementById('progress').textContent = '0';
+            document.getElementById('feedback').classList.add('hidden');
+            document.getElementById('resultSummary').classList.add('hidden');
+            
+            hasChecked = false;
+            document.getElementById('showAnswersBtn').disabled = true;
+        }
+
+        function updateProgress() {
+            // 計算完成進度
+            let completed = 0;
+            let total = 0;
+            
+            document.querySelectorAll('.input-field').forEach(input => {
+                total++;
+                if (input.value.trim()) completed++;
+            });
+            
+            document.querySelectorAll('input[type="radio"]').forEach(radio => {
+                if (radio.name === 'q3') {
+                    if (!total || radio.name !== document.querySelector('input[type="radio"]:checked')?.name) {
+                        total = total || 1;
+                    }
+                    if (radio.checked) completed = Math.max(completed, 1);
+                }
+            });
+            
+            const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
+            document.getElementById('progress').textContent = progress;
+        }
+
+        function printResults() {
+            window.print();
+        }
+
+        // 自動更新進度
+        document.addEventListener('input', updateProgress);
+        document.addEventListener('change', updateProgress);
+
+        // 防止頁面刷新時丟失數據
+        window.addEventListener('beforeunload', function(e) {
+            const hasContent = document.querySelector('.input-field[value]') || 
+                              document.querySelector('input[type="radio"]:checked');
+            if (hasContent) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        });
+    </script>
+</body>
+</html>

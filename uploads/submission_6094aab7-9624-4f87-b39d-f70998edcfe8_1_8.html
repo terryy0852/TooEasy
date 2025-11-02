@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="zh-Hant"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>《在風中》框架化練習</title>
+    <style>
+        body {
+            font-family: "Microsoft JhengHei", "PingFang TC", "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #333;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            color: #333;
+            margin: 0;
+        }
+        
+        .framework-label {
+            background-color: #3498db;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 12px;
+            margin: 10px 5px;
+            display: inline-block;
+        }
+        
+        .score-display {
+            text-align: right;
+            font-weight: bold;
+            margin-bottom: 20px;
+            font-size: 16px;
+            color: #007acc;
+        }
+        
+        .instruction {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-left: 4px solid #007acc;
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+        
+        .text-content {
+            background-color: #fafafa;
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin: 20px 0;
+            font-size: 16px;
+            line-height: 1.8;
+            border-radius: 5px;
+        }
+        
+        .text-content h3 {
+            margin-top: 0;
+            color: #2c3e50;
+            border-bottom: 1px solid #bdc3c7;
+            padding-bottom: 5px;
+        }
+        
+        .level-section {
+            margin: 30px 0;
+            border-left: 5px solid;
+            padding-left: 20px;
+        }
+        
+        .level1 { border-color: #27ae60; background-color: #f8fff8; }
+        .level2 { border-color: #f39c12; background-color: #fffbf0; }
+        .level3 { border-color: #e74c3c; background-color: #fff5f5; }
+        
+        .level-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .level1 .level-title { color: #27ae60; }
+        .level2 .level-title { color: #f39c12; }
+        .level3 .level-title { color: #e74c3c; }
+        
+        .difficulty-badge {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        
+        .easy { background-color: #27ae60; }
+        .medium { background-color: #f39c12; }
+        .hard { background-color: #e74c3c; }
+        
+        .question {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: white;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        
+        .question-header {
+            font-weight: bold;
+            font-size: 16px;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .points {
+            color: #e67e22;
+            font-weight: bold;
+            font-size: 14px;
+            background-color: #fdf2e9;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+        
+        .sub-question {
+            margin: 12px 0;
+            padding-left: 15px;
+        }
+        
+        .input-field {
+            border: 2px solid #ddd;
+            padding: 8px 12px;
+            font-size: 14px;
+            border-radius: 4px;
+            min-width: 150px;
+            font-family: inherit;
+            margin: 5px;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: #007acc;
+        }
+        
+        .options {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        
+        .option {
+            margin: 8px 0;
+            padding: 8px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        
+        .option:hover {
+            background-color: #e9ecef;
+        }
+        
+        .option input[type="radio"] {
+            margin-right: 8px;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+        }
+        
+        table, th, td {
+            border: 1px solid #333;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        
+        th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+        }
+        
+        .template-hint {
+            background-color: #e8f4fd;
+            border-left: 4px solid #2196f3;
+            padding: 10px 15px;
+            margin: 10px 0;
+            font-size: 13px;
+            color: #1976d2;
+        }
+        
+        .template-hint strong {
+            color: #0d47a1;
+        }
+        
+        .bold {
+            font-weight: bold;
+        }
+        
+        .separator {
+            border-top: 1px solid #ccc;
+            margin: 25px 0;
+        }
+        
+        .control-buttons {
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .btn {
+            background-color: #007acc;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 10px 10px 10px;
+            transition: background-color 0.3s;
+        }
+        
+        .btn:hover {
+            background-color: #005a9e;
+        }
+        
+        .btn:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+        
+        .btn-success {
+            background-color: #28a745;
+        }
+        
+        .btn-info {
+            background-color: #17a2b8;
+        }
+        
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .feedback.excellent {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .feedback.good {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .feedback.needs-improvement {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .feedback.poor {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .result-summary {
+            background-color: #e8f4fd;
+            border: 1px solid #b3d9ff;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+        
+        .result-summary h3 {
+            color: #0066cc;
+            margin-top: 0;
+        }
+        
+        .answer-section {
+            background-color: #fff8e1;
+            border: 2px solid #ffb74d;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        
+        .answer-section h3 {
+            color: #e65100;
+            margin-top: 0;
+        }
+        
+        .answer-section h4 {
+            color: #ff6f00;
+            margin-top: 15px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #ffb74d;
+            padding-bottom: 5px;
+        }
+        
+        .answer-section .template-answer {
+            background-color: white;
+            padding: 12px;
+            margin: 8px 0;
+            border-left: 4px solid #9c27b0;
+            border-radius: 3px;
+        }
+        
+        .keyword {
+            background-color: #e3f2fd;
+            color: #1976d2;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        
+        .scoring-point {
+            background-color: #e8f5e8;
+            color: #2e7d32;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        
+        .student-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .student-info input {
+            margin: 5px 10px;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+        
+        @media (max-width: 768px) {
+            .btn {
+                display: block;
+                width: 100%;
+                margin: 5px 0;
+            }
+            
+            .input-field {
+                min-width: 100px;
+                width: 100%;
+                margin: 5px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>《在風中》框架化練習</h1>
+            <div>
+                <span class="framework-label">理解層面</span>
+                <span class="framework-label">分析層面</span>
+                <span class="framework-label">評價層面</span>
+            </div>
+        </div>
+        
+        <div class="student-info">
+            <label>學生姓名：<input type="text" id="studentName" placeholder="請輸入您的姓名" value="test1"></label>
+            <label>班級：<input type="text" id="studentClass" placeholder="請輸入班級" value="Sss"></label>
+            <label>學號：<input type="text" id="studentId" placeholder="請輸入學號" value="Siwiwiw"></label>
+        </div>
+        
+        <div class="score-display">
+            總分：67分 | 當前得分：<span id="currentScore">0</span>分 | 完成進度：<span id="progress">29</span>%
+        </div>
+        
+        <div class="instruction">
+            本練習基於白話文閱讀評核大綱設計，從理解到分析再到評價，全面檢測白話文閱讀理解能力。按照「說什麼→怎麼說→說得怎樣」的三維思考框架進行。
+        </div>
+        
+        <div class="text-content">
+            <h3>閱讀材料：《在風中》</h3>
+            <p>剛下樓，才發覺風原來真的這麼強勁，迎面撲打過來。坐在家中是想像不到的。整條街上沒有人，只有風，風喧嘩，風振動，風拍打你的臉，叫你措手不及。</p>
+            
+            <p>碰見等候的朋友，他們說：「十號風球了。」一位朋友說：他走過來的時候，看見一個「瓦煲」被風吹起在空中飛舞。而他的傘，一撐起就折斷了。</p>
+            
+            <p>走嗎？走的。在簷下走還不覺怎樣，一走出來，就感覺到滿懷的風雨。風是兇猛的，雨卻不算很大，像尖尖的針刺，刺到臉上，刺進人的耳朵去。</p>
+            
+            <p>走過那一列開上門的店鋪，轉了彎，左邊只剩下一列鐵絲網，圍住大廈內的草地。在空曠的地方，我們與風更是正面相對了。大家都吃不消，有人的脚步踉蹌，一個人轉進大廈的鐵閘內暫避，其他人跟着進去。偶然，一個人從鐵閘後探頭出來，又連忙縮回去；一個人走出來，又扮成被風吹回去的樣子。</p>
+            
+            <p>怎麼辦？我們記起大度花園後有一道橫門，可以通往橫街的。封。「試試別的門！」「就像災難片一樣！」對，就像災難片一樣。只是不知橫門上了鎖沒有。</p>
+            
+            <p>幸而沒有。我們走進橫街。滿地都是垃圾，頭上是岌岌可危的招牌。有一回，當我們剛走過，上面就掉下一些碎磚和玻璃片。再轉出來，過了馬路，大廈的後面露出海洋。「我們看海去！」但是海洋的旁邊只有很低的鐵欄，前面一大片空地，風呼呼地颳過。大廈都在兩旁，只有我們、海洋、風。</p>
+            
+            <p>朋友走出路中心跳舞。風很大，像要把人吹下海的樣子，他退回來了。我們轉出馬路，在對面，店舖的招牌在風中晃動。它們有些已經吹毀，有些還半吊在空中，在強大的風力中不住擺動，破碎的白色膠片散了一地。</p>
+            
+            <p>我們沿路前行，在小小的公園那兒，裏面的樹葉都落到街道上來了。那麼鮮嫩青綠的樹葉，濕漉漉的；另外一些，連枝帶葉的一株，就像硬生生給人撕下來那樣，扔在地上。但其他在樹上的，仍然搖動、掙扎，自有它們的生命。</p>
+            
+            <p>在碼頭，公共汽車都停開了；一輛一輛呆笨地獃在那兒，碼頭的通道都上了鎖。那裏的鐵欄牢固，我們可以站得更近看海。海浪翻騰不息，忽然掀起巨浪，有人說濺上來的水沫是鹹的。颱風下船隻都停泊在港灣，鐵欄外是廣闊的海洋，不知為甚麼，海浪都向著一個方向洶湧滾動，遠處泊着一艘大輪船，逆着方向，像正在前行。朋友說，在風暴的時候，大輪船都得開了馬達，逆着風浪。近岸處，往日的小漁船都不見了。鐵欄的網上留下漁民往日兜售海鮮的竹籮和籠子，這些空的竹器綁在鐵欄上，顯示生計的停頓。</p>
+            
+            <p>風暴之後，海鮮和蔬菜都要漲價了，有人說。而在那邊，我們看見，碼頭附近種着的一株樹在風中折了腰，頂上的樹葉都垂到地面上來。「多可憐的樹，平時已經在這裏呼吸汽車的碳氣，現在還給風吹斷了。」有人說。當我們走近，可以看見折口的地方露出裏面鮮明的淺棕色和白色的樹液的泡沫。它也是有生命的。</p>
+            
+            <p>但轉出大街上，可以看見一列垃圾桶橫臥在地上，在飄飛的紙屑和破碎招牌間。</p>
+            
+            <p>我們推門走進一所剛開始營業的小小咖啡店，喝一杯咖啡，吃一件新鮮出爐的熱蛋撻。等我回到街上的時候，風已差不多過去，人們逐漸走到街上來了。</p>
+        </div>
+        
+        <!-- 第一层：理解层面 -->
+        <div class="level-section level1">
+            <div class="level-title">
+                <span class="difficulty-badge easy"></span>
+                第一層：理解層面（「說什麼？」）(10分)
+            </div>
+            
+            <div class="question">
+                <div class="question-header">
+                    1. 段落劃分與大意
+                    <span class="points">6分</span>
+                </div>
+                <div class="sub-question">
+                    請為本文劃分段落並概括大意：
+                </div>
+                <div class="table-container">
+                    <table>
+                        <tbody><tr>
+                            <th>段落</th>
+                            <th>段落範圍</th>
+                            <th>段落大意</th>
+                        </tr>
+                        <tr>
+                            <td>第一段</td>
+                            <td>第1段</td>
+                            <td><input type="text" class="input-field" id="q1a" placeholder="概括第一段大意" style="width: 200px;" value=""></td>
+                        </tr>
+                        <tr>
+                            <td>第二段</td>
+                            <td>第2段</td>
+                            <td><input type="text" class="input-field" id="q1b" placeholder="概括第二段大意" style="width: 200px;" value=""></td>
+                        </tr>
+                        <tr>
+                            <td>第三段</td>
+                            <td>第3-5段</td>
+                            <td><input type="text" class="input-field" id="q1c" placeholder="概括第三段大意" style="width: 200px;" value=""></td>
+                        </tr>
+                        <tr>
+                            <td>第四段</td>
+                            <td>第6-7段</td>
+                            <td><input type="text" class="input-field" id="q1d" placeholder="概括第四段大意" style="width: 200px;" value=""></td>
+                        </tr>
+                        <tr>
+                            <td>第五段</td>
+                            <td>第8-10段</td>
+                            <td><input type="text" class="input-field" id="q1e" placeholder="概括第五段大意" style="width: 200px;" value=""></td>
+                        </tr>
+                        <tr>
+                            <td>第六段</td>
+                            <td>第11-12段</td>
+                            <td><input type="text" class="input-field" id="q1f" placeholder="概括第六段大意" style="width: 200px;" value=""></td>
+                        </tr>
+                    </tbody></table>
+                </div>
+            </div>
+            
+            <div class="question">
+                <div class="question-header">
+                    2. 內容概括
+                    <span class="points">4分</span>
+                </div>
+                <div class="sub-question">
+                    本文主要記敘了什麼內容？請用自己的話概括：
+                </div>
+                <div class="sub-question">
+                    <textarea class="input-field" id="q2a" placeholder="用自己的話概括文章主要內容，約100字" style="width: 100%; height: 80px; resize: vertical;"></textarea>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 第二层：分析层面 -->
+        <div class="level-section level2">
+            <div class="level-title">
+                <span class="difficulty-badge medium"></span>
+                第二層：分析層面（「怎麼說？」）(39分)
+            </div>
+            
+            <div class="question">
+                <div class="question-header">
+                    3. 結構分析
+                    <span class="points">6分</span>
+                </div>
+                <div class="sub-question">
+                    ① 本文採用了什麼敘述順序？<input type="text" class="input-field" id="q3a" placeholder="敘述順序" value="順序">（2分）
+                </div>
+                <div class="sub-question">
+                    ② 這樣安排有什麼作用？
+                </div>
+                <div class="sub-question">
+                    <textarea class="input-field" id="q3b" placeholder="分析結構安排的作用，可從清晰展現過程、層層遞進、情感弧線等角度分析" style="width: 100%; height: 60px; resize: vertical;">可以清楚敍述事情發展先後，讓文章內容结構上通顺，方便理解</textarea>（4分）
+                </div>
+            </div>
+            
+            <div class="question">
+                <div class="question-header">
+                    4. 表現手法分析
+                    <span class="points">8分</span>
+                </div>
+                <div class="sub-question">
+                    文中運用了哪些表現手法來表現風的強勁？請舉例分析其效果：
+                </div>
+                <div class="table-container">
+                    <table>
+                        <tbody><tr>
+                            <th>表現手法</th>
+                            <th>具體例子</th>
+                            <th>表達效果</th>
+                        </tr>
+                        <tr>
+                            <td><input type="text" class="input-field" id="q4a" placeholder="手法1" value=""></td>
+                            <td><input type="text" class="input-field" id="q4b" placeholder="舉例1" style="width: 150px;" value=""></td>
+                            <td><input type="text" class="input-field" id="q4c" placeholder="效果1" style="width: 150px;" value=""></td>
+                        </tr>
+                        <tr>
+                            <td><input type="text" class="input-field" id="q4d" placeholder="手法2" value=""></td>
+                            <td><input type="text" class="input-field" id="q4e" placeholder="舉例2" style="width: 150px;" value=""></td>
+                            <td><input type="text" class="input-field" id="q4f" placeholder="效果2" style="width: 150px;" value=""></td>
+                        </tr>
+                        <tr>
+                            <td><input type="text" class="input-field" id="q4g" placeholder="手法3" value=""></td>
+                            <td><input type="text" class="input-field" id="q4h" placeholder="舉例3" style="width: 150px;" value=""></td>
+                            <td><input type="text" class="input-field" id="q4i" placeholder="效果3" style="width: 150px;" value=""></td>
+                        </tr>
+                    </tbody></table>
+                </div>
+            </div>
+            
+            <div class="question">
+                <div class="question-header">
+                    5. 修辭手法分析
+                    <span class="points">6分</span>
+                </div>
+                <div class="sub-question">
+                    「風呼呼地颳過。大廈都在兩旁，只有我們、海洋、風。」這句話運用了什麼修辭手法？有何表達效果？
+                </div>
+                <div class="sub-question">
+                    ① 修辭手法：<input type="text" class="input-field" id="q5a" placeholder="修辭手法1" value="擬聲">、<input type="text" class="input-field" id="q5b" placeholder="修辭手法2" value="誇張">（2分）
+                </div>
+                <div class="sub-question">
+                    ② 表達效果：
+                </div>
+                <div class="sub-question">
+                    <textarea class="input-field" id="q5c" placeholder="分析表達效果，可從營造氛圍、突出環境、強調感受等角度分析" style="width: 100%; height: 60px; resize: vertical;">想要表達颱風的威力和刻畫颱風带来的影响</textarea>（4分）
+                </div>
+            </div>
+            
+            <div class="question">
+                <div class="question-header">
+                    6. 遣詞用字分析
+                    <span class="points">5分</span>
+                </div>
+                <div class="sub-question">
+                    文中多次用「我們」而不是「我」，這樣寫有什麼好處？
+                </div>
+                <div class="sub-question">
+                    <textarea class="input-field" id="q6a" placeholder="從情感角度、效果角度、主題角度等分析使用「我們」的好處" style="width: 100%; height: 60px; resize: vertical;">表示作者不是獨自一人在感受颱風的力量</textarea>
+                </div>
+            </div>
+            
+            <div class="question">
+                <div class="question-header">
+                    7. 情感態度分析
+                    <span class="points">6分</span>
+                </div>
+                <div class="sub-question">
+                    作者對這次風暴經歷持什麼態度？請結合具體語句分析：
+                </div>
+                <div class="sub-question">
+                    ① 總體態度：<input type="text" class="input-field" id="q7a" placeholder="概括作者態度" style="width: 200px;" value="震撼">（2分）
+                </div>
+                <div class="sub-question">
+                    ② 具體分析：
+                </div>
+                <div class="sub-question">
+                    <textarea class="input-field" id="q7b" placeholder="結合具體語句分析作者的情感態度，如好奇感、緊張感、同情心、從容感等" style="width: 100%; height: 60px; resize: vertical;">作者主要從不同角度描寫颱風下的城市，足以证明作者對這次颱風的威力感到非常震撼和驚讶</textarea>（4分）
+                </div>
+            </div>
+            
+            <div class="question">
+                <div class="question-header">
+                    8. 主旨理解
+                    <span class="points">8分</span>
+                </div>
+                <div class="sub-question">
+                    本文通過記敘風暴中的經歷，表達了什麼主題思想？
+                </div>
+                <div class="sub-question">
+                    ① 表面層次：<input type="text" class="input-field" id="q8a" placeholder="表面記敘內容" style="width: 250px;" value="描写颱風下的城市">（2分）
+                </div>
+                <div class="sub-question">
+                    ② 深層主題：
+                </div>
+                <div class="sub-question">
+                    <textarea class="input-field" id="q8b" placeholder="深入分析主題思想，可從人與自然、生命思考、人情溫暖、日常珍貴等角度分析" style="width: 100%; height: 80px; resize: vertical;">透過描寫被颱風影响的香港，刻劃了它的威力和對人們生活的影响</textarea>（6分）
+                </div>
+            </div>
+        </div>
+        
+        <!-- 第三层：评价层面 -->
+        <div class="level-section level3">
+            <div class="level-title">
+                <span class="difficulty-badge hard"></span>
+                第三層：評價層面（「說得怎樣？」）(18分)
+            </div>
+            
+            <div class="question">
+                <div class="question-header">
+                    9. 語言特色評價
+                    <span class="points">6分</span>
+                </div>
+                <div class="sub-question">
+                    本文在語言表達上有什麼特點？請舉例說明：
+                </div>
+                <div class="table-container">
+                    <table>
+                        <tbody><tr>
+                            <th>語言特點</th>
+                            <th>具體例子</th>
+                            <th>效果說明</th>
+                        </tr>
+                        <tr>
+                            <td><input type="text" class="input-field" id="q9a" placeholder="特點1" value=""></td>
+                            <td><input type="text" class="input-field" id="q9b" placeholder="例子1" style="width: 150px;" value=""></td>
+                            <td><input type="text" class="input-field" id="q9c" placeholder="效果1" style="width: 150px;" value=""></td>
+                        </tr>
+                        <tr>
+                            <td><input type="text" class="input-field" id="q9d" placeholder="特點2" value=""></td>
+                            <td><input type="text" class="input-field" id="q9e" placeholder="例子2" style="width: 150px;" value=""></td>
+                            <td><input type="text" class="input-field" id="q9f" placeholder="效果2" style="width: 150px;" value=""></td>
+                        </tr>
+                    </tbody></table>
+                </div>
+                <div class="template-hint">
+                    <strong>提示：</strong>可從簡潔生動、感官並用、口語化、動態感強等角度分析
+                </div>
+            </div>
+            
+            <div class="question">
+                <div class="question-header">
+                    10. 個人感悟與評價
+                    <span class="points">8分</span>
+                </div>
+                <div class="sub-question">
+                    讀完這篇文章，你對「在風暴中的人生體驗」有什麼感想？請結合文本和生活實際談談：
+                </div>
+                <div class="sub-question">
+                    <textarea class="input-field" id="q10a" placeholder="結合文本和生活實際，談談對「風暴中的人生體驗」的感悟，要求有理有據，體現個人思考" style="width: 100%; height: 100px; resize: vertical;"></textarea>
+                </div>
+                <div class="template-hint">
+                    <strong>答題指導：</strong>①結合文本具體內容 ②聯繫生活實際或社會現象 ③深層思考人生哲理 ④語言表達條理清晰
+                </div>
+            </div>
+            
+            <div class="question">
+                <div class="question-header">
+                    11. 寫作效果評價
+                    <span class="points">4分</span>
+                </div>
+                <div class="sub-question">
+                    你認為這篇文章寫得怎麼樣？有什麼值得學習的地方？還有什麼可以改進的建議？
+                </div>
+                <div class="sub-question">
+                    <textarea class="input-field" id="q11a" placeholder="客觀評價文章的寫作效果，包括優點和建議" style="width: 100%; height: 80px; resize: vertical;"></textarea>
+                </div>
+            </div>
+        </div>
+        
+        <div class="control-buttons">
+            <button class="btn" onclick="checkAnswers()">📝 檢查答案</button>
+            <button class="btn btn-secondary" onclick="resetForm()">🔄 重新作答</button>
+            <button class="btn btn-success" onclick="showStandardAnswers()" id="showAnswersBtn" disabled="">📖 顯示標準答案</button>
+            <button class="btn btn-info" onclick="showFrameworkAnalysis()">🎯 框架解析</button>
+        </div>
+        
+        <div id="feedback" class="feedback hidden"></div>
+        
+        <div id="resultSummary" class="result-summary hidden">
+            <h3>閱讀理解能力分析</h3>
+            <div id="detailedResults"></div>
+        </div>
+        
+        <div id="standardAnswers" class="answer-section hidden">
+            <h3>📚 標準答案</h3>
+            
+            <h4>第一層：理解層面答案</h4>
+            <div class="template-answer">
+                <strong>1. 段落劃分與大意：</strong>
+                <br>①第一段：<span class="keyword">初遇強風的震撼</span>，發覺風力遠超想像
+                <br>②第二段：<span class="keyword">朋友相聚</span>，了解十號風球的威力
+                <br>③第三段：<span class="keyword">在風中艱難前行</span>，尋找避風之處
+                <br>④第四段：<span class="keyword">觀海覽景</span>，直面自然力量
+                <br>⑤第五段：<span class="keyword">沿路見聞</span>，感受風暴對環境的破壞
+                <br>⑥第六段：<span class="keyword">風暴漸息</span>，回歸日常
+                <br><strong>2. 內容概括：</strong>記敘了作者和朋友在<span class="scoring-point">十號風球襲港時外出的經歷</span>，從感受風力到觀海見聞，展現了<span class="scoring-point">人在自然力量面前的體驗與感悟</span>。
+            </div>
+            
+            <h4>第二層：分析層面答案</h4>
+            <div class="template-answer">
+                <strong>3. 結構分析：</strong>
+                <br>①<span class="keyword">時間順序</span>（按行程發展的時間線索）
+                <br>②作用：<span class="scoring-point">清晰展現風暴體驗的完整過程</span>；<span class="scoring-point">層層遞進突出風力強勁</span>；<span class="scoring-point">形成完整情感弧線</span>
+                
+                <br><br><strong>4. 表現手法：</strong>
+                <br>①<span class="keyword">對比手法</span>：「坐在家中想像不到」vs實際感受，突出風力超預期
+                <br>②<span class="keyword">擬人手法</span>：「風喧嘩，風振動，風拍打」，生動形象
+                <br>③<span class="keyword">比喻手法</span>：雨「像尖尖的針刺」，形象表現雨點尖銳
+                
+                <br><br><strong>5. 修辭手法：</strong>
+                <br>①<span class="keyword">擬聲詞</span>、<span class="keyword">排比</span>
+                <br>②效果：<span class="scoring-point">突出空曠環境中人的渺小</span>，<span class="scoring-point">強調風的強勁無處不在</span>，<span class="scoring-point">營造緊張震撼的氛圍</span>
+                
+                <br><br><strong>6. 遣詞用字：</strong>使用「我們」的好處：<span class="scoring-point">體現同伴情誼</span>，<span class="scoring-point">增強真實感和參與感</span>，<span class="scoring-point">突出人在自然面前需要團結</span>
+                
+                <br><br><strong>7. 情感態度：</strong>
+                <br>①<span class="keyword">既敬畏又好奇，既緊張又興奮</span>
+                <br>②具體分析：好奇興奮（「就像災難片一樣」）；敬畏緊張（面對風暴威力）；人文關懷（對樹木的同情）；從容應對（進咖啡店）
+                
+                <br><br><strong>8. 主旨理解：</strong>
+                <br>①表面：<span class="scoring-point">記錄颱風天外出經歷</span>
+                <br>②深層：<span class="keyword">人與自然的關係思考</span>；<span class="scoring-point">生命的脆弱與堅韌</span>；<span class="scoring-point">困境中的人情溫暖</span>；<span class="scoring-point">日常生活的珍貴</span>
+            </div>
+            
+            <h4>第三層：評價層面答案</h4>
+            <div class="template-answer">
+                <strong>9. 語言特色：</strong>
+                <br>①<span class="keyword">簡潔生動</span>：多用短句，如「走嗎？走的」，節奏明快
+                <br>②<span class="keyword">感官並用</span>：視覺、聽覺、觸覺描寫豐富，增強真實感
+                <br>③<span class="keyword">口語化</span>：貼近生活，如朋友間對話，真實自然
+                <br>④<span class="keyword">動態感強</span>：大量動詞，營造緊張氛圍
+                
+                <br><br><strong>10. 個人感悟：</strong>（學生結合文本和生活實際，從人與自然、困境應對、珍惜平凡等角度展開，體現個人思考）
+                
+                <br><br><strong>11. 寫作效果：</strong>（學生客觀評價文章優缺點，如結構清晰、描寫生動、語言簡潔等優點，以及可能的改進建議）
+            </div>
+            
+            <button class="btn btn-secondary" onclick="hideStandardAnswers()">隱藏標準答案</button>
+        </div>
+        
+        <div id="frameworkAnalysis" class="answer-section hidden">
+            <h3>🎯 三維思考框架解析</h3>
+            
+            <h4>白話文閱讀評核框架運用：</h4>
+            <div class="template-answer">
+                <strong>🏗️ 第一維：理解層面（「說什麼？」）</strong>
+                <br>• <span class="keyword">段落劃分</span>：梳理文章結構脈絡，掌握內容層次
+                <br>• <span class="keyword">內容概括</span>：提取主要信息，培養概括能力
+                <br>• 重點考查：<span class="scoring-point">理解、複述、重整</span>等基礎能力
+            </div>
+            
+            <div class="template-answer">
+                <strong>📈 第二維：分析層面（「怎麼說？」）</strong>
+                <br>• <span class="keyword">結構分析</span>：分析敘述順序，理解組織方式
+                <br>• <span class="keyword">手法技巧</span>：識別表現手法、修辭手法及其效果
+                <br>• <span class="keyword">語言特色</span>：分析遣詞用字的特點和作用
+                <br>• <span class="keyword">情感態度</span>：把握作者的立場和情感傾向
+                <br>• 重點考查：<span class="scoring-point">分析、解釋、伸展</span>等核心能力
+            </div>
+            
+            <div class="template-answer">
+                <strong>📝 第三維：評價層面（「說得怎樣？」）</strong>
+                <br>• <span class="keyword">語言評價</span>：評價語言表達的特色和效果
+                <br>• <span class="keyword">個人感悟</span>：結合文本談個人體會和人生感悟
+                <br>• <span class="keyword">寫作評價</span>：客觀評價文章的優缺點
+                <br>• 重點考查：<span class="scoring-point">評鑒、創意</span>等高階能力
+            </div>
+            
+            <div class="template-answer">
+                <strong>💡 答題框架要點：</strong>
+                <br>• <span class="keyword">先概括後具體</span>：歸納主題句，再具體說明
+                <br>• <span class="keyword">善用標示語</span>：「首先、其次、最後」等帶出層次
+                <br>• <span class="keyword">扣緊題目</span>：留心關鍵字眼，針對考核重點作答
+                <br>• <span class="keyword">避免濫抄</span>：用自己語言表達，體現理解深度
+            </div>
+            
+            <button class="btn btn-secondary" onclick="hideFrameworkAnalysis()">隱藏框架解析</button>
+        </div>
+    </div>
+
+    <script>
+        // 標準答案參考
+        const standardAnswers = {
+            // 理解層面
+            q1a: ['初遇強風', '震撼', '風力強勁', '想像不到'],
+            q1b: ['朋友相聚', '十號風球', '了解風力'],
+            q1c: ['艱難前行', '風中前行', '尋找避風'],
+            q1d: ['觀海覽景', '直面自然', '看海'],
+            q1e: ['沿路見聞', '風暴破壞', '環境破壞'],
+            q1f: ['風暴漸息', '回歸日常', '咖啡店'],
+            q2a: ['十號風球', '外出經歷', '風暴', '體驗', '感悟'],
+
+            // 分析層面
+            q3a: ['時間順序', '行程發展', '時間線索'],
+            q3b: ['清晰展現', '層層遞進', '情感弧線', '完整過程'],
+            q4a: ['對比', '對比手法'],
+            q4b: ['坐在家中', '想像不到'],
+            q4c: ['突出', '超預期', '強烈對比'],
+            q4d: ['擬人', '擬人手法'],
+            q4e: ['風喧嘩', '風振動', '風拍打'],
+            q4f: ['生動形象', '人格化'],
+            q4g: ['比喻', '比喻手法'],
+            q4h: ['針刺', '尖尖的針刺'],
+            q4i: ['形象表現', '尖銳刺痛'],
+            q5a: ['擬聲', '擬聲詞'],
+            q5b: ['排比', '省略'],
+            q5c: ['渺小', '強勁', '緊張', '震撼'],
+            q6a: ['同伴情誼', '真實感', '參與感', '團結'],
+            q7a: ['敬畏好奇', '緊張興奮', '關注從容'],
+            q7b: ['好奇', '災難片', '同情', '可憐', '從容', '咖啡'],
+            q8a: ['颱風天外出', '風暴經歷', '特殊經歷'],
+            q8b: ['人與自然', '生命思考', '人情溫暖', '日常珍貴'],
+
+            // 評價層面
+            q9a: ['簡潔生動', '簡潔'],
+            q9b: ['走嗎？走的', '短句'],
+            q9c: ['節奏明快', '簡潔有力'],
+            q9d: ['感官並用', '感官描寫'],
+            q9e: ['風呼呼', '刺到臉上'],
+            q9f: ['真實感', '身臨其境'],
+            q10a: ['人與自然', '困境', '珍惜', '適應', '溫暖'],
+            q11a: ['結構清晰', '描寫生動', '語言簡潔', '真實自然']
+        };
+
+        // 分數分配
+        const pointsMap = {
+            q1a: 1, q1b: 1, q1c: 1, q1d: 1, q1e: 1, q1f: 1,
+            q2a: 4,
+            q3a: 2, q3b: 4,
+            q4a: 1, q4b: 1, q4c: 1, q4d: 1, q4e: 1, q4f: 1, q4g: 1, q4h: 1, q4i: 1,
+            q5a: 1, q5b: 1, q5c: 4,
+            q6a: 5,
+            q7a: 2, q7b: 4,
+            q8a: 2, q8b: 6,
+            q9a: 1, q9b: 1, q9c: 1, q9d: 1, q9e: 1, q9f: 1,
+            q10a: 8,
+            q11a: 4
+        };
+
+        let hasChecked = false;
+        let currentScore = 0;
+
+        function checkAnswer(inputId, answerArray) {
+            const input = document.getElementById(inputId);
+            if (!input) return false;
+            
+            const userAnswer = input.value.trim();
+            if (!userAnswer) return false;
+            
+            return answerArray.some(answer => 
+                userAnswer.includes(answer) || answer.includes(userAnswer) ||
+                userAnswer.toLowerCase().includes(answer.toLowerCase()) ||
+                answer.toLowerCase().includes(userAnswer.toLowerCase())
+            );
+        }
+
+        function checkAnswers() {
+            let score = 0;
+            let results = {};
+            let levelScores = {level1: 0, level2: 0, level3: 0};
+
+            // 檢查所有答案
+            for (let questionId of Object.keys(standardAnswers)) {
+                const isCorrect = checkAnswer(questionId, standardAnswers[questionId]);
+                results[questionId] = isCorrect;
+                
+                const element = document.getElementById(questionId);
+                if (element) {
+                    if (isCorrect) {
+                        score += pointsMap[questionId];
+                        element.style.borderColor = '#28a745';
+                        element.style.backgroundColor = '#d4edda';
+                        
+                        // 分層計分
+                        if (['q1a', 'q1b', 'q1c', 'q1d', 'q1e', 'q1f', 'q2a'].includes(questionId)) {
+                            levelScores.level1 += pointsMap[questionId];
+                        } else if (['q3a', 'q3b', 'q4a', 'q4b', 'q4c', 'q4d', 'q4e', 'q4f', 'q4g', 'q4h', 'q4i', 'q5a', 'q5b', 'q5c', 'q6a', 'q7a', 'q7b', 'q8a', 'q8b'].includes(questionId)) {
+                            levelScores.level2 += pointsMap[questionId];
+                        } else {
+                            levelScores.level3 += pointsMap[questionId];
+                        }
+                    } else {
+                        element.style.borderColor = '#dc3545';
+                        element.style.backgroundColor = '#f8d7da';
+                    }
+                }
+            }
+
+            currentScore = score;
+            document.getElementById('currentScore').textContent = score;
+            document.getElementById('progress').textContent = Math.round((score / 67) * 100);
+
+            showFeedback(score);
+            showDetailedResults(results, score, levelScores);
+            
+            hasChecked = true;
+            document.getElementById('showAnswersBtn').disabled = false;
+        }
+
+        function showFeedback(score) {
+            const feedback = document.getElementById('feedback');
+            const percentage = (score / 67) * 100;
+            
+            feedback.classList.remove('hidden', 'excellent', 'good', 'needs-improvement', 'poor');
+            
+            if (percentage >= 90) {
+                feedback.classList.add('excellent');
+                feedback.innerHTML = `🎉 優秀！您獲得了 ${score}/67 分（${percentage.toFixed(1)}%）。白話文閱讀理解能力優秀！`;
+            } else if (percentage >= 75) {
+                feedback.classList.add('good');
+                feedback.innerHTML = `👍 良好！您獲得了 ${score}/67 分（${percentage.toFixed(1)}%）。閱讀分析能力良好，繼續加油！`;
+            } else if (percentage >= 60) {
+                feedback.classList.add('needs-improvement');
+                feedback.innerHTML = `📚 需要改進。您獲得了 ${score}/67 分（${percentage.toFixed(1)}%）。建議加強閱讀理解訓練。`;
+            } else {
+                feedback.classList.add('poor');
+                feedback.innerHTML = `💪 繼續努力！您獲得了 ${score}/67 分（${percentage.toFixed(1)}%）。請系統學習閱讀理解方法。`;
+            }
+        }
+
+        function showDetailedResults(results, score, levelScores) {
+            const resultDiv = document.getElementById('detailedResults');
+            const summary = document.getElementById('resultSummary');
+            
+            let html = `
+                <p><strong>學生資訊：</strong></p>
+                <ul>
+                    <li>姓名：${document.getElementById('studentName').value || '未填寫'}</li>
+                    <li>班級：${document.getElementById('studentClass').value || '未填寫'}</li>
+                    <li>學號：${document.getElementById('studentId').value || '未填寫'}</li>
+                </ul>
+                
+                <p><strong>三層能力得分分析：</strong></p>
+                <ul>
+                    <li>第一層（理解層面）：${levelScores.level1}/10分 - ${levelScores.level1 >= 8 ? '優秀' : levelScores.level1 >= 6 ? '良好' : '需改進'}</li>
+                    <li>第二層（分析層面）：${levelScores.level2}/39分 - ${levelScores.level2 >= 32 ? '優秀' : levelScores.level2 >= 24 ? '良好' : '需改進'}</li>
+                    <li>第三層（評價層面）：${levelScores.level3}/18分 - ${levelScores.level3 >= 15 ? '優秀' : levelScores.level3 >= 12 ? '良好' : '需改進'}</li>
+                </ul>
+                
+                <p><strong>學習建議：</strong></p>
+                <ul>
+                    ${levelScores.level1 < 6 ? '<li>加強文本理解和內容概括能力</li>' : ''}
+                    ${levelScores.level2 < 24 ? '<li>提高分析技巧和表達手法的識別能力</li>' : ''}
+                    ${levelScores.level3 < 12 ? '<li>加強個人感悟和批判評價的表達能力</li>' : ''}
+                </ul>
+                
+                <p><strong>總分：${score}/67分（${((score/67)*100).toFixed(1)}%）</strong></p>
+            `;
+            
+            resultDiv.innerHTML = html;
+            summary.classList.remove('hidden');
+        }
+
+        function showStandardAnswers() {
+            if (!hasChecked) {
+                alert('請先檢查答案！');
+                return;
+            }
+            
+            const answerSection = document.getElementById('standardAnswers');
+            answerSection.classList.remove('hidden');
+            answerSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function hideStandardAnswers() {
+            document.getElementById('standardAnswers').classList.add('hidden');
+        }
+
+        function showFrameworkAnalysis() {
+            const analysisSection = document.getElementById('frameworkAnalysis');
+            analysisSection.classList.remove('hidden');
+            analysisSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function hideFrameworkAnalysis() {
+            document.getElementById('frameworkAnalysis').classList.add('hidden');
+        }
+
+        function resetForm() {
+            document.querySelectorAll('.input-field').forEach(input => {
+                input.value = '';
+                input.style.borderColor = '#ddd';
+                input.style.backgroundColor = 'white';
+            });
+            
+            document.getElementById('currentScore').textContent = '0';
+            document.getElementById('progress').textContent = '0';
+            document.getElementById('feedback').classList.add('hidden');
+            document.getElementById('resultSummary').classList.add('hidden');
+            document.getElementById('standardAnswers').classList.add('hidden');
+            document.getElementById('frameworkAnalysis').classList.add('hidden');
+            
+            hasChecked = false;
+            currentScore = 0;
+            document.getElementById('showAnswersBtn').disabled = true;
+        }
+
+        // 實時更新進度
+        document.addEventListener('input', function() {
+            let completed = 0;
+            let total = Object.keys(standardAnswers).length;
+            
+            for (let questionId of Object.keys(standardAnswers)) {
+                const element = document.getElementById(questionId);
+                if (element && element.value.trim()) {
+                    completed++;
+                }
+            }
+            
+            const progress = Math.round((completed / total) * 100);
+            document.getElementById('progress').textContent = progress;
+        });
+    </script>
+
+</body></html>

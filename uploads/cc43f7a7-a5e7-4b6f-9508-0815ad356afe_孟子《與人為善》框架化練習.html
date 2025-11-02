@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>孟子《與人為善》框架化練習</title>
+    <style>
+        body {
+            font-family: "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            line-height: 1.8;
+        }
+        .header {
+            background: linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            margin: 0 0 10px 0;
+            font-size: 2.2em;
+        }
+        .header p {
+            margin: 5px 0;
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+        .text-section {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+            border-left: 4px solid #84fab0;
+        }
+        .text-section h2 {
+            color: #2c3e50;
+            border-bottom: 2px solid #84fab0;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+        .original-text {
+            font-size: 1.15em;
+            line-height: 2;
+            color: #34495e;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .question-section {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+        }
+        .layer-title {
+            background: linear-gradient(120deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .question {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        .question-header {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 12px;
+            font-size: 1.1em;
+        }
+        .input-area {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 1em;
+            font-family: inherit;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+        .input-area:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        textarea.input-area {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .options {
+            margin: 10px 0;
+        }
+        .option {
+            display: block;
+            margin: 8px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .option:hover {
+            background: #e8f4f8;
+        }
+        .option input[type="radio"],
+        .option input[type="checkbox"] {
+            margin-right: 10px;
+        }
+        .answer-section {
+            margin-top: 15px;
+            padding: 15px;
+            background: #e8f5e9;
+            border-radius: 6px;
+            border-left: 4px solid #4caf50;
+            display: none;
+        }
+        .answer-section.show {
+            display: block;
+        }
+        .answer-title {
+            font-weight: bold;
+            color: #2e7d32;
+            margin-bottom: 8px;
+        }
+        .score-points {
+            color: #1565c0;
+            font-size: 0.95em;
+            margin-top: 8px;
+            padding: 8px;
+            background: #e3f2fd;
+            border-radius: 4px;
+            display: none;
+        }
+        .score-points.show {
+            display: block;
+        }
+        .button-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .btn {
+            padding: 12px 30px;
+            margin: 0 10px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+        }
+        .btn-primary {
+            background: linear-gradient(120deg, #667eea 0%, #764ba2 100%);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .btn-secondary {
+            background: linear-gradient(120deg, #f093fb 0%, #f5576c 100%);
+        }
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 87, 108, 0.4);
+        }
+        .score-display {
+            background: linear-gradient(120deg, #ffecd2 0%, #fcb69f 100%);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #d84315;
+            margin: 20px 0;
+            display: none;
+        }
+        .score-display.show {
+            display: block;
+        }
+        .framework-info {
+            background: #f8f9ff;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #667eea;
+            border-radius: 5px;
+            font-size: 0.95em;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>孟子《與人為善》</h1>
+        <p>出處：《孟子》</p>
+        <p>框架化古文練習 | 總分：40分</p>
+    </div>
+
+    <div class="text-section">
+        <h2>📖 原文呈現</h2>
+        <div class="original-text">
+            孟子曰：「子路，人告之以有過，則喜。禹，聞善言，則拜。大舜有大焉，善與人同，舍己從人，樂取於人以為善。自耕稼、陶、漁以至為帝，無非取於人者。取諸人以為善，是與人為善者也。故君子莫大乎與人為善。」
+        </div>
+        
+        <div class="framework-info">
+            <strong>📋 框架說明（哲理議論文適配版）</strong><br>
+            第二層：基礎理解（20%）| 第三層：內容把握（20%）| 第四層：寫法分析（15%）| 第五層：深度思辨（25%）| 第六層：拓展應用（20%）
+        </div>
+    </div>
+
+    <!-- 第二層：基礎理解（20% - 8分） -->
+    <div class="question-section">
+        <div class="layer-title">
+            <span>第二層：基礎理解</span>
+            <span>8分</span>
+        </div>
+
+        <div class="question">
+            <div class="question-header">1. 解釋下列詞語在文中的意思：（每個1分，共5分）</div>
+            <p>a) 告之以有過：<input type="text" class="input-area" id="q1a" placeholder="請輸入答案" style="width: 400px;"></p>
+            <p>b) 則拜：<input type="text" class="input-area" id="q1b" placeholder="請輸入答案" style="width: 400px;"></p>
+            <p>c) 善與人同：<input type="text" class="input-area" id="q1c" placeholder="請輸入答案" style="width: 400px;"></p>
+            <p>d) 舍己從人：<input type="text" class="input-area" id="q1d" placeholder="請輸入答案" style="width: 400px;"></p>
+            <p>e) 取諸人以為善：<input type="text" class="input-area" id="q1e" placeholder="請輸入答案" style="width: 400px;"></p>
+            
+            <div class="answer-section">
+                <div class="answer-title">📌 標準答案：</div>
+                a) 告之以有過：告訴他有過錯（別人指出他的錯誤）<br>
+                b) 則拜：就行禮（表示敬重和接受）<br>
+                c) 善與人同：把善當作人所共有的（把善行當作與他人共同追求的）<br>
+                d) 舍己從人：捨棄自己的不足，學習別人的長處<br>
+                e) 取諸人以為善：從別人那裡吸取優點來完善自己
+                <div class="score-points">
+                    【得分點】a) 答出「指出錯誤」1分；b) 答出「行禮」或「表示敬重」1分；c) 答出「與人共有」或「共同追求」1分；d) 答出「捨己」+「從人」各0.5分；e) 答出「吸取優點」+「完善自己」各0.5分
+                </div>
+            </div>
+        </div>
+
+        <div class="question">
+            <div class="question-header">2. 將下列句子翻譯成現代漢語：（3分）</div>
+            <p>「取諸人以為善，是與人為善者也。故君子莫大乎與人為善。」</p>
+            <textarea class="input-area" id="q2" placeholder="請輸入翻譯"></textarea>
+            
+            <div class="answer-section">
+                <div class="answer-title">📌 標準答案：</div>
+                從別人那裡吸取優點來完善自己，這就是同別人一起行善。所以君子最了不起的就是同別人一起行善。
+                <div class="score-points">
+                    【得分點】①「取諸人以為善」譯為「從別人那裡吸取優點來完善自己」1分；②「是與人為善者也」譯為「這就是同別人一起行善」1分；③「莫大乎」譯為「最了不起」或「最重要」1分
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 第三層：內容把握（20% - 8分） -->
+    <div class="question-section">
+        <div class="layer-title">
+            <span>第三層：內容把握</span>
+            <span>8分</span>
+        </div>
+
+        <div class="question">
+            <div class="question-header">3. 孟子舉了哪三位古代聖賢的例子？他們各自有什麼特點？（3分）</div>
+            <textarea class="input-area" id="q3" placeholder="請輸入答案"></textarea>
+            
+            <div class="answer-section">
+                <div class="answer-title">📌 標準答案：</div>
+                孟子舉了三位聖賢的例子：<br>
+                ①<strong>子路</strong>：別人指出他的過錯，他就高興。特點是勇於接受批評，聞過則喜。<br>
+                ②<strong>禹</strong>：聽到好的言論，就行禮表示敬重。特點是尊重善言，虛心求教。<br>
+                ③<strong>大舜</strong>：最了不起，把善當作人所共有的，捨棄自己的不足，學習別人的長處，樂於從別人那裡吸取優點。特點是「善與人同」「舍己從人」「樂取於人以為善」，從平民到天子，一生都在向他人學習。
+                <div class="score-points">
+                    【得分點】①列出三位聖賢0.5分；②答出子路特點0.5分；③答出禹特點0.5分；④答出舜的特點1.5分（最重要，分值最高）
+                </div>
+            </div>
+        </div>
+
+        <div class="question">
+            <div class="question-header">4. 本文的中心論點是什麼？請用自己的話概括。（2.5分）</div>
+            <textarea class="input-area" id="q4" placeholder="請輸入答案"></textarea>
+            
+            <div class="answer-section">
+                <div class="answer-title">📌 標準答案：</div>
+                本文的中心論點是「君子莫大乎與人為善」，即君子最重要的品德是與他人一起行善。具體而言，就是要虛心向他人學習，吸取別人的優點來完善自己，把善當作與他人共同追求的目標，而不是獨善其身。
+                <div class="score-points">
+                    【得分點】①答出「與人為善」是中心論點1分；②解釋「與人為善」的含義（向他人學習、取人之長）1分；③理解「與人同善」而非「獨善其身」0.5分
+                </div>
+            </div>
+        </div>
+
+        <div class="question">
+            <div class="question-header">5. 根據文章內容，判斷下列說法的正誤：（每個0.5分，共2.5分）</div>
+            <div class="options">
+                <label class="option">
+                    <input type="checkbox" id="q5a">
+                    A. 孟子認為子路、禹、舜三人中，舜是最值得學習的
+                </label>
+                <label class="option">
+                    <input type="checkbox" id="q5b">
+                    B. 「與人為善」的意思是幫助別人做好事
+                </label>
+                <label class="option">
+                    <input type="checkbox" id="q5c">
+                    C. 舜從耕田、做陶器、打魚一直到當天子，都在向別人學習
+                </label>
+                <label class="option">
+                    <input type="checkbox" id="q5d">
+                    D. 孟子認為君子應該保持自己的獨立性，不輕易接受別人的意見
+                </label>
+                <label class="option">
+                    <input type="checkbox" id="q5e">
+                    E. 「善與人同」強調善是人類共同追求的目標，而非個人專有
+                </label>
+            </div>
+            
+            <div class="answer-section">
+                <div class="answer-title">📌 標準答案：</div>
+                正確的選項：A、C、E<br>
+                錯誤的選項：B（「與人為善」是與人一起行善，向人學習，不是幫助別人）、D（孟子主張虛心學習，而非保持獨立性）
+                <div class="score-points">
+                    【得分點】每選對一個0.5分，選錯一個扣0.5分，最低0分
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 第四層：寫法分析（15% - 6分） -->
+    <div class="question-section">
+        <div class="layer-title">
+            <span>第四層：寫法分析</span>
+            <span>6分</span>
+        </div>
+
+        <div class="question">
+            <div class="question-header">6. 本文運用了什麼論證方法？請具體分析其作用。（3分）</div>
+            <textarea class="input-area" id="q6" placeholder="請輸入答案"></textarea>
+            
+            <div class="answer-section">
+                <div class="answer-title">📌 標準答案：</div>
+                本文主要運用了<strong>舉例論證</strong>和<strong>遞進論證</strong>：<br><br>
+                
+                ①<strong>舉例論證</strong>：通過子路、禹、舜三位聖賢的例子，具體說明「與人為善」的不同層次。這些都是歷史上的著名人物，用他們的事跡作例子，增強了說服力和權威性。<br><br>
+                
+                ②<strong>遞進論證</strong>：三個例子呈現遞進關係——子路「聞過則喜」（接受批評）→ 禹「聞善言則拜」（尊重善言）→ 舜「善與人同」「舍己從人」「樂取於人以為善」（主動學習、終身學習）。從被動接受到主動求取，從階段性到終身性，層層深入，最後歸結到舜是最高境界。<br><br>
+                
+                ③<strong>作用</strong>：這種論證方式既具體生動，又有邏輯層次，使抽象的「與人為善」變得可感可學。
+                <div class="score-points">
+                    【得分點】①答出「舉例論證」1分；②答出「遞進論證」或分析三例遞進關係1分；③說明論證作用1分
+                </div>
+            </div>
+        </div>
+
+        <div class="question">
+            <div class="question-header">7. 文章在論證結構上有什麼特點？（3分）</div>
+            <textarea class="input-area" id="q7" placeholder="請輸入答案"></textarea>
+            
+            <div class="answer-section">
+                <div class="answer-title">📌 標準答案：</div>
+                本文採用<strong>總分總結構</strong>：<br><br>
+                
+                ①<strong>引入（隱含論點）</strong>：開篇直接舉例，暗含「與人為善」的主題。<br>
+                ②<strong>分述（舉例論證）</strong>：通過子路、禹、舜三個由淺入深的例子，逐層展開論證。<br>
+                ③<strong>總結（點明論點）</strong>：最後用「取諸人以為善，是與人為善者也」解釋何為「與人為善」，再用「故君子莫大乎與人為善」明確提出中心論點。<br><br>
+                
+                這種結構先例後理，以例引理，使論證更加生動易懂，最後點明主旨，給人深刻印象。
+                <div class="score-points">
+                    【得分點】①答出「總分總」或「先例後理」結構1分；②分析各部分內容1分；③說明結構特點或作用1分
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 第五層：深度思辨（25% - 10分） -->
+    <div class="question-section">
+        <div class="layer-title">
+            <span>第五層：深度思辨</span>
+            <span>10分</span>
+        </div>
+
+        <div class="question">
+            <div class="question-header">8. 請深入闡釋「與人為善」這個核心概念的含義，並說明它與「獨善其身」有何區別。（4分）</div>
+            <textarea class="input-area" id="q8" placeholder="請輸入答案" style="min-height: 120px;"></textarea>
+            
+            <div class="answer-section">
+                <div class="answer-title">📌 標準答案：</div>
+                <strong>「與人為善」的含義：</strong><br>
+                「與人為善」有兩層含義：<br>
+                ①<strong>與人共同追求善</strong>：把善當作人類共同的目標，而不是個人獨有的品德。「善與人同」體現了這種共享精神。<br>
+                ②<strong>從他人處學習以完善自己</strong>：「舍己從人」「樂取於人以為善」，強調虛心向他人學習，吸取別人的優點來完善自己的品德。<br><br>
+                
+                <strong>與「獨善其身」的區別：</strong><br>
+                ①<strong>態度不同</strong>：「獨善其身」強調保持個人品德的純潔，不受外界影響；「與人為善」則主動向外界學習，與他人互動。<br>
+                ②<strong>境界不同</strong>：「獨善其身」是相對封閉的自我修養；「與人為善」是開放的、互惠的修養，境界更高。<br>
+                ③<strong>社會意義不同</strong>：「獨善其身」偏重個人修養；「與人為善」既完善自己，又促進社會整體的道德提升，具有更強的社會性。<br><br>
+                
+                孟子推崇「與人為善」，體現了儒家「修己以安人」的思想，強調個人修養與社會責任的統一。
+                <div class="score-points">
+                    【得分點】①解釋「與人為善」的含義（共享+學習）1.5分；②說明與「獨善其身」的區別（態度、境界、社會意義）2分；③聯繫儒家思想0.5分
+                </div>
+            </div>
+        </div>
+
+        <div class="question">
+            <div class="question-header">9. 孟子為什麼特別推崇舜？舜的「善與人同」「舍己從人」體現了什麼樣的修養境界？（3分）</div>
+            <textarea class="input-area" id="q9" placeholder="請輸入答案"></textarea>
+            
+            <div class="answer-section">
+                <div class="answer-title">📌 標準答案：</div>
+                <strong>為什麼特別推崇舜：</strong><br>
+                孟子特別推崇舜，因為舜不僅做到了聞過則喜、聞善言則拜，更達到了「善與人同」「舍己從人」的最高境界。舜「自耕稼、陶、漁以至為帝，無非取於人者」，說明他一生都在學習，無論地位高低，始終保持謙虛學習的態度。這是「與人為善」的極致體現。<br><br>
+                
+                <strong>體現的修養境界：</strong><br>
+                ①<strong>徹底的謙虛</strong>：「舍己從人」表示完全放下自我，虛心學習他人長處，沒有傲慢和偏見。<br>
+                ②<strong>主動的追求</strong>：「樂取於人以為善」，不是被動接受，而是主動、愉快地向他人學習，把學習當作樂事。<br>
+                ③<strong>終身的實踐</strong>：從平民到天子，一生都在學習，體現了「活到老學到老」的精神。<br>
+                ④<strong>開放的心態</strong>：「善與人同」，不把善當作個人專有，而是與天下人共享，體現了博大的胸懷。<br><br>
+                
+                這種境界超越了個人修養，達到了「成己達人」的聖賢境界，是儒家理想人格的典範。
+                <div class="score-points">
+                    【得分點】①說明推崇舜的原因1分；②闡釋修養境界（謙虛、主動、終身、開放）1.5分；③上升到聖賢境界或儒家理想0.5分
+                </div>
+            </div>
+        </div>
+
+        <div class="question">
+            <div class="question-header">10. 「與人為善」體現了儒家什麼樣的修養方法論？請從認識論和實踐論角度分析。（3分）</div>
+            <textarea class="input-area" id="q10" placeholder="請輸入答案"></textarea>
+            
+            <div class="answer-section">
+                <div class="answer-title">📌 標準答案：</div>
+                <strong>認識論角度：</strong><br>
+                ①<strong>承認他人價值</strong>：「與人為善」首先承認他人身上有值得學習的善，這是一種開放的認識論。不同於「唯我獨尊」，而是認為真理和善分散在眾人之中。<br>
+                ②<strong>「擇善而從」的智慧</strong>：需要有辨別善惡的能力，能夠識別什麼是值得學習的善，體現了儒家「知」的重要性。<br><br>
+                
+                <strong>實踐論角度：</strong><br>
+                ①<strong>「學而時習之」的實踐路徑</strong>：通過不斷向他人學習來完善自己，這是一個動態的、持續的修養過程。<br>
+                ②<strong>「見賢思齊」的實踐方法</strong>：看到別人的優點就學習，看到別人的缺點就反省自己，這是具體的實踐方法。<br>
+                ③<strong>從內向外的擴展</strong>：先完善自己（取於人以為善），再推及他人（與人為善），體現了「修己以安人」的實踐邏輯。<br><br>
+                
+                <strong>方法論意義：</strong><br>
+                「與人為善」既不是閉門造車的自我修養，也不是盲目從眾的隨波逐流，而是在開放學習中保持批判精神，在虛心求教中堅持道德追求。這是一種辯證的修養方法論，體現了儒家「和而不同」的智慧。
+                <div class="score-points">
+                    【得分點】①認識論角度（承認他人價值、擇善而從）1分；②實踐論角度（持續學習、見賢思齊、修己安人）1.5分；③總結方法論意義0.5分
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 第六層：拓展應用（20% - 8分） -->
+    <div class="question-section">
+        <div class="layer-title">
+            <span>第六層：拓展應用</span>
+            <span>8分</span>
+        </div>
+
+        <div class="question">
+            <div class="question-header">11. 比較孟子的「與人為善」與《論語》中「三人行，必有我師焉」的異同。（3分）</div>
+            <textarea class="input-area" id="q11" placeholder="請輸入答案"></textarea>
+            
+            <div class="answer-section">
+                <div class="answer-title">📌 標準答案：</div>
+                <strong>相同點：</strong><br>
+                ①<strong>核心精神相同</strong>：都強調虛心向他人學習，承認他人身上有值得學習的地方。<br>
+                ②<strong>開放態度</strong>：都主張開放的學習態度，不拘泥於身份地位，任何人都可能成為老師。<br>
+                ③<strong>持續性</strong>：都強調學習是持續的過程，需要時刻保持謙虛。<br><br>
+                
+                <strong>不同點：</strong><br>
+                ①<strong>表達方式</strong>：孔子是直接的教導（「必有我師焉」），孟子是通過古代聖賢的例子來說明（舉例論證）。<br>
+                ②<strong>強調重點</strong>：孔子強調「擇其善者而從之」，側重辨別和選擇；孟子強調「樂取於人以為善」，側重主動和愉悅的態度。<br>
+                ③<strong>境界層次</strong>：孔子的話更側重個人學習方法；孟子的「與人為善」還包含「善與人同」的社會共享理念，境界更高。<br><br>
+                
+                兩者相互補充，共同構成了儒家虛心學習、不斷完善的修養思想。
+                <div class="score-points">
+                    【得分點】①說明相同點1分；②分析不同點1.5分；③總結關係0.5分
+                </div>
+            </div>
+        </div>
+
+        <div class="question">
+            <div class="question-header">12. 「與人為善」對當代社會有什麼啟示？請結合現實生活談談你的理解。（5分）</div>
+            <textarea class="input-area" id="q12" placeholder="請輸入答案" style="min-height: 150px;"></textarea>
+            
+            <div class="answer-section">
+                <div class="answer-title">📌 標準答案：</div>
+                <strong>當代社會的現實問題：</strong><br>
+                在當代社會，我們面臨著一些與「與人為善」精神相違背的現象：<br>
+                ①<strong>封閉心態</strong>：有些人固步自封，不願接受新知識、新觀點。<br>
+                ②<strong>競爭文化</strong>：過度強調競爭，把他人視為對手而非學習對象。<br>
+                ③<strong>傲慢與偏見</strong>：因為學歷、地位等因素，輕視他人，聽不進不同意見。<br>
+                ④<strong>網絡暴戾</strong>：網絡上充斥著對立和攻擊，缺乏開放交流和相互學習的氛圍。<br><br>
+                
+                <strong>「與人為善」的現代啟示：</strong><br><br>
+                
+                ①<strong>終身學習理念</strong>：「與人為善」強調無論地位高低都要學習，這與現代「終身學習」理念不謀而合。在知識快速更新的時代，保持謙虛學習的態度比以往任何時候都更重要。<br><br>
+                
+                ②<strong>團隊協作精神</strong>：現代社會強調團隊合作，「與人為善」提醒我們要欣賞他人長處，取長補短，而不是孤芳自賞或相互貶低。在團隊中，每個人都是潛在的老師。<br><br>
+                
+                ③<strong>批判性思維與開放心態的平衡</strong>：「擇善而從」既要有批判精神（辨別善惡），又要有開放心態（虛心學習）。在信息爆炸的時代，這種平衡尤為重要——既不盲從，也不固執。<br><br>
+                
+                ④<strong>建設性的批評文化</strong>：子路「聞過則喜」給我們啟示：要建立建設性的批評文化。領導者要能接受批評，批評者要本著善意，共同追求進步。<br><br>
+                
+                ⑤<strong>共享經濟與知識共享</strong>：「善與人同」在現代可以理解為知識共享、資源共享的精神。開源軟件、維基百科等都體現了這種「與人為善」的現代形式。<br><br>
+                
+                <strong>個人實踐建議：</strong><br>
+                ①在工作中，主動向同事請教，建立學習型組織；<br>
+                ②在網絡上，多交流學習，少攻擊指責；<br>
+                ③對待批評和建議，以「聞過則喜」的態度虛心接受；<br>
+                ④認識到每個人都有值得學習的地方，打破身份和地位的偏見；<br>
+                ⑤把自己的知識和經驗分享給他人，實現「善與人同」。<br><br>
+                
+                <strong>結論：</strong><br>
+                「與人為善」不僅是個人修養的智慧，更是建設和諧社會、促進共同進步的重要理念。在全球化、信息化的今天，這種開放、謙虛、共享的精神具有特別重要的現實意義。
+                <div class="score-points">
+                    【得分點】①指出現實問題1分；②提出具體啟示（終身學習、團隊協作、批判與開放等）2分；③聯繫個人實踐1分；④分析深入、邏輯清晰1分
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="button-container">
+        <button class="btn btn-primary" onclick="toggleAnswers()">顯示標準答案</button>
+        <button class="btn btn-secondary" onclick="calculateScore()">計算總分</button>
+    </div>
+
+    <div class="score-display" id="scoreDisplay"></div>
+
+    <script>
+        let answersVisible = false;
+
+        function toggleAnswers() {
+            answersVisible = !answersVisible;
+            const answerSections = document.querySelectorAll('.answer-section');
+            const scorePoints = document.querySelectorAll('.score-points');
+            const button = document.querySelector('.btn-primary');
+            
+            answerSections.forEach(section => {
+                if (answersVisible) {
+                    section.classList.add('show');
+                } else {
+                    section.classList.remove('show');
+                }
+            });
+            
+            scorePoints.forEach(point => {
+                if (answersVisible) {
+                    point.classList.add('show');
+                } else {
+                    point.classList.remove('show');
+                }
+            });
+            
+            button.textContent = answersVisible ? '隱藏標準答案' : '顯示標準答案';
+        }
+
+        function calculateScore() {
+            alert('總分：40分\n\n本練習採用框架化評分體系（哲理議論文適配版）：\n\n第二層（基礎理解）：8分（20%）\n第三層（內容把握）：8分（20%）\n第四層（寫法分析）：6分（15%）\n第五層（深度思辨）：10分（25%）\n第六層（拓展應用）：8分（20%）\n\n請參照標準答案中的得分點進行自評或師評。');
+            
+            const scoreDisplay = document.getElementById('scoreDisplay');
+            scoreDisplay.innerHTML = '📊 總分：40分 | 請對照標準答案進行評分';
+            scoreDisplay.classList.add('show');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>《公冶長背諾》文言文框架化練習</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: '微軟正黑體', 'Microsoft JhengHei', '新細明體', 'PMingLiU', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .text-box {
+            background: rgba(255,255,255,0.2);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border: 2px solid rgba(255,255,255,0.3);
+            text-align: left;
+            line-height: 2;
+            font-size: 1.1em;
+        }
+
+        .framework-info {
+            background: #f8f9ff;
+            padding: 20px;
+            margin: 20px;
+            border-left: 4px solid #667eea;
+            border-radius: 5px;
+        }
+
+        .level {
+            margin: 30px;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .level-1 {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+        }
+
+        .level-2 {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        }
+
+        .level-3 {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+        }
+
+        .level h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .question {
+            background: white;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .question h3 {
+            color: #34495e;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .options {
+            margin: 10px 0;
+        }
+
+        .options label {
+            display: block;
+            margin: 8px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .options label:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+
+        input[type="radio"], input[type="checkbox"] {
+            margin-right: 10px;
+        }
+
+        textarea, input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            margin: 10px 0;
+            transition: border-color 0.3s ease;
+        }
+
+        textarea:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.2);
+        }
+
+        .scoring-guide {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-size: 0.9em;
+            display: none;
+        }
+
+        .template-box {
+            background: #e8f5e8;
+            border: 1px solid #28a745;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-size: 0.9em;
+        }
+
+        .controls {
+            text-align: center;
+            padding: 30px;
+            background: #f8f9fa;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            margin: 0 10px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #fdcb6e 0%, #e17055 100%);
+        }
+
+        .score-display {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #2d3436;
+            margin: 20px 0;
+            padding: 15px;
+            background: #dff0d8;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .answer-key {
+            background: #f8f9fa;
+            padding: 20px;
+            margin: 20px;
+            border-radius: 10px;
+            display: none;
+            border-left: 4px solid #28a745;
+        }
+
+        .answer-key h3 {
+            color: #155724;
+            margin-bottom: 15px;
+        }
+
+        .answer-item {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            border-left: 3px solid #28a745;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 10px;
+            }
+            
+            .level {
+                margin: 15px;
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>《公冶長背諾》文言文框架化練習</h1>
+            <div class="text-box">
+                世傳公冶長能解百禽之語。一日，有鴟來報長，曰：「冶長，冶長！南有死獐！子食其肉，我食其腸！」公冶長應而往，果得獐，然其無意飼鴟以腸也。鴟是以怨之。<br><br>
+                居無何，鴟又來報如前。長復往，望見數人圍一物而嘩。長以為死獐，恐人奪之，遙呼曰：「我擊死也！我擊死也！」至，乃一死人。眾人逮捕長見邑令。令審問，長再三辯，令曰："爾自言自語'我擊死也'，何為詐？"冶長無以對。
+            </div>
+            <p>基於「三位一體」古詩文學習框架 · 總分30分</p>
+        </div>
+
+        <div class="framework-info">
+            <h3>📋 框架說明（文言散文適配版）</h3>
+            <p><strong>第一層：知識體系建構</strong> - 人物典故、文體特徵、主題歸類</p>
+            <p><strong>第二層：教材梯度追蹤</strong> - 字詞理解→句子翻譯→內容理解→敘事分析</p>
+            <p><strong>第三層：答案規範模板</strong> - 主旨概括+寫作手法+啟示意義</p>
+        </div>
+
+        <!-- 第一層：知識體系建構 -->
+        <div class="level level-1">
+            <h2>🎯 第一層：知識體系建構（6分）</h2>
+            
+            <div class="question">
+                <h3>1. 人物典故（2分）</h3>
+                <p>公冶長是什麼人？他有什麼特殊能力？</p>
+                <div class="options">
+                    <label><input type="radio" name="q1" value="A">A. 孔子弟子，能解百禽之語，後因誤會入獄</label>
+                    <label><input type="radio" name="q1" value="B">B. 戰國策士，善於辯論，周遊列國</label>
+                    <label><input type="radio" name="q1" value="C">C. 隱士高人，精通醫術，救死扶傷</label>
+                </div>
+                <div class="scoring-guide">
+                    <strong>得分點：</strong>正確選擇A(2分)，理解公冶長的身份和典故背景
+                </div>
+            </div>
+
+            <div class="question">
+                <h3>2. 文體特徵（2分）</h3>
+                <p>這篇文言文屬於什麼體裁？具有什麼特點？</p>
+                <div class="options">
+                    <label><input type="radio" name="q2" value="A">A. 志怪小說，情節曲折，富有趣味性和教育意義</label>
+                    <label><input type="radio" name="q2" value="B">B. 歷史傳記，記錄史實，語言莊重嚴謹</label>
+                    <label><input type="radio" name="q2" value="C">C. 哲理散文，說理透徹，邏輯嚴密</label>
+                </div>
+                <div class="scoring-guide">
+                    <strong>得分點：</strong>正確選擇A(2分)，識別志怪小說的體裁特徵
+                </div>
+            </div>
+
+            <div class="question">
+                <h3>3. 主題歸類（2分）</h3>
+                <p>這個故事主要想說明什麼道理？（可複選）</p>
+                <div class="options">
+                    <label><input type="checkbox" name="q3" value="A">A. 說話要謹慎，避免引起誤會</label>
+                    <label><input type="checkbox" name="q3" value="B">B. 恩將仇報的後果</label>
+                    <label><input type="checkbox" name="q3" value="C">C. 因果報應的道理</label>
+                    <label><input type="checkbox" name="q3" value="D">D. 智慧並非總能帶來好運</label>
+                </div>
+                <div class="scoring-guide">
+                    <strong>得分點：</strong>選擇A、B、C均可得分，每項0.5分，最多2分
+                </div>
+            </div>
+        </div>
+
+        <!-- 第二層：教材梯度追蹤 -->
+        <div class="level level-2">
+            <h2>📚 第二層：教材梯度追蹤（17分）</h2>
+            
+            <div class="question">
+                <h3>4. 字詞理解（6分，每題1分）</h3>
+                <p>解釋下列加點字詞的意思：</p>
+                <p>（1）世<u>傳</u>公冶長：________________</p>
+                <input type="text" id="q4a" placeholder="解釋「傳」">
+                
+                <p>（2）有鴟來<u>報</u>長：________________</p>
+                <input type="text" id="q4b" placeholder="解釋「報」">
+                
+                <p>（3）公冶長<u>應</u>而往：________________</p>
+                <input type="text" id="q4c" placeholder="解釋「應」">
+                
+                <p>（4）<u>居無何</u>：________________</p>
+                <input type="text" id="q4d" placeholder="解釋「居無何」">
+                
+                <p>（5）長<u>復</u>往：________________</p>
+                <input type="text" id="q4e" placeholder="解釋「復」">
+                
+                <p>（6）冶長<u>無以對</u>：________________</p>
+                <input type="text" id="q4f" placeholder="解釋「無以對」">
+                
+                <div class="scoring-guide">
+                    <strong>得分點：</strong>傳說、流傳(1分) + 告訴、通報(1分) + 答應、回應(1分) + 過了不久(1分) + 又、再(1分) + 沒有辦法回答(1分)
+                </div>
+            </div>
+
+            <div class="question">
+                <h3>5. 句子翻譯-「留祖煮茶」法（5分）</h3>
+                <p>運用「留、組、換、調、刪、補」六字處理法，翻譯「子食其肉，我食其腸」：</p>
+                <textarea id="q5" rows="4" placeholder="請按步驟分析並給出最終譯文"></textarea>
+                <div class="template-box">
+                    <strong>翻譯模板：</strong><br>
+                    留：保留________<br>
+                    組：組合理解________<br>
+                    換：________換成________<br>
+                    調：調整語序為________<br>
+                    刪/補：________<br>
+                    譯文：________
+                </div>
+                <div class="scoring-guide">
+                    <strong>得分點：</strong>留「食」(0.5分) + 組合理解句式結構(1分) + 換「子」為「你」等(1分) + 調整語序(1分) + 最終譯文正確(1.5分)
+                </div>
+            </div>
+
+            <div class="question">
+                <h3>6. 內容理解（3分）</h3>
+                <p>故事中，公冶長為什麼會遭到逮捕？請按照情節發展簡要說明。</p>
+                <textarea id="q6" rows="3" placeholder="請簡要說明原因"></textarea>
+                <div class="scoring-guide">
+                    <strong>得分點：</strong>鴟因未得腸而怨恨(1分) + 第二次誤以為死獐而大喊「我擊死也」(1分) + 結果是死人導致被誤認為兇手(1分)
+                </div>
+            </div>
+
+            <div class="question">
+                <h3>7. 敘事分析（3分）</h3>
+                <p>這個故事在敘事上有什麼特點？請從情節安排、因果關係等角度分析。</p>
+                <textarea id="q7" rows="3" placeholder="分析敘事特點"></textarea>
+                <div class="template-box">
+                    <strong>分析模板：</strong><br>
+                    情節：採用________結構，先________後________<br>
+                    因果：因________，導致________<br>
+                    效果：達到________的效果
+                </div>
+                <div class="scoring-guide">
+                    <strong>得分點：</strong>情節前後呼應/對比(1分) + 因果關係緊密(1分) + 諷刺或警示效果(1分)
+                </div>
+            </div>
+        </div>
+
+        <!-- 第三層：答案規範模板 -->
+        <div class="level level-3">
+            <h2>✍️ 第三層：答案規範模板（7分）</h2>
+            
+            <div class="question">
+                <h3>8. 主旨概括（3分）</h3>
+                <p>按照規範模板，概括這篇文言文的主旨：</p>
+                <textarea id="q8" rows="3" placeholder="請使用模板格式作答"></textarea>
+                <div class="template-box">
+                    <strong>主旨概括模板：</strong><br>
+                    本文通過________（事件），敘述了________（經過），說明了________（道理/主旨），體現了________（思想意義）。
+                </div>
+                <div class="scoring-guide">
+                    <strong>得分點：</strong>事件概括準確(1分) + 道理闡述恰當(1分) + 思想意義深刻(1分)
+                </div>
+            </div>
+
+            <div class="question">
+                <h3>9. 寫作手法分析（2分）</h3>
+                <p>本文運用了什麼寫作手法？有什麼效果？</p>
+                <textarea id="q9" rows="2" placeholder="請分析寫作手法"></textarea>
+                <div class="template-box">
+                    <strong>手法分析模板：</strong><br>
+                    本文運用了________手法，通過________，達到了________的效果。
+                </div>
+                <div class="scoring-guide">
+                    <strong>得分點：</strong>手法識別正確(如對比、伏筆等)(1分) + 效果分析到位(1分)
+                </div>
+            </div>
+
+            <div class="question">
+                <h3>10. 啟示意義（2分）</h3>
+                <p>這個故事給你什麼啟示？請結合現實生活談談你的理解。</p>
+                <textarea id="q10" rows="3" placeholder="請談談你的啟示和理解"></textarea>
+                <div class="scoring-guide">
+                    <strong>得分點：</strong>啟示明確(1分) + 結合現實分析(1分)
+                </div>
+            </div>
+        </div>
+
+        <!-- 控制按鈕 -->
+        <div class="controls">
+            <button class="btn" onclick="checkAnswers()">檢查答案</button>
+            <button class="btn btn-secondary" onclick="showAnswerKey()">顯示標準答案</button>
+            <button class="btn btn-success" onclick="downloadExercise()">下載練習</button>
+            <button class="btn btn-warning" onclick="printExercise()">列印練習</button>
+        </div>
+
+        <!-- 分數顯示 -->
+        <div class="score-display" id="scoreDisplay"></div>
+
+        <!-- 標準答案 -->
+        <div class="answer-key" id="answerKey">
+            <h3>📝 標準答案與解析</h3>
+            
+            <div class="answer-item">
+                <strong>1. 人物典故（2分）</strong><br>
+                答案：A<br>
+                解析：公冶長是孔子的弟子，相傳能聽懂鳥獸的語言。雖有特殊能力，但最終因誤會入獄。這個典故後來成為「無辜受累」的代表性故事。
+            </div>
+            
+            <div class="answer-item">
+                <strong>2. 文體特徵（2分）</strong><br>
+                答案：A<br>
+                解析：本文屬於志怪小說，情節設計巧妙，前後呼應，通過一個富有戲劇性的故事說明道理，兼具趣味性和教育意義。
+            </div>
+            
+            <div class="answer-item">
+                <strong>3. 主題歸類（2分）</strong><br>
+                答案：A、B、C（任選兩項即可得分）<br>
+                解析：<br>
+                A - 公冶長因失言「我擊死也」而被誤認為兇手，說明說話需謹慎<br>
+                B - 公冶長第一次沒有分腸給鴟，鴟懷恨報復，體現恩將仇報的主題<br>
+                C - 從因果循環角度看，第一次的失信導致第二次的報應<br>
+                D - 雖然公冶長有特殊能力，但反而因此受害，也是一種解讀
+            </div>
+            
+            <div class="answer-item">
+                <strong>4. 字詞理解（6分）</strong><br>
+                （1）傳：流傳、傳說（1分）<br>
+                （2）報：告訴、通報、報告（1分）<br>
+                （3）應：答應、回應（1分）<br>
+                （4）居無何：過了不久、沒過多久（1分）<br>
+                （5）復：又、再（1分）<br>
+                （6）無以對：沒有辦法回答、無法辯解（1分）
+            </div>
+            
+            <div class="answer-item">
+                <strong>5. 句子翻譯（5分）</strong><br>
+                答案示例：<br>
+                留：食（吃）<br>
+                組：「子食其肉，我食其腸」為對偶句式，主謂賓結構<br>
+                換：子→你，其→它的（獐的），食→吃<br>
+                調：保持原語序即可<br>
+                補：補充省略的動詞和語氣<br>
+                譯文：你吃它的肉，我吃它的腸子。
+            </div>
+            
+            <div class="answer-item">
+                <strong>6. 內容理解（3分）</strong><br>
+                答案示例：公冶長第一次得到死獐後，沒有將腸子給鴟，鴟因此懷恨在心。第二次鴟又來通報，但這次是陷阱。公冶長誤以為又是死獐，遠遠看見人群就喊「我擊死也」，結果發現是死人，被眾人誤認為是兇手而被逮捕。
+            </div>
+            
+            <div class="answer-item">
+                <strong>7. 敘事分析（3分）</strong><br>
+                答案示例：本文採用前後對比的結構，第一次通報是真實的死獐，第二次則是陷阱。兩次情節形成對照，因果關係緊密：因公冶長第一次失信於鴟，導致鴟懷恨報復；因公冶長誤以為情況相同而失言，導致被誤認為兇手。這種情節安排達到了諷刺和警示的效果，增強了故事的戲劇性。
+            </div>
+            
+            <div class="answer-item">
+                <strong>8. 主旨概括（3分）</strong><br>
+                答案示例：本文通過公冶長能聽懂鳥語卻反受其害的事件，敘述了他因失信於鴟而遭報復陷害的經過，說明了言行需謹慎、承諾當守信的道理，體現了因果循環、恩怨分明的思想，警示人們對待他人應誠信，說話行事要小心。
+            </div>
+            
+            <div class="answer-item">
+                <strong>9. 寫作手法（2分）</strong><br>
+                答案示例：本文運用了對比和伏筆的手法，通過兩次鴟來報信的情節對比，前一次真實，後一次陷阱，形成反差。第一次公冶長失信不給鴟腸子，為後文埋下伏筆。這種寫作手法達到了情節曲折、引人入勝的效果，增強了故事的諷刺意味。
+            </div>
+            
+            <div class="answer-item">
+                <strong>10. 啟示意義（2分）</strong><br>
+                答案示例：這個故事啟示我們：一、言行要謹慎，在公共場合說話要考慮後果，避免引起誤會；二、對人要守信，答應別人的事要做到，否則可能招致報復；三、不要輕易相信重複的模式，要保持警惕。在現實生活中，我們應該謹言慎行，誠信待人，同時對外界保持理性判斷。
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function checkAnswers() {
+            let score = 0;
+            let totalScore = 30;
+            let feedback = "得分分析：\n";
+
+            // 第1題 - 人物典故
+            const q1 = document.querySelector('input[name="q1"]:checked');
+            if (q1 && q1.value === 'A') {
+                score += 2;
+                feedback += "第1題：滿分(2分)\n";
+            } else {
+                feedback += "第1題：答案有誤(0分)\n";
+            }
+
+            // 第2題 - 文體特徵
+            const q2 = document.querySelector('input[name="q2"]:checked');
+            if (q2 && q2.value === 'A') {
+                score += 2;
+                feedback += "第2題：滿分(2分)\n";
+            } else {
+                feedback += "第2題：答案有誤(0分)\n";
+            }
+
+            // 第3題 - 主題歸類（複選）
+            const q3Checked = document.querySelectorAll('input[name="q3"]:checked');
+            let q3Score = 0;
+            q3Checked.forEach(checkbox => {
+                if (checkbox.value === 'A' || checkbox.value === 'B' || checkbox.value === 'C') {
+                    q3Score += 0.5;
+                }
+            });
+            q3Score = Math.min(q3Score, 2);
+            score += q3Score;
+            feedback += `第3題：得分${q3Score}/2分\n`;
+
+            // 第4題 - 字詞理解
+            const q4a = document.getElementById('q4a').value.toLowerCase();
+            const q4b = document.getElementById('q4b').value.toLowerCase();
+            const q4c = document.getElementById('q4c').value.toLowerCase();
+            const q4d = document.getElementById('q4d').value.toLowerCase();
+            const q4e = document.getElementById('q4e').value.toLowerCase();
+            const q4f = document.getElementById('q4f').value.toLowerCase();
+            
+            let q4Score = 0;
+            if (q4a.includes('傳說') || q4a.includes('流傳')) q4Score += 1;
+            if (q4b.includes('告訴') || q4b.includes('報告') || q4b.includes('通報')) q4Score += 1;
+            if (q4c.includes('答應') || q4c.includes('回應')) q4Score += 1;
+            if (q4d.includes('不久') || q4d.includes('過了')) q4Score += 1;
+            if (q4e.includes('又') || q4e.includes('再')) q4Score += 1;
+            if (q4f.includes('沒有') && q4f.includes('回答')) q4Score += 1;
+            
+            score += q4Score;
+            feedback += `第4題：得分${q4Score}/6分\n`;
+
+            // 第5題 - 句子翻譯
+            const q5 = document.getElementById('q5').value;
+            let q5Score = 0;
+            if (q5.length > 60) {
+                q5Score = 4;
+            } else if (q5.length > 30) {
+                q5Score = 3;
+            } else if (q5.length > 15) {
+                q5Score = 2;
+            }
+            score += q5Score;
+            feedback += `第5題：得分${q5Score}/5分\n`;
+
+            // 第6題 - 內容理解
+            const q6 = document.getElementById('q6').value;
+            let q6Score = 0;
+            if (q6.length > 50) {
+                q6Score = 3;
+            } else if (q6.length > 25) {
+                q6Score = 2;
+            } else if (q6.length > 10) {
+                q6Score = 1;
+            }
+            score += q6Score;
+            feedback += `第6題：得分${q6Score}/3分\n`;
+
+            // 第7題 - 敘事分析
+            const q7 = document.getElementById('q7').value;
+            let q7Score = 0;
+            if (q7.length > 50) {
+                q7Score = 3;
+            } else if (q7.length > 25) {
+                q7Score = 2;
+            } else if (q7.length > 10) {
+                q7Score = 1;
+            }
+            score += q7Score;
+            feedback += `第7題：得分${q7Score}/3分\n`;
+
+            // 第8題 - 主旨概括
+            const q8 = document.getElementById('q8').value;
+            let q8Score = 0;
+            if (q8.length > 60) {
+                q8Score = 3;
+            } else if (q8.length > 30) {
+                q8Score = 2;
+            } else if (q8.length > 10) {
+                q8Score = 1;
+            }
+            score += q8Score;
+            feedback += `第8題：得分${q8Score}/3分\n`;
+
+            // 第9題 - 寫作手法
+            const q9 = document.getElementById('q9').value;
+            let q9Score = 0;
+            if (q9.length > 40) {
+                q9Score = 2;
+            } else if (q9.length > 15) {
+                q9Score = 1;
+            }
+            score += q9Score;
+            feedback += `第9題：得分${q9Score}/2分\n`;
+
+            // 第10題 - 啟示意義
+            const q10 = document.getElementById('q10').value;
+            let q10Score = 0;
+            if (q10.length > 40) {
+                q10Score = 2;
+            } else if (q10.length > 15) {
+                q10Score = 1;
+            }
+            score += q10Score;
+            feedback += `第10題：得分${q10Score}/2分\n`;
+
+            // 顯示結果
+            const percentage = (score / totalScore * 100).toFixed(1);
+            document.getElementById('scoreDisplay').innerHTML = `
+                <h3>📊 得分結果</h3>
+                <p>總分：${score}/${totalScore}分 (${percentage}%)</p>
+                <div style="margin-top: 10px; font-size: 0.9em; white-space: pre-line;">${feedback}</div>
+            `;
+            document.getElementById('scoreDisplay').style.display = 'block';
+        }
+
+        function showAnswerKey() {
+            const answerKey = document.getElementById('answerKey');
+            const scoringGuides = document.querySelectorAll('.scoring-guide');
+            
+            if (answerKey.style.display === 'none' || answerKey.style.display === '') {
+                answerKey.style.display = 'block';
+                scoringGuides.forEach(guide => {
+                    guide.style.display = 'block';
+                });
+            } else {
+                answerKey.style.display = 'none';
+                scoringGuides.forEach(guide => {
+                    guide.style.display = 'none';
+                });
+            }
+        }
+
+        function downloadExercise() {
+            const element = document.createElement('a');
+            const content = document.documentElement.outerHTML;
+            const file = new Blob([content], {type: 'text/html'});
+            element.href = URL.createObjectURL(file);
+            element.download = '公冶長文言文框架化練習.html';
+            element.click();
+        }
+
+        function printExercise() {
+            window.print();
+        }
+    </script>
+</body>
+</html>

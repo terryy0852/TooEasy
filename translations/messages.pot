@@ -1,0 +1,343 @@
+# Translations template for PROJECT.
+# Copyright (C) 2023 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+msgid ""msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2023-12-08 10:00+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.12.1\n"
+
+# Common terms
+msgid "作业管理系统"
+msgstr ""
+
+msgid "登录"
+msgstr ""
+
+msgid "注册"
+msgstr ""
+
+msgid "退出登录"
+msgstr ""
+
+msgid "仪表盘"
+msgstr ""
+
+# Login page
+msgid "用户登录"
+msgstr ""
+
+msgid "用户名"
+msgstr ""
+
+msgid "密码"
+msgstr ""
+
+msgid "还没有账号？"
+msgstr ""
+
+msgid "立即注册"
+msgstr ""
+
+# Register page
+msgid "用户注册"
+msgstr ""
+
+msgid "邮箱"
+msgstr ""
+
+msgid "我是教师"
+msgstr ""
+
+msgid "已有账号？"
+msgstr ""
+
+msgid "立即登录"
+msgstr ""
+
+# Tutor dashboard
+msgid "教师仪表盘"
+msgstr ""
+
+msgid "创建新作业"
+msgstr ""
+
+msgid "我的作业"
+msgstr ""
+
+msgid "下载文件"
+msgstr ""
+
+msgid "查看提交"
+msgstr ""
+
+msgid "您还没有创建任何作业"
+msgstr ""
+
+msgid "创建第一个作业"
+msgstr ""
+
+# Create assignment
+msgid "创建作业"
+msgstr ""
+
+msgid "作业标题"
+msgstr ""
+
+msgid "作业描述"
+msgstr ""
+
+msgid "上传文件（可选）"
+msgstr ""
+
+msgid "支持的格式：txt, pdf, doc, docx, xls, xlsx, ppt, pptx, zip"
+msgstr ""
+
+msgid "截止日期（可选）"
+msgstr ""
+
+msgid "创建作业"
+msgstr ""
+
+msgid "取消"
+msgstr ""
+
+# View submissions
+msgid "查看提交"
+msgstr ""
+
+msgid "返回仪表盘"
+msgstr ""
+
+msgid "学生"
+msgstr ""
+
+msgid "提交时间"
+msgstr ""
+
+msgid "文件"
+msgstr ""
+
+msgid "评分状态"
+msgstr ""
+
+msgid "操作"
+msgstr ""
+
+msgid "下载"
+msgstr ""
+
+msgid "已评分"
+msgstr ""
+
+msgid "未评分"
+msgstr ""
+
+msgid "修改评分"
+msgstr ""
+
+msgid "评分"
+msgstr ""
+
+msgid "还没有学生提交此作业"
+msgstr ""
+
+msgid "无文件"
+msgstr ""
+
+# Grade submission
+msgid "评分"
+msgstr ""
+
+msgid "返回提交列表"
+msgstr ""
+
+msgid "学生信息"
+msgstr ""
+
+msgid "学生姓名"
+msgstr ""
+
+msgid "提交文件"
+msgstr ""
+
+msgid "分数"
+msgstr ""
+
+msgid "反馈"
+msgstr ""
+
+msgid "保存评分"
+msgstr ""
+
+# Student dashboard
+msgid "学生仪表盘"
+msgstr ""
+
+msgid "可用作业"
+msgstr ""
+
+msgid "已提交"
+msgstr ""
+
+msgid "发布者"
+msgstr ""
+
+msgid "截止日期"
+msgstr ""
+
+msgid "发布时间"
+msgstr ""
+
+msgid "查看详情"
+msgstr ""
+
+msgid "开始作业"
+msgstr ""
+
+msgid "当前没有可用的作业"
+msgstr ""
+
+msgid "等待评分"
+msgstr ""
+
+msgid "得分"
+msgstr ""
+
+# View assignment
+msgid "返回仪表盘"
+msgstr ""
+
+msgid "提交状态"
+msgstr ""
+
+msgid "教师尚未评分"
+msgstr ""
+
+msgid "提交作业"
+msgstr ""
+
+msgid "上传作业文件"
+msgstr ""
+
+msgid "提交作业"
+msgstr ""
+
+msgid "作业文件"
+msgstr ""
+
+msgid "教师反馈"
+msgstr ""
+
+msgid "暂无反馈"
+msgstr ""
+
+msgid "下载作业材料"
+msgstr ""
+
+# Flash messages
+msgid "Invalid username or password"
+msgstr ""
+
+msgid "Username already exists"
+msgstr ""
+
+msgid "Email already exists"
+msgstr ""
+
+msgid "Registration successful! Please login."
+msgstr ""
+
+msgid "You are not authorized to access this page"
+msgstr ""
+
+msgid "Assignment created successfully!"
+msgstr ""
+
+msgid "You are not authorized to view these submissions"
+msgstr ""
+
+msgid "You are not authorized to grade this submission"
+msgstr ""
+
+msgid "Submission graded successfully!"
+msgstr ""
+
+msgid "You have already submitted this assignment"
+msgstr ""
+
+msgid "No file part"
+msgstr ""
+
+msgid "No selected file"
+msgstr ""
+
+msgid "Assignment submitted successfully!"
+msgstr ""
+
+# Interactive Assignment
+msgid "开始作业"
+msgstr ""
+
+msgid "点击以上按钮在新标签页中完成交互式作业"
+msgstr ""
+
+msgid "交互式作业"
+msgstr ""
+
+msgid "此作业没有交互式内容。请使用文件上传方式提交作业。"
+msgstr ""
+
+msgid "确定要关闭吗？未提交的内容将会丢失。"
+msgstr ""
+
+msgid "您有未保存的内容，确定要离开吗？"
+msgstr ""
+
+msgid "This assignment does not have interactive content"
+msgstr ""
+
+msgid "作业提交成功！"
+msgstr ""
+
+msgid "您的作业已成功提交，请等待教师评分。"
+msgstr ""
+
+msgid "此窗口将在3秒后自动关闭。"
+msgstr ""
+
+msgid "您没有权限下载此文件"
+msgstr ""
+
+msgid "下载文件时出错: %(error)s"
+msgstr ""
+
+msgid "学生答案 (JSON)"
+msgstr ""
+
+msgid "原始作业 (HTML)"
+msgstr ""
+
+msgid "正在获取答案..."
+msgstr ""
+
+msgid "无法获取作业答案。请确保您已完成作业，并尝试重新提交。"
+msgstr ""
+
+msgid "提交作业时发生错误:"
+msgstr ""
+
+msgid "提交的答案为空，请完成作业后重新提交。"
+msgstr ""
+
+msgid "保存答案时出错:"
+msgstr ""
+
+msgid "Invalid file type"
+msgstr ""

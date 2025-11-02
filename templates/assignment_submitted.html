@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ _('作业提交成功') }} - {{ _('作业管理系统') }}{% endblock %}
+
+{% block content %}
+<div class="submission-success" style="text-align: center; max-width: 600px; margin: 0 auto; padding: 2rem;">
+    <h2 style="color: var(--primary-color); margin-bottom: 1.5rem;">{{ _('作业提交成功！') }}</h2>
+    <p style="margin-bottom: 2rem;">{{ _('您的作业已成功提交，请等待教师评分。') }}</p>
+    
+    <div style="margin-bottom: 2rem;">
+        <i class="fas fa-check-circle" style="font-size: 3rem; color: #28a745; margin-bottom: 1rem;"></i>
+    </div>
+    
+    <div style="text-align: center;">
+        <p style="margin-bottom: 1.5rem;">{{ _('此窗口将在3秒后自动关闭。') }}</p>
+    </div>
+</div>
+
+<script>
+    // Close the current window after a short delay
+    setTimeout(function() {
+        // Try to refresh the opener window if it exists
+        if (window.opener && !window.opener.closed) {
+            // Redirect the opener to the view assignment page
+            window.opener.location.href = '{{ url_for('view_assignment', assignment_id=assignment_id) }}';
+        }
+        
+        // Close the current window
+        window.close();
+    }, 3000);
+</script>
+{% endblock %}

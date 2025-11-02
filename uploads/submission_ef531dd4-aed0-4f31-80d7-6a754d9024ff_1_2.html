@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light" style=""><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中二級成語理解測試</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&amp;display=swap" rel="stylesheet">
+    <style>
+      body {
+        font-family: 'Microsoft YaHei', 'SimSun', serif;
+        line-height: 1.6;
+        max-width: 880px;
+        margin: 0 auto;
+        padding: 32px 80px;
+        position: relative;
+        box-sizing: border-box;
+        background-color: #f9f9f9;
+      }
+
+      .container {
+        background-color: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .header {
+        text-align: center;
+        border-bottom: 2px solid #333;
+        padding-bottom: 15px;
+        margin-bottom: 25px;
+      }
+
+      .header h1 {
+        font-size: 24px;
+        color: #333;
+        margin: 0;
+      }
+
+      .score-display {
+        text-align: right;
+        font-weight: bold;
+        margin-bottom: 20px;
+        font-size: 16px;
+        color: #007acc;
+      }
+
+      .instruction {
+        background-color: #f5f5f5;
+        padding: 15px;
+        border-left: 4px solid #007acc;
+        margin-bottom: 25px;
+        font-size: 14px;
+      }
+
+      .question {
+        margin: 25px 0;
+        padding: 15px;
+        border-left: 3px solid #007acc;
+        background-color: #fafafa;
+      }
+
+      .question-number {
+        font-weight: bold;
+        font-size: 16px;
+        color: #007acc;
+        margin-bottom: 10px;
+      }
+
+      .sub-question {
+        margin: 15px 0;
+        padding-left: 20px;
+      }
+
+	.idiom-reference {
+        background-color: #fafafa;
+        padding: 20px;
+        margin: 25px 0;
+        border: 1px solid #e0e0e0;
+        border-radius: 5px;
+      }
+      .input-field {
+        border: 2px solid #ddd;
+        padding: 8px 12px;
+        font-size: 14px;
+        border-radius: 4px;
+        min-width: 150px;
+        font-family: inherit;
+        transition: border-color 0.3s;
+      }
+
+      .input-field[maxlength="1"] {
+        min-width: 25px;
+        width: 25px;
+        padding: 8px 4px;
+        text-align: center;
+      }
+
+      .input-field:focus {
+        outline: none;
+        border-color: #007acc;
+      }
+
+      .input-field.correct {
+        border-color: #28a745;
+        background-color: #d4edda;
+      }
+
+      .input-field.incorrect {
+        border-color: #dc3545;
+        background-color: #f8d7da;
+      }
+
+      .points {
+        color: #666;
+        font-weight: bold;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 15px 0;
+      }
+
+      table,
+      th,
+      td {
+        border: 1px solid #333;
+      }
+
+      th,
+      td {
+        padding: 12px;
+        text-align: center;
+        vertical-align: middle;
+      }
+
+      th {
+        background-color: #f5f5f5;
+        font-weight: bold;
+      }
+
+      .options {
+        margin: 10px 0;
+        padding-left: 20px;
+      }
+
+      .option {
+        margin: 8px 0;
+        padding: 8px;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: background-color 0.3s;
+      }
+
+      .option:hover {
+        background-color: #e9ecef;
+      }
+
+      .option input[type='radio'] {
+        margin-right: 8px;
+      }
+
+      .option.correct {
+        background-color: #d4edda;
+        border: 2px solid #28a745;
+      }
+
+      .option.incorrect {
+        background-color: #f8d7da;
+        border: 2px solid #dc3545;
+      }
+
+      .separator {
+        border-top: 1px solid #ccc;
+        margin: 25px 0;
+      }
+
+      .control-buttons {
+        text-align: center;
+        margin: 30px 0;
+      }
+
+      .btn {
+        background-color: #007acc;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        font-size: 16px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 0 10px;
+        transition: background-color 0.3s;
+      }
+
+      .btn:hover {
+        background-color: #005a9e;
+      }
+
+      .btn:disabled {
+        background-color: #6c757d;
+        cursor: not-allowed;
+      }
+
+      .btn-secondary {
+        background-color: #6c757d;
+      }
+
+      .btn-secondary:hover {
+        background-color: #545b62;
+      }
+
+      .feedback {
+        margin-top: 20px;
+        padding: 15px;
+        border-radius: 5px;
+        font-weight: bold;
+      }
+
+      .feedback.excellent {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+
+      .feedback.good {
+        background-color: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+      }
+
+      .feedback.needs-improvement {
+        background-color: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+      }
+
+      .feedback.poor {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .result-summary {
+        background-color: #e8f4fd;
+        border: 1px solid #b3d9ff;
+        padding: 20px;
+        margin-top: 20px;
+        border-radius: 5px;
+      }
+
+      .result-summary h3 {
+        color: #0066cc;
+        margin-top: 0;
+      }
+
+      .student-info {
+        background-color: #f8f9fa;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+        border: 1px solid #dee2e6;
+      }
+
+      .student-info input {
+        margin: 5px 10px;
+        padding: 5px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+      }
+
+      .matching-table {
+        display: flex;
+        justify-content: space-between;
+        margin: 15px 0;
+      }
+
+      .matching-column {
+        width: 45%;
+      }
+
+      .matching-item {
+        margin: 8px 0;
+        padding: 8px;
+        border: 1px solid #ddd;
+        background-color: #f9f9f9;
+      }
+    </style>
+  </head>
+  <body style="">
+    <div class="container">
+      <div class="header">
+        <h1>中二級成語理解測試</h1>
+      </div>
+
+      <div class="student-info">
+        <label>學生姓名：<input type="text" id="studentName" placeholder="請輸入您的姓名" value="test1"></label>
+        <label>班級：<input type="text" id="studentClass" placeholder="請輸入班級" value="2b"></label>
+        <label>學號：<input type="text" id="studentId" placeholder="請輸入學號" value="33"></label>
+      </div>
+
+      <div class="score-display">
+        總分：61分 | 當前得分：<span id="currentScore">28.0</span>分 | 完成進度：<span id="progress">43</span>%
+      </div>
+
+      <div class="instruction">
+        <strong>測試說明：</strong>本測試包含五個部分，共61分。請仔細閱讀每道題目，根據對成語的理解作答。完成後點擊「檢查答案」查看結果。
+      </div>
+
+ <h2 id="reference">成語參考資料</h2>
+
+    <div class="idiom-reference">
+      <h3>完整成語解釋與例句</h3>
+
+      <div class="idiom-item">
+        <div class="idiom-title">1. 削足就履</div>
+        <div class="idiom-meaning">比喻勉強遷就，不顧客觀條件。例：制定計劃要實事求是，不能削足就履。</div>
+      </div>
+
+      <div class="idiom-item">
+        <div class="idiom-title">2. 曲突徙薪</div>
+        <div class="idiom-meaning">彎曲煙囪，搬走柴火，比喻預先防範災禍。例：我們應該曲突徙薪，提前做好防範措施。</div>
+      </div>
+
+      <div class="idiom-item">
+        <div class="idiom-title">3. 狐假虎威</div>
+        <div class="idiom-meaning">借助別人的威勢嚇唬人。例：他只是狐假虎威，沒有真正的能力。</div>
+      </div>
+
+      <div class="idiom-item">
+        <div class="idiom-title">4. 掩耳盜鈴</div>
+        <div class="idiom-meaning">比喻自欺欺人。例：逃避責任只是掩耳盜鈴的做法。</div>
+      </div>
+
+      <div class="idiom-item">
+        <div class="idiom-title">5. 曲意逢迎</div>
+        <div class="idiom-meaning">違背本意去迎合別人。例：他為了升職而曲意逢迎上司。</div>
+      </div>
+
+      <div class="idiom-item">
+        <div class="idiom-title">6. 枕戈待旦</div>
+        <div class="idiom-meaning">時刻保持警惕，準備應戰。例：士兵們枕戈待旦，隨時準備迎敵。</div>
+      </div>
+
+      <div class="idiom-item">
+        <div class="idiom-title">7. 前車之鑑</div>
+        <div class="idiom-meaning">以前人的失敗作為教訓。例：這次失敗要作為前車之鑑。</div>
+      </div>
+
+      <div class="idiom-item">
+        <div class="idiom-title">8. 為虎作倀</div>
+        <div class="idiom-meaning">助紂為虐，幫助壞人做壞事。例：我們不能為虎作倀，助長不正之風。</div>
+      </div>
+
+      <div class="idiom-item">
+        <div class="idiom-title">9. 開誠佈公</div>
+        <div class="idiom-meaning">誠懇坦白，毫不隱瞒。例：我們應該開誠佈公地討論問題。</div>
+      </div>
+
+      <div class="idiom-item">
+        <div class="idiom-title">10. 胸無城府</div>
+        <div class="idiom-meaning">心地純潔，沒有心機。例：他是個胸無城府的人，很值得信賴。</div>
+      </div>
+
+      <div class="idiom-item">
+        <div class="idiom-title">11. 一箭之地</div>
+        <div class="idiom-meaning">一箭射程的距離，形容距離很近。例：學校離家只有一箭之地。</div>
+      </div>
+
+      <div class="idiom-item">
+        <div class="idiom-title">12. 鳳毛麟角</div>
+        <div class="idiom-meaning">比喻珍貴而稀少的人才或事物。例：像他這樣的人才真是鳳毛麟角。</div>
+      </div>
+
+      <div class="idiom-item">
+        <div class="idiom-title">13. 偃旗息鼓</div>
+        <div class="idiom-meaning">停止活動或保持沉默。例：經過激烈辯論後，雙方都偃旗息鼓了。</div>
+      </div>
+
+      <div class="idiom-item">
+        <div class="idiom-title">14. 滄海一粟</div>
+        <div class="idiom-meaning">比喻非常渺小。例：個人在歷史長河中只是滄海一粟。</div>
+      </div>
+
+      <div class="idiom-item">
+        <div class="idiom-title">15. 如雷貫耳</div>
+        <div class="idiom-meaning">聲音很大，也比喻名聲很大。例：這位歌手的名字如雷貫耳。</div>
+      </div>
+
+      <div class="idiom-item">
+        <div class="idiom-title">16. 水中撈月</div>
+        <div class="idiom-meaning">比喻徒勞無功，不可能實現。例：想不努力就成功，無異於水中撈月。</div>
+      </div>
+
+      <div class="idiom-item">
+        <div class="idiom-title">17. 水到渠成</div>
+        <div class="idiom-meaning">條件成熟，事情自然成功。例：只要努力學習，成績提高是水到渠成的。</div>
+      </div>
+
+      <div class="idiom-item">
+        <div class="idiom-title">18. 木已成舟</div>
+        <div class="idiom-meaning">事情已成定局，無法改變。例：既然木已成舟，就要面對現實。</div>
+      </div>
+
+      <div class="idiom-item">
+        <div class="idiom-title">19. 中流砥柱</div>
+        <div class="idiom-meaning">比喻堅強而能起支撐作用的人或力量。例：他是公司的中流砥柱。</div>
+      </div>
+
+      <div class="idiom-item">
+        <div class="idiom-title">20. 立竿見影</div>
+        <div class="idiom-meaning">比喻效果顯著，見效很快。例：這個方法很有效，立竿見影。</div>
+      </div>
+    </div>
+
+      <div class="question">
+        <div class="question-number">第一部分：成語配對題（每題2分，共16分）</div>
+        <p>請將下列成語與其正確含義配對，在空格中填入對應的字母。</p>
+
+        <div class="matching-table">
+          <div class="matching-column">
+            <h4>成語：</h4>
+            <div class="matching-item">
+              1. 削足就履 ( <input type="text" class="input-field correct" id="match1" style="width: 25px; text-align: center;" maxlength="1" value="C"> )
+            </div>
+            <div class="matching-item">
+              2. 狐假虎威 ( <input type="text" class="input-field correct" id="match2" style="width: 25px; text-align: center;" maxlength="1" value="B"> )
+            </div>
+            <div class="matching-item">
+              3. 掩耳盜鈴 ( <input type="text" class="input-field correct" id="match3" style="width: 25px; text-align: center;" maxlength="1" value="A"> )
+            </div>
+            <div class="matching-item">
+              4. 枕戈待旦 ( <input type="text" class="input-field correct" id="match4" style="width: 25px; text-align: center;" maxlength="1" value="D"> )
+            </div>
+            <div class="matching-item">
+              5. 鳳毛麟角 ( <input type="text" class="input-field correct" id="match5" style="width: 25px; text-align: center;" maxlength="1" value="E"> )
+            </div>
+            <div class="matching-item">
+              6. 滄海一粟 ( <input type="text" class="input-field correct" id="match6" style="width: 25px; text-align: center;" maxlength="1" value="F"> )
+            </div>
+            <div class="matching-item">
+              7. 水中撈月 ( <input type="text" class="input-field correct" id="match7" style="width: 25px; text-align: center;" maxlength="1" value="G"> )
+            </div>
+            <div class="matching-item">
+              8. 立竿見影 ( <input type="text" class="input-field correct" id="match8" style="width: 25px; text-align: center;" maxlength="1" value="H"> )
+            </div>
+          </div>
+
+          <div class="matching-column">
+            <h4>含義：</h4>
+            <div class="matching-item">A. 自欺欺人，掩蓋事實真相</div>
+            <div class="matching-item">B. 借助他人威勢欺壓別人</div>
+            <div class="matching-item">C. 勉強遷就，削弱自己適應環境</div>
+            <div class="matching-item">D. 時刻保持警惕，準備戰鬥</div>
+            <div class="matching-item">E. 極其罕見珍貴的事物</div>
+            <div class="matching-item">F. 微小得如同大海中的一粒米</div>
+            <div class="matching-item">G. 做徒勞無益的事情</div>
+            <div class="matching-item">H. 效果顯著，立即見到成效</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="separator"></div>
+
+      <div class="question">
+        <div class="question-number">第二部分：填空題（每題1.5分，共9分）</div>
+        <p>請根據句子意思，在空格中填入合適的成語。</p>
+
+        <div class="sub-question">
+          1. 面對困難，我們應該從________中吸取教訓，避免重蹈覆轍。
+          <input type="text" class="input-field incorrect" id="fill1" placeholder="請填入成語" value="前車之鑑">
+        </div>
+
+        <div class="sub-question">
+          2. 他總是________，毫無主見地迎合上級的意思。
+          <input type="text" class="input-field correct" id="fill2" placeholder="請填入成語" value="曲意逢迎">
+        </div>
+
+        <div class="sub-question">
+          3. 經過長期努力，他的計劃終於________，取得了成功。
+          <input type="text" class="input-field correct" id="fill3" placeholder="請填入成語" value="水到渠成">
+        </div>
+
+        <div class="sub-question">
+          4. 事情已經發生了，現在________，只能接受現實。
+          <input type="text" class="input-field correct" id="fill4" placeholder="請填入成語" value="木已成舟">
+        </div>
+
+        <div class="sub-question">
+          5. 他在團隊中發揮了________的作用，穩定了整個局面。
+          <input type="text" class="input-field incorrect" id="fill5" placeholder="請填入成語" value="中流砥柱">
+        </div>
+
+        <div class="sub-question">
+          6. 他的名聲________，在業界無人不知。
+          <input type="text" class="input-field correct" id="fill6" placeholder="請填入成語" value="如雷貫耳">
+        </div>
+      </div>
+
+      <div class="separator"></div>
+
+      <div class="question">
+        <div class="question-number">第三部分：選擇題（每題2分，共8分）</div>
+
+        <div class="sub-question">
+          <strong>1. 下列哪個成語的意思是「事先採取預防措施」？</strong>
+          <div class="options">
+            <div class="option correct" onclick="selectOption('q1', 'A')">
+              <input type="radio" name="q1" value="A" id="q1A" checked="">
+              <label for="q1A">A. 曲突徙薪</label>
+            </div>
+            <div class="option" onclick="selectOption('q1', 'B')">
+              <input type="radio" name="q1" value="B" id="q1B">
+              <label for="q1B">B. 為虎作倀</label>
+            </div>
+            <div class="option" onclick="selectOption('q1', 'C')">
+              <input type="radio" name="q1" value="C" id="q1C">
+              <label for="q1C">C. 偃旗息鼓</label>
+            </div>
+            <div class="option" onclick="selectOption('q1', 'D')">
+              <input type="radio" name="q1" value="D" id="q1D">
+              <label for="q1D">D. 胸無城府</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="sub-question">
+          <strong>2. 「開誠佈公」的反義詞是下列哪一個？</strong>
+          <div class="options">
+            <div class="option" onclick="selectOption('q2', 'A')">
+              <input type="radio" name="q2" value="A" id="q2A">
+              <label for="q2A">A. 胸無城府</label>
+            </div>
+            <div class="option correct" onclick="selectOption('q2', 'B')">
+              <input type="radio" name="q2" value="B" id="q2B" checked="">
+              <label for="q2B">B. 曲意逢迎</label>
+            </div>
+            <div class="option" onclick="selectOption('q2', 'C')">
+              <input type="radio" name="q2" value="C" id="q2C">
+              <label for="q2C">C. 為虎作倀</label>
+            </div>
+            <div class="option" onclick="selectOption('q2', 'D')">
+              <input type="radio" name="q2" value="D" id="q2D">
+              <label for="q2D">D. 狐假虎威</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="sub-question">
+          <strong>3. 「一箭之地」表示的是：</strong>
+          <div class="options">
+            <div class="option" onclick="selectOption('q3', 'A')">
+              <input type="radio" name="q3" value="A" id="q3A">
+              <label for="q3A">A. 很遠的距離</label>
+            </div>
+            <div class="option incorrect" onclick="selectOption('q3', 'B')">
+              <input type="radio" name="q3" value="B" id="q3B">
+              <label for="q3B">B. 很近的距離</label>
+            </div>
+            <div class="option" onclick="selectOption('q3', 'C')">
+              <input type="radio" name="q3" value="C" id="q3C">
+              <label for="q3C">C. 不確定的距離</label>
+            </div>
+            <div class="option correct" onclick="selectOption('q3', 'D')">
+              <input type="radio" name="q3" value="D" id="q3D" checked="">
+              <label for="q3D">D. 箭射程內的距離</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="sub-question">
+          <strong>4. 「偃旗息鼓」在現代常用來表示：</strong>
+          <div class="options">
+            <div class="option" onclick="selectOption('q4', 'A')">
+              <input type="radio" name="q4" value="A" id="q4A">
+              <label for="q4A">A. 準備戰鬥</label>
+            </div>
+            <div class="option correct" onclick="selectOption('q4', 'B')">
+              <input type="radio" name="q4" value="B" id="q4B" checked="">
+              <label for="q4B">B. 停止活動或放棄行動</label>
+            </div>
+            <div class="option" onclick="selectOption('q4', 'C')">
+              <input type="radio" name="q4" value="C" id="q4C">
+              <label for="q4C">C. 慶祝勝利</label>
+            </div>
+            <div class="option" onclick="selectOption('q4', 'D')">
+              <input type="radio" name="q4" value="D" id="q4D">
+              <label for="q4D">D. 隱藏實力</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="separator"></div>
+
+      <div class="question">
+        <div class="question-number">第四部分：造句練習（每題1分，共20分）</div>
+        <p>請用下列成語各造一個句子，句子要能正確體現成語的含義。</p>
+
+        <div class="sub-question">
+          1. 削足就履：<input type="text" class="input-field incorrect" id="sentence1" placeholder="請造句" style="min-width: 500px" value="他為了迎合老闆的要求而削足就履，放棄了自己的原則。">
+        </div>
+        
+        <div class="sub-question">
+          2. 曲突徙薪：<input type="text" class="input-field incorrect" id="sentence2" placeholder="請造句" style="min-width: 500px" value="為了防範火災，我們應該曲突徙薪，提前做好安全措施。">
+        </div>
+        
+        <div class="sub-question">
+          3. 狐假虎威：<input type="text" class="input-field incorrect" id="sentence3" placeholder="請造句" style="min-width: 500px" value="他總是狐假虎威，借助經理的名義來威脅同事。">
+        </div>
+        
+        <div class="sub-question">
+          4. 掩耳盜鈴：<input type="text" class="input-field incorrect" id="sentence4" placeholder="請造句" style="min-width: 500px" value="他明知道錯了還不承認，真是掩耳盜鈴。">
+        </div>
+        
+        <div class="sub-question">
+          5. 曲意逢迎：<input type="text" class="input-field incorrect" id="sentence5" placeholder="請造句" style="min-width: 500px" value="他在會議上曲意逢迎，完全沒有自己的立場。">
+        </div>
+        
+        <div class="sub-question">
+          6. 枕戈待旦：<input type="text" class="input-field incorrect" id="sentence6" placeholder="請造句" style="min-width: 500px" value="戰士們枕戈待旦，隨時準備保衛國家。">
+        </div>
+        
+        <div class="sub-question">
+          7. 前車之鑑：<input type="text" class="input-field incorrect" id="sentence7" placeholder="請造句" style="min-width: 500px" value="我們要以前車之鑑，避免重複同樣的錯誤。">
+        </div>
+        
+        <div class="sub-question">
+          8. 為虎作倀：<input type="text" class="input-field incorrect" id="sentence8" placeholder="請造句" style="min-width: 500px" value="他為虎作倀，幫助壞人做壞事。">
+        </div>
+        
+        <div class="sub-question">
+          9. 開誠佈公：<input type="text" class="input-field incorrect" id="sentence9" placeholder="請造句" style="min-width: 500px" value="校長開誠佈公地向大家說明了學校的財務狀況。">
+        </div>
+        
+        <div class="sub-question">
+          10. 胸無城府：<input type="text" class="input-field incorrect" id="sentence10" placeholder="請造句" style="min-width: 500px" value="她胸無城府，是個很真誠的人。">
+        </div>
+        
+        <div class="sub-question">
+          11. 一箭之地：<input type="text" class="input-field incorrect" id="sentence11" placeholder="請造句" style="min-width: 500px" value="敵人已經到了一箭之地，我們要小心防範。">
+        </div>
+        
+        <div class="sub-question">
+          12. 鳳毛麟角：<input type="text" class="input-field incorrect" id="sentence12" placeholder="請造句" style="min-width: 500px" value="像他這樣的人才真是鳳毛麟角。">
+        </div>
+        
+        <div class="sub-question">
+          13. 偃旗息鼓：<input type="text" class="input-field incorrect" id="sentence13" placeholder="請造句" style="min-width: 500px" value="經過激烈的競爭後，他們終於偃旗息鼓。">
+        </div>
+        
+        <div class="sub-question">
+          14. 滄海一粟：<input type="text" class="input-field incorrect" id="sentence14" placeholder="請造句" style="min-width: 500px" value="在浩瀚的宇宙中，地球只是滄海一粟。">
+        </div>
+        
+        <div class="sub-question">
+          15. 如雷貫耳：<input type="text" class="input-field incorrect" id="sentence15" placeholder="請造句" style="min-width: 500px" value="他的大名如雷貫耳，無人不知。">
+        </div>
+        
+        <div class="sub-question">
+          16. 水中撈月：<input type="text" class="input-field incorrect" id="sentence16" placeholder="請造句" style="min-width: 500px" value="想要一夜暴富就像水中撈月一樣不切實際。">
+        </div>
+        
+        <div class="sub-question">
+          17. 水到渠成：<input type="text" class="input-field incorrect" id="sentence17" placeholder="請造句" style="min-width: 500px" value="經過長期準備，他的計劃終於水到渠成。">
+        </div>
+        
+        <div class="sub-question">
+          18. 木已成舟：<input type="text" class="input-field incorrect" id="sentence18" placeholder="請造句" style="min-width: 500px" value="事情已經發生了，木已成舟，我們只能接受。">
+        </div>
+        
+        <div class="sub-question">
+          19. 中流砥柱：<input type="text" class="input-field incorrect" id="sentence19" placeholder="請造句" style="min-width: 500px" value="他是團隊的中流砥柱，起到了重要的支撐作用。">
+        </div>
+        
+        <div class="sub-question">
+          20. 立竿見影：<input type="text" class="input-field incorrect" id="sentence20" placeholder="請造句" style="min-width: 500px" value="這個新政策實施後立竿見影，效果很好。">
+        </div>
+      </div>
+
+      <div class="separator"></div>
+
+      <div class="question">
+        <div class="question-number">第五部分：情境應用題（每題3分，共6分）</div>
+
+        <div class="sub-question">
+          <strong>1.
+            小明的公司最近推出了一項新政策，要求所有員工每週加班兩天。小明雖然內心不滿，但為了保住工作，在會議上仍然表示贊同。請用一個四字成語來形容小明的行為，並簡單說明理由。</strong>
+          <br><br>
+          成語：<input type="text" class="input-field incorrect" id="scenario1" placeholder="請填入成語" style="min-width: 120px" value="曲意逢迎">
+          <br><br>
+          理由：<input type="text" class="input-field incorrect" id="reason1" placeholder="請說明理由" style="min-width: 400px" value="為了保住工作而違心迎合上級意見">
+        </div>
+
+        <div class="sub-question">
+          <strong>2.
+            李老師在學校推行環保教育多年，面對各種困難從不退縮。在他的努力下，學校的環保意識大大提升。現在其他學校都來學習經驗。請用一個四字成語來讚美李老師在環保教育中的作用，並解釋為什麼選擇這個成語。</strong>
+          <br><br>
+          成語：<input type="text" class="input-field incorrect" id="scenario2" placeholder="請填入成語" style="min-width: 120px" value="中流砥柱">
+          <br><br>
+          解釋：<input type="text" class="input-field incorrect" id="reason2" placeholder="請解釋原因" style="min-width: 400px" value="在環保教育中發揮了重要的支撐和引領作用">
+        </div>
+      </div>
+
+      <div class="control-buttons">
+        <button class="btn" onclick="checkAnswers()">檢查答案</button>
+        <button class="btn btn-secondary" onclick="resetForm()">重新作答</button>
+        <button class="btn" onclick="showAnswers()" id="showAnswersBtn">顯示標準答案</button>
+        <button class="btn" onclick="printResults()">打印結果</button>
+      </div>
+
+      <div id="feedback" class="feedback poor">💪 繼續努力！您獲得了 28/61 分（45.9%）。建議系統學習成語知識，多做練習。</div>
+
+      <div id="resultSummary" class="result-summary">
+        <h3>作答結果總結</h3>
+        <div id="detailedResults">
+                <p><strong>學生資訊：</strong></p>
+                <ul>
+                    <li>姓名：test1</li>
+                    <li>班級：2b</li>
+                    <li>學號：33</li>
+                    <li>完成時間：2025/10/16 下午10:02:50</li>
+                </ul>
+                
+                <p><strong>各部分得分情況：</strong></p>
+                <ul>
+                    <li>第一部分（成語配對）：16/16分</li>
+                    <li>第二部分（填空題）：6/9分</li>
+                    <li>第三部分（選擇題）：6/8分</li>
+                    <li>第四部分（造句練習）：0/20分</li>
+                    <li>第五部分（情境應用）：0/6分</li>
+                </ul>
+                
+                <p><strong>總分：28/61分（45.9%）</strong></p>
+            </div>
+      </div>
+    </div>
+
+    <script>
+      // 標準答案
+      const answers = {
+        // 配對題答案
+        match1: ['C'],
+        match2: ['B'],
+        match3: ['A'],
+        match4: ['D'],
+        match5: ['E'],
+        match6: ['F'],
+        match7: ['G'],
+        match8: ['H'],
+
+        // 填空題答案
+        fill1: ['前車之鑑', '前車之鉴'],
+        fill2: ['曲意逢迎'],
+        fill3: ['水到渠成'],
+        fill4: ['木已成舟'],
+        fill5: ['中流砥柱'],
+        fill6: ['如雷貫耳', '如雷贯耳'],
+
+        // 選擇題答案
+        q1: 'A',
+        q2: 'B',
+        q3: 'D',
+        q4: 'B',
+
+        // 造句題答案（關鍵詞檢查）
+        sentence1: ['削足就履'],
+        sentence2: ['曲突徙薪'],
+        sentence3: ['狐假虎威'],
+        sentence4: ['掩耳盜鈴'],
+        sentence5: ['曲意逢迎'],
+        sentence6: ['枕戈待旦'],
+        sentence7: ['前車之鑑', '前車之鉴'],
+        sentence8: ['為虎作倀', '为虎作伥'],
+        sentence9: ['開誠佈公', '开诚布公'],
+        sentence10: ['胸無城府', '胸无城府'],
+        sentence11: ['一箭之地'],
+        sentence12: ['鳳毛麟角', '凤毛麟角'],
+        sentence13: ['偃旗息鼓'],
+        sentence14: ['滄海一粟', '沧海一粟'],
+        sentence15: ['如雷貫耳', '如雷贯耳'],
+        sentence16: ['水中撈月', '水中捞月'],
+        sentence17: ['水到渠成'],
+        sentence18: ['木已成舟'],
+        sentence19: ['中流砥柱'],
+        sentence20: ['立竿見影', '立竿见影'],
+
+        // 情境題答案
+        scenario1: ['曲意逢迎'],
+        reason1: ['違心迎合', '迎合上級', '為了保住工作而違心表態', '明知不對還要附和'],
+        scenario2: ['中流砥柱'],
+        reason2: ['起到支撑作用', '在困難中堅持', '發揮重要支撐作用', '成為學校環保的核心力量'],
+      };
+
+      // 分數分配
+      const pointsMap = {
+        match1: 2,
+        match2: 2,
+        match3: 2,
+        match4: 2,
+        match5: 2,
+        match6: 2,
+        match7: 2,
+        match8: 2,
+        fill1: 1.5,
+        fill2: 1.5,
+        fill3: 1.5,
+        fill4: 1.5,
+        fill5: 1.5,
+        fill6: 1.5,
+        q1: 2,
+        q2: 2,
+        q3: 2,
+        q4: 2,
+        sentence1: 1,
+        sentence2: 1,
+        sentence3: 1,
+        sentence4: 1,
+        sentence5: 1,
+        sentence6: 1,
+        sentence7: 1,
+        sentence8: 1,
+        sentence9: 1,
+        sentence10: 1,
+        sentence11: 1,
+        sentence12: 1,
+        sentence13: 1,
+        sentence14: 1,
+        sentence15: 1,
+        sentence16: 1,
+        sentence17: 1,
+        sentence18: 1,
+        sentence19: 1,
+        sentence20: 1,
+        scenario1: 1.5,
+        reason1: 1.5,
+        scenario2: 1.5,
+        reason2: 1.5,
+      };
+
+      let hasChecked = false;
+
+      function selectOption(questionName, value) {
+        document.getElementById(questionName + value).checked = true;
+        updateProgress();
+      }
+
+      function checkAnswer(inputId, answerArray, isPartialMatch = false) {
+        const input = document.getElementById(inputId);
+        const userAnswer = input.value.trim();
+
+        if (!userAnswer) return false;
+
+        if (isPartialMatch) {
+          return answerArray.some((answer) => userAnswer.includes(answer) || answer.includes(userAnswer));
+        } else {
+          return answerArray.some(
+            (answer) => userAnswer === answer || userAnswer.toUpperCase() === answer.toUpperCase(),
+          );
+        }
+      }
+
+      function checkAnswers() {
+        let score = 0;
+        let totalAnswered = 0;
+        let totalQuestions = Object.keys(answers).length - 4; // 減去選擇題
+        let results = {};
+
+        // 檢查填空題和配對題
+        for (let questionId of Object.keys(answers)) {
+          if (questionId.startsWith('q')) continue; // 跳過選擇題
+
+          const isPartialMatch = questionId.includes('reason') || questionId.includes('scenario');
+          const isCorrect = checkAnswer(questionId, answers[questionId], isPartialMatch);
+          results[questionId] = isCorrect;
+
+          if (document.getElementById(questionId).value.trim()) totalAnswered++;
+
+          if (isCorrect) {
+            score += pointsMap[questionId];
+            document.getElementById(questionId).classList.add('correct');
+            document.getElementById(questionId).classList.remove('incorrect');
+          } else {
+            document.getElementById(questionId).classList.add('incorrect');
+            document.getElementById(questionId).classList.remove('correct');
+          }
+        }
+
+        // 檢查選擇題
+        ['q1', 'q2', 'q3', 'q4'].forEach((q) => {
+          const selected = document.querySelector(`input[name="${q}"]:checked`);
+          if (selected) {
+            totalAnswered++;
+            if (selected.value === answers[q]) {
+              score += pointsMap[q];
+              results[q] = true;
+              selected.parentElement.classList.add('correct');
+            } else {
+              results[q] = false;
+              selected.parentElement.classList.add('incorrect');
+            }
+            // 顯示正確答案
+            document.querySelector(`#${q}${answers[q]}`).parentElement.classList.add('correct');
+          }
+        });
+
+        // 更新分數顯示
+        document.getElementById('currentScore').textContent = score.toFixed(1);
+        document.getElementById('progress').textContent = Math.round((totalAnswered / (totalQuestions + 4)) * 100);
+
+        // 顯示反饋
+        showFeedback(score);
+        showDetailedResults(results, score);
+
+        hasChecked = true;
+        document.getElementById('showAnswersBtn').disabled = false;
+      }
+
+      function showFeedback(score) {
+        const feedback = document.getElementById('feedback');
+        const percentage = (score / 61) * 100;
+
+        feedback.classList.remove('hidden', 'excellent', 'good', 'needs-improvement', 'poor');
+
+        if (percentage >= 90) {
+          feedback.classList.add('excellent');
+          feedback.innerHTML = `🎉 優秀！您獲得了 ${score}/61 分（${percentage.toFixed(1)}%）。您對成語的理解非常深刻！`;
+        } else if (percentage >= 75) {
+          feedback.classList.add('good');
+          feedback.innerHTML = `👍 良好！您獲得了 ${score}/61 分（${percentage.toFixed(1)}%）。繼續加油，您已經掌握了大部分成語！`;
+        } else if (percentage >= 60) {
+          feedback.classList.add('needs-improvement');
+          feedback.innerHTML = `📚 需要改進。您獲得了 ${score}/61 分（${percentage.toFixed(1)}%）。建議多閱讀相關資料，加深對成語的理解。`;
+        } else {
+          feedback.classList.add('poor');
+          feedback.innerHTML = `💪 繼續努力！您獲得了 ${score}/61 分（${percentage.toFixed(1)}%）。建議系統學習成語知識，多做練習。`;
+        }
+      }
+
+      function showDetailedResults(results, score) {
+        const resultDiv = document.getElementById('detailedResults');
+        const summary = document.getElementById('resultSummary');
+
+        let part1Score = 0,
+          part2Score = 0,
+          part3Score = 0,
+          part4Score = 0,
+          part5Score = 0;
+
+        // 計算各部分得分
+        for (let i = 1; i <= 8; i++) {
+          if (results[`match${i}`]) part1Score += 2;
+        }
+        for (let i = 1; i <= 6; i++) {
+          if (results[`fill${i}`]) part2Score += 1.5;
+        }
+        for (let i = 1; i <= 4; i++) {
+          if (results[`q${i}`]) part3Score += 2;
+        }
+        for (let i = 1; i <= 20; i++) {
+          if (results[`sentence${i}`]) part4Score += 1;
+        }
+        if (results.scenario1) part5Score += 1.5;
+        if (results.reason1) part5Score += 1.5;
+        if (results.scenario2) part5Score += 1.5;
+        if (results.reason2) part5Score += 1.5;
+
+        let html = `
+                <p><strong>學生資訊：</strong></p>
+                <ul>
+                    <li>姓名：${document.getElementById('studentName').value || '未填寫'}</li>
+                    <li>班級：${document.getElementById('studentClass').value || '未填寫'}</li>
+                    <li>學號：${document.getElementById('studentId').value || '未填寫'}</li>
+                    <li>完成時間：${new Date().toLocaleString('zh-TW')}</li>
+                </ul>
+                
+                <p><strong>各部分得分情況：</strong></p>
+                <ul>
+                    <li>第一部分（成語配對）：${part1Score}/16分</li>
+                    <li>第二部分（填空題）：${part2Score}/9分</li>
+                    <li>第三部分（選擇題）：${part3Score}/8分</li>
+                    <li>第四部分（造句練習）：${part4Score}/20分</li>
+                    <li>第五部分（情境應用）：${part5Score}/6分</li>
+                </ul>
+                
+                <p><strong>總分：${score}/61分（${((score / 61) * 100).toFixed(1)}%）</strong></p>
+            `;
+
+        resultDiv.innerHTML = html;
+        summary.classList.remove('hidden');
+      }
+
+      function showAnswers() {
+        if (!hasChecked) {
+          alert('請先檢查答案！');
+          return;
+        }
+
+        // 顯示所有標準答案
+        document.getElementById('match1').value = 'C';
+        document.getElementById('match2').value = 'B';
+        document.getElementById('match3').value = 'A';
+        document.getElementById('match4').value = 'D';
+        document.getElementById('match5').value = 'E';
+        document.getElementById('match6').value = 'F';
+        document.getElementById('match7').value = 'G';
+        document.getElementById('match8').value = 'H';
+
+        document.getElementById('fill1').value = '前車之鑑';
+        document.getElementById('fill2').value = '曲意逢迎';
+        document.getElementById('fill3').value = '水到渠成';
+        document.getElementById('fill4').value = '木已成舟';
+        document.getElementById('fill5').value = '中流砥柱';
+        document.getElementById('fill6').value = '如雷貫耳';
+
+        document.getElementById('q1A').checked = true;
+        document.getElementById('q2B').checked = true;
+        document.getElementById('q3D').checked = true;
+        document.getElementById('q4B').checked = true;
+
+        // 顯示造句參考答案
+        document.getElementById('sentence1').value = '他為了迎合老闆的要求而削足就履，放棄了自己的原則。';
+        document.getElementById('sentence2').value = '為了防範火災，我們應該曲突徙薪，提前做好安全措施。';
+        document.getElementById('sentence3').value = '他總是狐假虎威，借助經理的名義來威脅同事。';
+        document.getElementById('sentence4').value = '他明知道錯了還不承認，真是掩耳盜鈴。';
+        document.getElementById('sentence5').value = '他在會議上曲意逢迎，完全沒有自己的立場。';
+        document.getElementById('sentence6').value = '戰士們枕戈待旦，隨時準備保衛國家。';
+        document.getElementById('sentence7').value = '我們要以前車之鑑，避免重複同樣的錯誤。';
+        document.getElementById('sentence8').value = '他為虎作倀，幫助壞人做壞事。';
+        document.getElementById('sentence9').value = '校長開誠佈公地向大家說明了學校的財務狀況。';
+        document.getElementById('sentence10').value = '她胸無城府，是個很真誠的人。';
+        document.getElementById('sentence11').value = '敵人已經到了一箭之地，我們要小心防範。';
+        document.getElementById('sentence12').value = '像他這樣的人才真是鳳毛麟角。';
+        document.getElementById('sentence13').value = '經過激烈的競爭後，他們終於偃旗息鼓。';
+        document.getElementById('sentence14').value = '在浩瀚的宇宙中，地球只是滄海一粟。';
+        document.getElementById('sentence15').value = '他的大名如雷貫耳，無人不知。';
+        document.getElementById('sentence16').value = '想要一夜暴富就像水中撈月一樣不切實際。';
+        document.getElementById('sentence17').value = '經過長期準備，他的計劃終於水到渠成。';
+        document.getElementById('sentence18').value = '事情已經發生了，木已成舟，我們只能接受。';
+        document.getElementById('sentence19').value = '他是團隊的中流砥柱，起到了重要的支撐作用。';
+        document.getElementById('sentence20').value = '這個新政策實施後立竿見影，效果很好。';
+
+        document.getElementById('scenario1').value = '曲意逢迎';
+        document.getElementById('reason1').value = '為了保住工作而違心迎合上級意見';
+        document.getElementById('scenario2').value = '中流砥柱';
+        document.getElementById('reason2').value = '在環保教育中發揮了重要的支撐和引領作用';
+      }
+
+      function resetForm() {
+        // 清除所有輸入
+        document.querySelectorAll('.input-field').forEach((input) => {
+          input.value = '';
+          input.classList.remove('correct', 'incorrect');
+        });
+
+        document.querySelectorAll('input[type="radio"]').forEach((radio) => {
+          radio.checked = false;
+          radio.parentElement.classList.remove('correct', 'incorrect');
+        });
+
+        // 重置顯示
+        document.getElementById('currentScore').textContent = '0';
+        document.getElementById('progress').textContent = '0';
+        document.getElementById('feedback').classList.add('hidden');
+        document.getElementById('resultSummary').classList.add('hidden');
+
+        hasChecked = false;
+        document.getElementById('showAnswersBtn').disabled = true;
+      }
+
+      function updateProgress() {
+        let completed = 0;
+        let total = 0;
+
+        document.querySelectorAll('.input-field').forEach((input) => {
+          total++;
+          if (input.value.trim()) completed++;
+        });
+
+        document.querySelectorAll('input[type="radio"]').forEach((radio) => {
+          if (radio.checked) completed++;
+        });
+
+        // 選擇題只計算4題
+        total += 4;
+
+        const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
+        document.getElementById('progress').textContent = progress;
+      }
+
+      function printResults() {
+        window.print();
+      }
+
+      // 自動更新進度
+      document.addEventListener('input', updateProgress);
+      document.addEventListener('change', updateProgress);
+    </script>
+  
+
+<script defer="" src="https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon="{&quot;version&quot;:&quot;2024.11.0&quot;,&quot;token&quot;:&quot;4edd5f8ec12a48cfa682ab8261b80a79&quot;,&quot;server_timing&quot;:{&quot;name&quot;:{&quot;cfCacheStatus&quot;:true,&quot;cfEdge&quot;:true,&quot;cfExtPri&quot;:true,&quot;cfL4&quot;:true,&quot;cfOrigin&quot;:true,&quot;cfSpeedBrain&quot;:true},&quot;location_startswith&quot;:null}}" crossorigin="anonymous"></script>
+</body></html>

@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S2 Geography - Global Food Problem Interactive Assessment</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', 'Microsoft JhengHei', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2e7d32 0%, #558b2f 100%);
+            color: white;
+            text-align: center;
+            padding: 40px 30px;
+        }
+
+        .header h1 {
+            font-size: 2.3em;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header .subtitle {
+            font-size: 1.1em;
+            margin-top: 10px;
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .info-box {
+            background: #f1f8e9;
+            padding: 20px;
+            margin: 20px;
+            border-left: 5px solid #558b2f;
+            border-radius: 8px;
+        }
+
+        .info-box h3 {
+            color: #2e7d32;
+            margin-bottom: 12px;
+            font-size: 1.3em;
+        }
+
+        .info-box ul {
+            margin-left: 20px;
+        }
+
+        .info-box li {
+            margin: 8px 0;
+        }
+
+        .level {
+            margin: 30px;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .level-1 {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+            border: 2px solid #ff9800;
+        }
+
+        .level-2 {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border: 2px solid #2196f3;
+        }
+
+        .level-3 {
+            background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+            border: 2px solid #9c27b0;
+        }
+
+        .level-4 {
+            background: linear-gradient(135deg, #ede7f6 0%, #d1c4e9 100%);
+            border: 2px solid #673ab7;
+        }
+
+        .level h2 {
+            color: #1b5e20;
+            margin-bottom: 25px;
+            font-size: 1.6em;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid currentColor;
+        }
+
+        .question {
+            background: white;
+            padding: 25px;
+            margin: 20px 0;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            border-left: 4px solid #4caf50;
+        }
+
+        .question h3 {
+            color: #2e7d32;
+            margin-bottom: 15px;
+            font-size: 1.15em;
+        }
+
+        .question-text {
+            margin: 12px 0;
+            font-size: 1.05em;
+            line-height: 1.8;
+        }
+
+        .options {
+            margin: 15px 0;
+        }
+
+        .options label {
+            display: block;
+            margin: 10px 0;
+            padding: 12px 15px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .options label:hover {
+            background: #e8f5e9;
+            transform: translateX(8px);
+            border-color: #4caf50;
+        }
+
+        input[type="radio"], input[type="checkbox"] {
+            margin-right: 12px;
+            transform: scale(1.2);
+        }
+
+        textarea, input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 15px;
+            font-family: inherit;
+            margin: 12px 0;
+            transition: all 0.3s ease;
+            resize: vertical;
+        }
+
+        textarea:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: #4caf50;
+            box-shadow: 0 0 12px rgba(76, 175, 80, 0.3);
+        }
+
+        .scoring-guide {
+            background: #fff9c4;
+            border: 2px solid #fbc02d;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-size: 0.95em;
+            display: none;
+        }
+
+        .scoring-guide strong {
+            color: #f57f17;
+        }
+
+        .template-box {
+            background: #e8f5e9;
+            border: 2px solid #4caf50;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-size: 0.95em;
+            line-height: 1.8;
+        }
+
+        .template-box strong {
+            color: #2e7d32;
+        }
+
+        .controls {
+            text-align: center;
+            padding: 35px;
+            background: #f5f5f5;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+            color: white;
+            border: none;
+            padding: 14px 35px;
+            margin: 8px 10px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%);
+        }
+
+        .score-display {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #1b5e20;
+            margin: 25px;
+            padding: 25px;
+            background: linear-gradient(135deg, #c8e6c9 0%, #a5d6a7 100%);
+            border-radius: 10px;
+            display: none;
+            border: 3px solid #4caf50;
+        }
+
+        .score-display h3 {
+            color: #2e7d32;
+            margin-bottom: 15px;
+        }
+
+        .answer-key {
+            background: #f9fbe7;
+            padding: 25px;
+            margin: 25px;
+            border-radius: 10px;
+            display: none;
+            border-left: 5px solid #689f38;
+        }
+
+        .answer-key h3 {
+            color: #33691e;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .answer-item {
+            margin: 15px 0;
+            padding: 18px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #8bc34a;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .answer-item strong {
+            color: #558b2f;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 10px;
+            }
+            
+            .level {
+                margin: 15px;
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .btn {
+                padding: 12px 20px;
+                font-size: 14px;
+                margin: 5px;
+            }
+        }
+
+        .timer {
+            background: rgba(255,255,255,0.3);
+            padding: 10px 20px;
+            border-radius: 20px;
+            margin-top: 15px;
+            font-size: 1.1em;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌾 S2 Geography Interactive Assessment</h1>
+            <h2 style="font-size: 1.5em; margin-top: 10px;">Unit 1: Global Food Problems & Farming Systems</h2>
+            <div class="subtitle">Total: 100 marks | Suggested Time: 100 minutes</div>
+            <div class="timer" id="timer">⏱ Time: 00:00</div>
+        </div>
+
+        <div class="info-box">
+            <h3>📋 Assessment Structure</h3>
+            <ul>
+                <li><strong>Section A:</strong> Multiple Choice Questions (20 marks) - Test your knowledge and understanding</li>
+                <li><strong>Section B:</strong> Short Answer Questions (30 marks) - Apply concepts and analyze information</li>
+                <li><strong>Section C:</strong> Structured Questions (30 marks) - Demonstrate analytical skills</li>
+                <li><strong>Section D:</strong> Extended Response (20 marks) - Evaluate and synthesize knowledge</li>
+            </ul>
+        </div>
+
+        <!-- Section A: Multiple Choice -->
+        <div class="level level-1">
+            <h2>📝 SECTION A: Multiple Choice Questions (20 marks)</h2>
+            <p style="margin-bottom: 20px; font-style: italic;">Choose the best answer for each question. Each question is worth 1 mark.</p>
+            
+            <div class="question">
+                <h3>Question 1</h3>
+                <p class="question-text">According to UN estimates, what will the world population reach by 2050?</p>
+                <div class="options">
+                    <label><input type="radio" name="q1" value="A"> A. 7.5 billion</label>
+                    <label><input type="radio" name="q1" value="B"> B. 8.9 billion</label>
+                    <label><input type="radio" name="q1" value="C"> C. 9.7 billion</label>
+                    <label><input type="radio" name="q1" value="D"> D. 10.2 billion</label>
+                </div>
+                <div class="scoring-guide">
+                    <strong>✓ Correct Answer:</strong> C. 9.7 billion (1 mark)
+                </div>
+            </div>
+
+            <div class="question">
+                <h3>Question 2</h3>
+                <p class="question-text">What percentage of all food produced globally is lost or wasted?</p>
+                <div class="options">
+                    <label><input type="radio" name="q2" value="A"> A. Up to 1/4</label>
+                    <label><input type="radio" name="q2" value="B"> B. Up to 1/3</label>
+                    <label><input type="radio" name="q2" value="C"> C. Up to 1/2</label>
+                    <label><input type="radio" name="q2" value="D"> D. Up to 2/3</label>
+                </div>
+                <div class="scoring-guide">
+                    <strong>✓ Correct Answer:</strong> B. Up to 1/3 (1 mark)
+                </div>
+            </div>
+
+            <div class="question">
+                <h3>Question 3</h3>
+                <p class="question-text">Which of the following is NOT a key challenge to food production mentioned in the document?</p>
+                <div class="options">
+                    <label><input type="radio" name="q3" value="A"> A. Overuse of freshwater resources</label>
+                    <label><input type="radio" name="q3" value="B"> B. Pest and disease outbreaks</label>
+                    <label><input type="radio" name="q3" value="C"> C. Nuclear contamination</label>
+                    <label><input type="radio" name="q3" value="D"> D. Land degradation</label>
+                </div>
+                <div class="scoring-guide">
+                    <strong>✓ Correct Answer:</strong> C. Nuclear contamination (1 mark)
+                </div>
+            </div>
+
+            <div class="question">
+                <h3>Question 4</h3>
+                <p class="question-text">What is the approximate area of farmland in Hong Kong?</p>
+                <div class="options">
+                    <label><input type="radio" name="q4" value="A"> A. 30 km²</label>
+                    <label><input type="radio" name="q4" value="B"> B. 40 km²</label>
+                    <label><input type="radio" name="q4" value="C"> C. 50 km²</label>
+                    <label><input type="radio" name="q4" value="D"> D. 60 km²</label>
+                </div>
+                <div class="scoring-guide">
+                    <strong>✓ Correct Answer:</strong> C. 50 km² (1 mark)
+                </div>
+            </div>
+
+            <div class="question">
+                <h3>Question 5</h3>
+                <p class="question-text">What percentage of Hong Kong's total farmland is currently used for farming?</p>
+                <div class="options">
+                    <label><input type="radio" name="q5" value="A"> A. 5%</label>
+                    <label><input type="radio" name="q5" value="B"> B. 15%</label>
+                    <label><input type="radio" name="q5" value="C"> C. 25%</label>
+                    <label><input type="radio" name="q5" value="D"> D. 35%</label>
+                </div>
+                <div class="scoring-guide">
+                    <strong>✓ Correct Answer:</strong> B. 15% (1 mark)
+                </div>
+            </div>
+
+            <div class="question">
+                <h3>Question 6</h3>
+                <p class="question-text">In 2020, what was the largest farm output in Hong Kong?</p>
+                <div class="options">
+                    <label><input type="radio" name="q6" value="A"> A. Flowers (17%)</label>
+                    <label><input type="radio" name="q6" value="B"> B. Fruit trees (10%)</label>
+                    <label><input type="radio" name="q6" value="C"> C. Vegetables (46%)</label>
+                    <label><input type="radio" name="q6" value="D"> D. Livestock (27%)</label>
+                </div>
+                <div class="scoring-guide">
+                    <strong>✓ Correct Answer:</strong> C. Vegetables (46%) (1 mark)
+                </div>
+            </div>
+
+            <div class="question">
+                <h3>Question 7</h3>
+                <p class="question-text">Which of these is an INPUT in the farming system?</p>
+                <div class="options">
+                    <label><input type="radio" name="q7" value="A"> A. Harvesting</label>
+                    <label><input type="radio" name="q7" value="B"> B. Irrigating</label>
+                    <label><input type="radio" name="q7" value="C"> C. Labor</label>
+                    <label><input type="radio" name="q7" value="D"> D. Food products</label>
+                </div>
+                <div class="scoring-guide">
+                    <strong>✓ Correct Answer:</strong> C. Labor (1 mark)
+                </div>
+            </div>
+
+            <div class="question">
+                <h3>Question 8</h3>
+                <p class="question-text">Farming that produces enough food mainly for the farmer's family is called:</p>
+                <div class="options">
+                    <label><input type="radio" name="q8" value="A"> A. Commercial farming</label>
+                    <label><input type="radio" name="q8" value="B"> B. Subsistence farming</label>
+                    <label><input type="radio" name="q8" value="C"> C. Intensive farming</label>
+                    <label><input type="radio" name="q8" value="D"> D. Extensive farming</label>
+                </div>
+                <div class="scoring-guide">
+                    <strong>✓ Correct Answer:</strong> B. Subsistence farming (1 mark)
+                </div>
+            </div>
+
+            <div class="question">
+                <h3>Question 9</h3>
+                <p class="question-text">Which type of farming focuses on raising animals?</p>
+                <div class="options">
+                    <label><input type="radio" name="q9" value="A"> A. Arable farming</label>
+                    <label><input type="radio" name="q9" value="B"> B. Pastoral farming</label>
+                    <label><input type="radio" name="q9" value="C"> C. Mixed farming</label>
+                    <label><input type="radio" name="q9" value="D"> D. Hydroponics</label>
+                </div>
+                <div class="scoring-guide">
+                    <strong>✓ Correct Answer:</strong> B. Pastoral farming (1 mark)
+                </div>
+            </div>
+
+            <div class="question">
+                <h3>Question 10</h3>
+                <p class="question-text">Hong Kong's farming areas are mainly concentrated in which region?</p>
+                <div class="options">
+                    <label><input type="radio" name="q10" value="A"> A. Southern New Territories</label>
+                    <label><input type="radio" name="q10" value="B"> B. Northern New Territories</label>
+                    <label><input type="radio" name="q10" value="C"> C. Hong Kong Island</label>
+                    <label><input type="radio" name="q10" value="D"> D. Lantau Island</label>
+                </div>
+                <div class="scoring-guide">
+                    <strong>✓ Correct Answer:</strong> B. Northern New Territories (1 mark)
+                </div>
+            </div>
+
+            <div class="question">
+                <h3>Question 11</h3>
+                <p class="question-text">Which areas in the Northern New Territories are known for farming?</p>
+                <div class="options">
+                    <label><input type="radio" name="q11" value="A"> A. Tsuen Wan and Kwai Chung</label>
+                    <label><input type="radio" name="q11" value="B"> B. Kam Tin, Fanling, and Sheung Shui</label>
+                    <label><input type="radio" name="q11" value="C"> C. Sha Tin and Tai Po</label>
+                    <label><input type="radio" name="q11" value="D"> D. Tuen Mun and Yuen Long only</label>
+                </div>
+                <div class="scoring-guide">
+                    <strong>✓ Correct Answer:</strong> B. Kam Tin, Fanling, and Sheung Shui (1 mark)
+                </div>
+            </div>
+
+            <div class="question">
+                <h3>Question 12</h3>
+                <p class="question-text">What is the expected increase in global food prices by 2050?</p>
+                <div class="options">
+                    <label><input type="radio" name="q12" value="A"> A. Up to 25%</label>
+                    <label><input type="radio" name="q12" value="B"> B. Up to 50%</label>
+                    <label><input type="radio" name="q12" value="C"> C. Up to 75%</label>
+                    <label><input type="radio" name="q12" value="D"> D. Up to 100%</label>
+                </div>
+                <div class="scoring-guide">
+                    <strong>✓ Correct Answer:</strong> D. Up to 100% (1 mark)
+                </div>
+            </div>
+
+            <div class="question">
+                <h3>Question 13</h3>
+                <p class="question-text">Which innovative farming method is mentioned for Hong Kong?</p>
+                <div class="options">
+                    <label><input type="radio" name="q13" value="A"> A. Terrace farming</label>
+                    <label><input type="radio" name="q13" value="B"> B. Slash-and-burn farming</label>
+                    <label><input type="radio" name="q13" value="C"> C. Hydroponics</label>
+                    <label><input type="radio" name="q13" value="D"> D. Nomadic farming</label>
+                </div>
+                <div class="scoring-guide">
+                    <strong>✓ Correct Answer:</strong> C. Hydroponics (1 mark)
+                </div>
+            </div>
+
+            <div class="question">
+                <h3>Question 14</h3>
+                <p class="question-text">China's climate gradient moves from:</p>
+                <div class="options">
+                    <label><input type="radio" name="q14" value="A"> A. Hot/humid northwest to cold/dry southeast</label>
+                    <label><input type="radio" name="q14" value="B"> B. Hot/humid southeast to cold/dry northwest</label>
+                    <label><input type="radio" name="q14" value="C"> C. Warm/dry southeast to cold/wet northwest</label>
+                    <label><input type="radio" name="q14" value="D"> D. Cold/humid southeast to hot/dry northwest</label>
+                </div>
+                <div class="scoring-guide">
+                    <strong>✓ Correct Answer:</strong> B. Hot/humid southeast to cold/dry northwest (1 mark)
+                </div>
+            </div>
+
+            <div class="question">
+                <h3>Question 15</h3>
+                <p class="question-text">How many major farming regions does China have?</p>
+                <div class="options">
+                    <label><input type="radio" name="q15" value="A"> A. Five</label>
+                    <label><input type="radio" name="q15" value="B"> B. Seven</label>
+                    <label><input type="radio" name="q15" value="C"> C. Nine</label>
+                    <label><input type="radio" name="q15" value="D"> D. Eleven</label>
+                </div>
+                <div class="scoring-guide">
+                    <strong>✓ Correct Answer:</strong> C. Nine (1 mark)
+                </div>
+            </div>
+
+            <div class="question">
+                <h3>Question 16</h3>
+                <p class="question-text">Which is a PROCESS in the farming system?</p>
+                <div class="options">
+                    <label><input type="radio" name="q16" value="A"> A. Capital</label>
+                    <label><input type="radio" name="q16" value="B"> B. Physical resources</label>
+                    <label><input type="radio" name="q16" value="C"> C. Sowing</label>
+                    <label><input type="radio" name="q16" value="D"> D. Raw materials</label>
+                </div>
+                <div class="scoring-guide">
+                    <strong>✓ Correct Answer:</strong> C. Sowing (1 mark)
+                </div>
+            </div>
+
+            <div class="question">
+                <h3>Question 17</h3>
+                <p class="question-text">Farming that uses large amounts of inputs on small areas is called:</p>
+                <div class="options">
+                    <label><input type="radio" name="q17" value="A"> A. Extensive farming</label>
+                    <label><input type="radio" name="q17" value="B"> B. Intensive farming</label>
+                    <label><input type="radio" name="q17" value="C"> C. Subsistence farming</label>
+                    <label><input type="radio" name="q17" value="D"> D. Commercial farming</label>
+                </div>
+                <div class="scoring-guide">
+                    <strong>✓ Correct Answer:</strong> B. Intensive farming (1 mark)
+                </div>
+            </div>
+
+            <div class="question">
+                <h3>Question 18</h3>
+                <p class="question-text">Which group of countries will suffer most from hunger by 2050?</p>
+                <div class="options">
+                    <label><input type="radio" name="q18" value="A"> A. Developed countries</label>
+                    <label><input type="radio" name="q18" value="B"> B. Less developed countries</label>
+                    <label><input type="radio" name="q18" value="C"> C. Island nations</label>
+                    <label><input type="radio" name="q18" value="D"> D. Arctic regions</label>
+                </div>
+                <div class="scoring-guide">
+                    <strong>✓ Correct Answer:</strong> B. Less developed countries (1 mark)
+                </div>
+            </div>
+
+            <div class="question">
+                <h3>Question 19</h3>
+                <p class="question-text">What percentage of Hong Kong's land is farmland?</p>
+                <div class="options">
+                    <label><input type="radio" name="q19" value="A"> A. 2.5%</label>
+                    <label><input type="radio" name="q19" value="B"> B. 4.5%</label>
+                    <label><input type="radio" name="q19" value="C"> C. 6.5%</label>
+                    <label><input type="radio" name="q19" value="D"> D. 8.5%</label>
+                </div>
+                <div class="scoring-guide">
+                    <strong>✓ Correct Answer:</strong> B. 4.5% (1 mark)
+                </div>
+            </div>
+
+            <div class="question">
+                <h3>Question 20</h3>
+                <p class="question-text">Where does Hong Kong import most of its food from?</p>
+                <div class="options">
+                    <label><input type="radio" name="q20" value="A"> A. Japan</label>
+                    <label><input type="radio" name="q20" value="B"> B. Southeast Asia</label>
+                    <label><input type="radio" name="q20" value="C"> C. Mainland China</label>
+                    <label><input type="radio" name="q20" value="D"> D. Europe</label>
+                </div>
+                <div class="scoring-guide">
+                    <strong>✓ Correct Answer:</strong> C. Mainland China (1 mark)
+                </div>
+            </div>
+        </div>
+
+        <!-- Section B: Short Answer -->
+        <div class="level level-2">
+            <h2>✍️ SECTION B: Short Answer Questions (30 marks)</h2>
+            
+            <div class="question">
+                <h3>Question 1 (6 marks)</h3>
+                <p class="question-text">List THREE challenges to food production and supply, and briefly explain how EACH affects food availability.</p>
+                <textarea id="qB1" rows="5" placeholder="Enter your answer here..."></textarea>
+                <div class="template-box">
+                    <strong>Answer Template:</strong><br>
+                    Challenge 1: _________ affects food availability by _________<br>
+                    Challenge 2: _________ affects food availability by _________<br>
+                    Challenge 3: _________ affects food availability by _________
+                </div>
+                <div class="scoring-guide">
+                    <strong>Marking Criteria:</strong> Each challenge correctly identified (1 mark) + Explanation (1 mark) = 2 marks per challenge × 3 = 6 marks total
+                </div>
+            </div>
+
+            <div class="question">
+                <h3>Question 2 (8 marks)</h3>
+                <p class="question-text">Complete the farming system diagram by filling in the components:</p>
+                <p><strong>a)</strong> Name TWO inputs: (2 marks)</p>
+                <input type="text" id="qB2a" placeholder="Input 1 and Input 2">
+                
+                <p><strong>b)</strong> Name TWO processes: (2 marks)</p>
+                <input type="text" id="qB2b" placeholder="Process 1 and Process 2">
+                
+                <p><strong>c)</strong> Name TWO outputs: (2 marks)</p>
+                <input type="text" id="qB2c" placeholder="Output 1 and Output 2">
+                
+                <p><strong>d)</strong> Explain why farming is considered a "system": (2 marks)</p>
+                <textarea id="qB2d" rows="2" placeholder="Your explanation..."></textarea>
+                
+                <div class="scoring-guide">
+                    <strong>Sample Answers:</strong><br>
+                    a) Labor, Capital, Physical resources, Seeds (any 2) - 1 mark each<br>
+                    b) Sowing, Irrigating, Feeding, Harvesting (any 2) - 1 mark each<br>
+                    c) Food, Raw materials, Crops, Livestock products (any 2) - 1 mark each<br>
+                    d) Farming is a system because inputs are transformed through processes to produce outputs, with all components interconnected - 2 marks
+                </div>
+            </div>
+
+            <div class="question">
+                <h3>Question 3 (6 marks)</h3>
+                <p class="question-text">Describe THREE ways that farming can be classified, giving an example of each classification.</p>
+                <textarea id="qB3" rows="4" placeholder="Enter your answer here..."></textarea>
+                <div class="template-box">
+                    <strong>Answer Template:</strong><br>
+                    1. By _________: _________ (example: _________)<br>
+                    2. By _________: _________ (example: _________)<br>
+                    3. By _________: _________ (example: _________)
+                </div>
+                <div class="scoring-guide">
+                    <strong>Expected Answers:</strong><br>
+                    1. By intensity: Intensive vs. Extensive (2 marks)<br>
+                    2. By output type: Arable, Pastoral, Mixed (2 marks)<br>
+                    3. By purpose: Subsistence vs. Commercial (2 marks)
+                </div>
+            </div>
+
+            <div class="question">
+                <h3>Question 4 (5 marks)</h3>
+                <p class="question-text">Explain TWO reasons why Hong Kong has such a small amount of active farmland despite having 50 km² available.</p>
+                <textarea id="qB4" rows="3" placeholder="Enter your answer here..."></textarea>
+                <div class="scoring-guide">
+                    <strong>Marking Criteria:</strong> Reason 1 with explanation (2.5 marks) + Reason 2 with explanation (2.5 marks)<br>
+                    <strong>Possible reasons:</strong> Urban development, low profitability, lack of farmers, competition for land, etc.
+                </div>
+            </div>
+
+            <div class="question">
+                <h3>Question 5 (5 marks)</h3>
+                <p class="question-text">Describe TWO innovative farming methods used in Hong Kong and explain why they are necessary.</p>
+                <textarea id="qB5" rows="3" placeholder="Enter your answer here..."></textarea>
+                <div class="template-box">
+                    <strong>Answer Template:</strong><br>
+                    Method 1: _________ is necessary because _________<br>
+                    Method 2: _________ is necessary because _________
+                </div>
+                <div class="scoring-guide">
+                    <strong>Expected Answer:</strong> Rooftop farming, Hydroponics, Aquaponics - necessary due to limited land space, need for efficient production (2.5 marks each method + reason)
+                </div>
+            </div>
+        </div>
+
+        <!-- Section C: Structured Questions -->
+        <div class="level level-3">
+            <h2>🎯 SECTION C: Structured Questions (30 marks)</h2>
+            
+            <div class="question">
+                <h3>Question 1: Global Food Crisis (15 marks)</h3>
+                
+                <p><strong>a)</strong> According to UN projections, what will happen to the global population by 2050? (2 marks)</p>
+                <textarea id="qC1a" rows="2" placeholder="Enter your answer here..."></textarea>
+                
+                <p><strong>b)</strong> Explain how population growth will affect global food supply by 2050. (4 marks)</p>
+                <textarea id="qC1b" rows="3" placeholder="Enter your answer here..."></textarea>
+                
+                <p><strong>c)</strong> Identify TWO economic and social factors that contribute to food problems. (4 marks)</p>
+                <textarea id="qC1c" rows="3" placeholder="Enter your answer here..."></textarea>
+                
+                <p><strong>d)</strong> Suggest THREE ways that countries can prepare for the food crisis of 2050. (5 marks)</p>
+                <textarea id="qC1d" rows="4" placeholder="Enter your answer here..."></textarea>
+                
+                <div class="scoring-guide">
+                    <strong>Model Answers:</strong><br>
+                    a) Population will reach 9.7 billion, creating increased food demand (2 marks)<br>
+                    b) Larger population = more food needed; current production insufficient; prices will rise up to 100%; LDCs will suffer most (4 marks for comprehensive explanation)<br>
+                    c) Economic: Poor economic development limits purchasing power; Social: High birth rates increase population and food demand (2 marks each factor)<br>
+                    d) Increase food production, reduce food waste, develop sustainable farming, improve distribution systems, invest in agricultural technology (any 3 valid suggestions with brief explanation)
+                </div>
+            </div>
+
+            <div class="question">
+                <h3>Question 2: Hong Kong Agriculture (15 marks)</h3>
+                
+                <p><strong>a)</strong> Calculate what percentage of Hong Kong's farmland is NOT currently being used for farming. Show your working. (3 marks)</p>
+                <textarea id="qC2a" rows="3" placeholder="Show your calculation..."></textarea>
+                
+                <p><strong>b)</strong> Explain why Hong Kong relies heavily on food imports from Mainland China. (4 marks)</p>
+                <textarea id="qC2b" rows="3" placeholder="Enter your answer here..."></textarea>
+                
+                <p><strong>c)</strong> Compare traditional farming with innovative farming methods (like hydroponics and rooftop farming) in Hong Kong. Discuss the advantages of innovative methods. (8 marks)</p>
+                <textarea id="qC2c" rows="5" placeholder="Enter your answer here..."></textarea>
+                
+                <div class="scoring-guide">
+                    <strong>Model Answers:</strong><br>
+                    a) If 15% is used, then 100% - 15% = 85% is NOT used (1 mark calculation + 2 marks correct answer = 3 marks)<br>
+                    b) Limited farmland (4.5% of total land), only 15% actively farmed, small production volume, proximity to China, economic factors (4 marks for comprehensive explanation)<br>
+                    c) Traditional: Requires large land areas, weather-dependent, lower yield; Innovative: Space-efficient, controlled environment, year-round production, higher yield, less water usage, suitable for urban areas (8 marks for detailed comparison and advantages)
+                </div>
+            </div>
+        </div>
+
+        <!-- Section D: Extended Response -->
+        <div class="level level-4">
+            <h2>📖 SECTION D: Extended Response (20 marks)</h2>
+            <p style="margin-bottom: 20px; font-style: italic;"><strong>Choose ONE question to answer</strong></p>
+            
+            <div class="question">
+                <h3>Option 1: Food Security</h3>
+                <p class="question-text">"The global food crisis is one of the most serious challenges facing humanity in the 21st century."</p>
+                <p>Discuss this statement by:</p>
+                <ul style="margin-left: 30px; margin-top: 10px;">
+                    <li>Explaining the causes of the global food crisis</li>
+                    <li>Describing the impacts on different regions of the world</li>
+                    <li>Evaluating possible solutions to ensure food security for future generations</li>
+                </ul>
+                <textarea id="qD1" rows="10" placeholder="Write your extended response here..."></textarea>
+                
+                <div class="template-box">
+                    <strong>Essay Structure Template:</strong><br>
+                    <strong>Introduction:</strong> Define the food crisis and state its significance<br>
+                    <strong>Paragraph 1 - Causes:</strong> Population growth, climate change, resource depletion, food waste<br>
+                    <strong>Paragraph 2 - Impacts:</strong> Effects on LDCs vs developed countries, price increases, hunger, social instability<br>
+                    <strong>Paragraph 3 - Solutions:</strong> Sustainable farming, technology, reducing waste, international cooperation<br>
+                    <strong>Conclusion:</strong> Summarize and provide your evaluation
+                </div>
+                
+                <div class="scoring-guide">
+                    <strong>Marking Criteria (20 marks):</strong><br>
+                    • Knowledge & Understanding (7 marks): Accurate facts and concepts<br>
+                    • Analysis & Application (7 marks): Depth of explanation and examples<br>
+                    • Evaluation (4 marks): Critical thinking and balanced argument<br>
+                    • Communication (2 marks): Structure, clarity, and geographical terminology
+                </div>
+            </div>
+
+            <div class="question">
+                <h3>Option 2: Sustainable Farming</h3>
+                <p class="question-text">With reference to Hong Kong and China:</p>
+                <ul style="margin-left: 30px; margin-top: 10px;">
+                    <li>Describe the characteristics of farming in these two regions</li>
+                    <li>Explain the challenges faced by farmers in each region</li>
+                    <li>Suggest how farming practices can be made more sustainable to meet future food needs</li>
+                </ul>
+                <textarea id="qD2" rows="10" placeholder="Write your extended response here..."></textarea>
+                
+                <div class="template-box">
+                    <strong>Essay Structure Template:</strong><br>
+                    <strong>Introduction:</strong> Brief overview of farming in Hong Kong and China<br>
+                    <strong>Paragraph 1 - Hong Kong:</strong> Small farmland (50km², 15% used), vegetables main output (46%), concentrated in Northern NT, innovative methods<br>
+                    <strong>Paragraph 2 - China:</strong> Nine farming regions, climate gradient affects crops, diverse production (rice, wheat, etc.)<br>
+                    <strong>Paragraph 3 - Challenges:</strong> HK: Limited land, high costs; China: Climate variation, population pressure<br>
+                    <strong>Paragraph 4 - Sustainability:</strong> Technology adoption, efficient resource use, reducing waste, education<br>
+                    <strong>Conclusion:</strong> Summary and future outlook
+                </div>
+                
+                <div class="scoring-guide">
+                    <strong>Marking Criteria (20 marks):</strong><br>
+                    • Knowledge & Understanding (7 marks): Accurate regional information<br>
+                    • Analysis & Application (7 marks): Comparison and explanation of challenges<br>
+                    • Evaluation (4 marks): Feasibility and effectiveness of suggestions<br>
+                    • Communication (2 marks): Structure, clarity, and geographical terminology
+                </div>
+            </div>
+        </div>
+
+        <!-- Control Buttons -->
+        <div class="controls">
+            <button class="btn" onclick="checkAnswers()">📊 Check Answers</button>
+            <button class="btn btn-secondary" onclick="showAnswerKey()">📝 Show Answer Key</button>
+            <button class="btn btn-success" onclick="downloadExercise()">💾 Download Assessment</button>
+            <button class="btn btn-warning" onclick="printExercise()">🖨 Print Assessment</button>
+        </div>
+
+        <!-- Score Display -->
+        <div class="score-display" id="scoreDisplay"></div>
+
+        <!-- Answer Key -->
+        <div class="answer-key" id="answerKey">
+            <h3>📚 Answer Key & Detailed Solutions</h3>
+            
+            <div class="answer-item">
+                <strong>SECTION A: Multiple Choice Answers</strong><br>
+                1. C | 2. B | 3. C | 4. C | 5. B | 6. C | 7. C | 8. B | 9. B | 10. B<br>
+                11. B | 12. D | 13. C | 14. B | 15. C | 16. C | 17. B | 18. B | 19. B | 20. C
+            </div>
+            
+            <div class="answer-item">
+                <strong>SECTION B - Question 1: Challenges to Food Production (6 marks)</strong><br>
+                <strong>Model Answer:</strong><br>
+                1. <strong>Overuse of freshwater resources:</strong> Agriculture consumes 70% of freshwater. Overuse leads to water scarcity, limiting irrigation for crops and reducing agricultural productivity.<br>
+                2. <strong>Land degradation:</strong> Soil erosion, desertification, and nutrient depletion reduce land fertility, decreasing crop yields and limiting areas suitable for farming.<br>
+                3. <strong>Extreme weather events:</strong> Climate change causes droughts, floods, and unpredictable weather patterns that destroy crops, disrupt planting schedules, and reduce harvests.
+            </div>
+            
+            <div class="answer-item">
+                <strong>SECTION B - Question 2: Farming System (8 marks)</strong><br>
+                <strong>Model Answer:</strong><br>
+                a) <strong>Inputs:</strong> Labor, Capital (or Physical resources, Seeds, Water, Fertilizers) - 2 marks<br>
+                b) <strong>Processes:</strong> Sowing, Harvesting (or Irrigating, Feeding, Cultivating) - 2 marks<br>
+                c) <strong>Outputs:</strong> Food crops, Raw materials (or Vegetables, Livestock products) - 2 marks<br>
+                d) <strong>Explanation:</strong> Farming is a system because it involves interconnected components where inputs (resources) are transformed through processes (farming activities) to produce outputs (products). Each component affects others, forming a complete cycle. - 2 marks
+            </div>
+            
+            <div class="answer-item">
+                <strong>SECTION B - Question 3: Classification of Farming (6 marks)</strong><br>
+                <strong>Model Answer:</strong><br>
+                1. <strong>By intensity:</strong> Intensive farming vs. Extensive farming (Example: Rice paddies in Asia use high inputs on small areas = intensive; Cattle ranching in Australia uses low inputs on large areas = extensive) - 2 marks<br>
+                2. <strong>By output type:</strong> Arable (crops), Pastoral (livestock), Mixed (both) (Example: Wheat farming = arable; Sheep farming = pastoral; Farm with crops and animals = mixed) - 2 marks<br>
+                3. <strong>By purpose:</strong> Subsistence vs. Commercial (Example: Family farm growing rice for own consumption = subsistence; Large farm producing wheat for sale = commercial) - 2 marks
+            </div>
+            
+            <div class="answer-item">
+                <strong>SECTION B - Question 4: Hong Kong's Limited Active Farmland (5 marks)</strong><br>
+                <strong>Model Answer:</strong><br>
+                1. <strong>Urban development pressure:</strong> Hong Kong has limited land (1,104 km² total). Urban areas, housing, and infrastructure development are prioritized over farming due to higher economic returns and population density, leaving only 4.5% for agriculture. - 2.5 marks<br>
+                2. <strong>Low profitability and labor shortage:</strong> Farming in Hong Kong generates low income compared to other industries. High operating costs, competition from cheap imports from Mainland China, and lack of young farmers willing to continue agricultural work result in farmland abandonment. - 2.5 marks
+            </div>
+            
+            <div class="answer-item">
+                <strong>SECTION B - Question 5: Innovative Farming Methods (5 marks)</strong><br>
+                <strong>Model Answer:</strong><br>
+                1. <strong>Hydroponics:</strong> Growing plants in nutrient-rich water without soil. This method is necessary because Hong Kong has extremely limited farmland (only 50 km², with 15% actively used). Hydroponics maximizes production in small spaces, uses less water, and allows year-round cultivation independent of weather. - 2.5 marks<br>
+                2. <strong>Rooftop farming:</strong> Utilizing building rooftops for agriculture. This is necessary to make use of unused urban spaces in Hong Kong's dense urban environment, bringing food production closer to consumers, reducing transportation costs, and increasing local food supply without requiring additional land. - 2.5 marks
+            </div>
+            
+            <div class="answer-item">
+                <strong>SECTION C - Question 1a: Population Projection (2 marks)</strong><br>
+                <strong>Model Answer:</strong><br>
+                According to UN projections, the global population will reach 9.7 billion by 2050, representing an increase of approximately 2 billion people from current levels.
+            </div>
+            
+            <div class="answer-item">
+                <strong>SECTION C - Question 1b: Population Growth Impact (4 marks)</strong><br>
+                <strong>Model Answer:</strong><br>
+                Population growth will significantly strain global food supply. With 2 billion more people to feed by 2050, food demand will increase substantially while current production levels are already insufficient. This mismatch will cause food prices to rise dramatically (up to 100%), making food unaffordable for many, especially in less developed countries. Competition for limited resources like freshwater and agricultural land will intensify, and climate change will further reduce production capacity, leading to widespread hunger and malnutrition particularly in regions with high population growth rates.
+            </div>
+            
+            <div class="answer-item">
+                <strong>SECTION C - Question 1c: Economic & Social Factors (4 marks)</strong><br>
+                <strong>Model Answer:</strong><br>
+                <strong>Economic Factor:</strong> Poor economic development in less developed countries limits people's purchasing power. Even when food is available, many cannot afford to buy it due to low incomes, unemployment, and lack of economic opportunities. This creates food insecurity despite adequate global production. - 2 marks<br>
+                <strong>Social Factor:</strong> High birth rates in certain regions lead to rapid population growth, creating exponentially increasing food demand. Large family sizes strain household resources, and rapid population expansion outpaces agricultural development, making it impossible for food production to keep up with growing needs. - 2 marks
+            </div>
+            
+            <div class="answer-item">
+                <strong>SECTION C - Question 1d: Preparation Solutions (5 marks)</strong><br>
+                <strong>Model Answer:</strong> (Any 3 valid suggestions with explanations)<br>
+                1. <strong>Increase sustainable food production:</strong> Invest in agricultural technology, improve irrigation systems, develop drought-resistant crops, and expand cultivatable land through sustainable methods.<br>
+                2. <strong>Reduce food waste:</strong> Improve storage facilities, enhance transportation infrastructure, educate consumers about food waste, and implement policies to minimize loss throughout the supply chain (currently 1/3 of food is wasted).<br>
+                3. <strong>Develop innovative farming techniques:</strong> Promote hydroponics, vertical farming, and precision agriculture to maximize yield per unit area while minimizing resource use.<br>
+                4. <strong>Improve food distribution systems:</strong> Ensure efficient transportation networks and fair distribution mechanisms so food reaches those in need, particularly in remote or less developed areas.<br>
+                5. <strong>Control population growth:</strong> Implement family planning programs and improve education, especially for women, to stabilize population growth rates in high-growth regions.
+            </div>
+            
+            <div class="answer-item">
+                <strong>SECTION C - Question 2a: Calculation (3 marks)</strong><br>
+                <strong>Model Answer:</strong><br>
+                <strong>Given:</strong> Hong Kong has 50 km² of farmland, only 15% is currently used<br>
+                <strong>Calculation:</strong> Percentage NOT used = 100% - 15% = 85%<br>
+                <strong>Answer:</strong> 85% of Hong Kong's farmland is not currently being used for farming.<br>
+                (1 mark for showing calculation + 2 marks for correct answer)
+            </div>
+            
+            <div class="answer-item">
+                <strong>SECTION C - Question 2b: Food Imports (4 marks)</strong><br>
+                <strong>Model Answer:</strong><br>
+                Hong Kong relies heavily on food imports from Mainland China for several reasons: First, Hong Kong has very limited agricultural land (only 50 km² or 4.5% of total land area), with only 15% actively farmed, making local production insufficient to meet the needs of 7.5 million people. Second, local farming faces high operating costs and cannot compete with cheaper imports from Mainland China. Third, geographical proximity to Mainland China makes transportation convenient and cost-effective. Fourth, historical and economic ties facilitate smooth trade relationships and supply chains. As a result, Hong Kong can only produce a small fraction of its food needs and must import most food items.
+            </div>
+            
+            <div class="answer-item">
+                <strong>SECTION C - Question 2c: Farming Comparison (8 marks)</strong><br>
+                <strong>Model Answer:</strong><br>
+                <strong>Traditional Farming:</strong> Requires large land areas with soil cultivation, depends heavily on weather conditions, has seasonal limitations, uses more water and natural resources, typically produces lower yields per unit area, and is labor-intensive. In Hong Kong's context, traditional farming is increasingly difficult due to land scarcity and urban development pressure.<br><br>
+                <strong>Innovative Methods (Hydroponics/Rooftop Farming):</strong><br>
+                <strong>Advantages:</strong><br>
+                1. <strong>Space efficiency:</strong> Can be implemented in urban areas, on rooftops, or in vertical structures, making maximum use of limited space in Hong Kong's dense urban environment.<br>
+                2. <strong>Controlled environment:</strong> Protected from extreme weather, pests, and diseases, ensuring more stable and reliable production year-round.<br>
+                3. <strong>Higher yields:</strong> Optimized growing conditions lead to faster growth cycles and greater productivity per square meter compared to traditional farming.<br>
+                4. <strong>Water conservation:</strong> Hydroponics uses up to 90% less water than traditional farming as water is recirculated in closed systems.<br>
+                5. <strong>Reduced pesticide use:</strong> Controlled environments minimize pest problems, reducing need for chemical pesticides and producing safer food.<br>
+                6. <strong>Urban food security:</strong> Brings food production closer to consumers, reducing transportation costs and carbon footprint while increasing local food supply.<br>
+                7. <strong>Year-round production:</strong> Independent of seasons, ensuring consistent food availability throughout the year.
+            </div>
+            
+            <div class="answer-item">
+                <strong>SECTION D - Extended Response Marking Criteria</strong><br>
+                <strong>For both options, essays should demonstrate:</strong><br>
+                • <strong>Knowledge & Understanding (7 marks):</strong> Accurate use of facts, figures, and geographical concepts from the unit<br>
+                • <strong>Analysis & Application (7 marks):</strong> Deep explanation of causes, impacts, and solutions with relevant examples<br>
+                • <strong>Evaluation (4 marks):</strong> Critical thinking, balanced arguments, consideration of different perspectives<br>
+                • <strong>Communication (2 marks):</strong> Clear structure (introduction-body-conclusion), logical flow, proper geographical terminology, correct grammar
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Timer functionality
+        let seconds = 0;
+        let timerInterval;
+
+        function startTimer() {
+            timerInterval = setInterval(function() {
+                seconds++;
+                let hours = Math.floor(seconds / 3600);
+                let minutes = Math.floor((seconds % 3600) / 60);
+                let secs = seconds % 60;
+                
+                document.getElementById('timer').innerHTML = 
+                    `⏱ Time: ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        // Start timer when page loads
+        window.onload = function() {
+            startTimer();
+        };
+
+        function checkAnswers() {
+            let score = 0;
+            let totalScore = 100;
+            let feedback = "📊 Detailed Score Breakdown:\n\n";
+            
+            // Section A: Multiple Choice (20 marks)
+            const mcqAnswers = {
+                q1: 'C', q2: 'B', q3: 'C', q4: 'C', q5: 'B',
+                q6: 'C', q7: 'C', q8: 'B', q9: 'B', q10: 'B',
+                q11: 'B', q12: 'D', q13: 'C', q14: 'B', q15: 'C',
+                q16: 'C', q17: 'B', q18: 'B', q19: 'B', q20: 'C'
+            };
+            
+            let mcqScore = 0;
+            for (let i = 1; i <= 20; i++) {
+                const selected = document.querySelector(`input[name="q${i}"]:checked`);
+                if (selected && selected.value === mcqAnswers[`q${i}`]) {
+                    mcqScore++;
+                }
+            }
+            score += mcqScore;
+            feedback += `SECTION A - Multiple Choice: ${mcqScore}/20 marks\n`;
+            
+            // Section B: Short Answer (30 marks)
+            let sectionBScore = 0;
+            
+            // Question B1 (6 marks)
+            const qB1 = document.getElementById('qB1').value;
+            let b1Score = 0;
+            if (qB1.length > 150) b1Score = 6;
+            else if (qB1.length > 100) b1Score = 4;
+            else if (qB1.length > 50) b1Score = 3;
+            else if (qB1.length > 20) b1Score = 1;
+            sectionBScore += b1Score;
+            feedback += `  Q1 (Challenges): ${b1Score}/6 marks\n`;
+            
+            // Question B2 (8 marks)
+            const qB2a = document.getElementById('qB2a').value;
+            const qB2b = document.getElementById('qB2b').value;
+            const qB2c = document.getElementById('qB2c').value;
+            const qB2d = document.getElementById('qB2d').value;
+            let b2Score = 0;
+            if (qB2a.length > 5) b2Score += 2;
+            if (qB2b.length > 5) b2Score += 2;
+            if (qB2c.length > 5) b2Score += 2;
+            if (qB2d.length > 20) b2Score += 2;
+            sectionBScore += b2Score;
+            feedback += `  Q2 (Farming System): ${b2Score}/8 marks\n`;
+            
+            // Question B3 (6 marks)
+            const qB3 = document.getElementById('qB3').value;
+            let b3Score = 0;
+            if (qB3.length > 120) b3Score = 6;
+            else if (qB3.length > 80) b3Score = 4;
+            else if (qB3.length > 40) b3Score = 2;
+            else if (qB3.length > 10) b3Score = 1;
+            sectionBScore += b3Score;
+            feedback += `  Q3 (Classification): ${b3Score}/6 marks\n`;
+            
+            // Question B4 (5 marks)
+            const qB4 = document.getElementById('qB4').value;
+            let b4Score = 0;
+            if (qB4.length > 100) b4Score = 5;
+            else if (qB4.length > 60) b4Score = 3;
+            else if (qB4.length > 30) b4Score = 2;
+            else if (qB4.length > 10) b4Score = 1;
+            sectionBScore += b4Score;
+            feedback += `  Q4 (HK Farmland): ${b4Score}/5 marks\n`;
+            
+            // Question B5 (5 marks)
+            const qB5 = document.getElementById('qB5').value;
+            let b5Score = 0;
+            if (qB5.length > 100) b5Score = 5;
+            else if (qB5.length > 60) b5Score = 3;
+            else if (qB5.length > 30) b5Score = 2;
+            else if (qB5.length > 10) b5Score = 1;
+            sectionBScore += b5Score;
+            feedback += `  Q5 (Innovative Methods): ${b5Score}/5 marks\n`;
+            
+            score += sectionBScore;
+            feedback += `SECTION B - Short Answer: ${sectionBScore}/30 marks\n\n`;
+            
+            // Section C: Structured Questions (30 marks)
+            let sectionCScore = 0;
+            
+            // Question C1 (15 marks)
+            const qC1a = document.getElementById('qC1a').value;
+            const qC1b = document.getElementById('qC1b').value;
+            const qC1c = document.getElementById('qC1c').value;
+            const qC1d = document.getElementById('qC1d').value;
+            
+            let c1Score = 0;
+            if (qC1a.length > 20) c1Score += 2;
+            if (qC1b.length > 80) c1Score += 4;
+            else if (qC1b.length > 40) c1Score += 2;
+            if (qC1c.length > 80) c1Score += 4;
+            else if (qC1c.length > 40) c1Score += 2;
+            if (qC1d.length > 100) c1Score += 5;
+            else if (qC1d.length > 50) c1Score += 3;
+            else if (qC1d.length > 20) c1Score += 1;
+            sectionCScore += c1Score;
+            feedback += `  Q1 (Global Food Crisis): ${c1Score}/15 marks\n`;
+            
+            // Question C2 (15 marks)
+            const qC2a = document.getElementById('qC2a').value;
+            const qC2b = document.getElementById('qC2b').value;
+            const qC2c = document.getElementById('qC2c').value;
+            
+            let c2Score = 0;
+            if (qC2a.length > 30) c2Score += 3;
+            else if (qC2a.length > 15) c2Score += 2;
+            else if (qC2a.length > 5) c2Score += 1;
+            if (qC2b.length > 80) c2Score += 4;
+            else if (qC2b.length > 40) c2Score += 2;
+            if (qC2c.length > 150) c2Score += 8;
+            else if (qC2c.length > 100) c2Score += 6;
+            else if (qC2c.length > 50) c2Score += 3;
+            else if (qC2c.length > 20) c2Score += 1;
+            sectionCScore += c2Score;
+            feedback += `  Q2 (Hong Kong Agriculture): ${c2Score}/15 marks\n`;
+            
+            score += sectionCScore;
+            feedback += `SECTION C - Structured Questions: ${sectionCScore}/30 marks\n\n`;
+            
+            // Section D: Extended Response (20 marks)
+            const qD1 = document.getElementById('qD1').value;
+            const qD2 = document.getElementById('qD2').value;
+            
+            let sectionDScore = 0;
+            const longerEssay = qD1.length > qD2.length ? qD1 : qD2;
+            
+            if (longerEssay.length > 400) sectionDScore = 20;
+            else if (longerEssay.length > 300) sectionDScore = 16;
+            else if (longerEssay.length > 200) sectionDScore = 12;
+            else if (longerEssay.length > 100) sectionDScore = 8;
+            else if (longerEssay.length > 50) sectionDScore = 4;
+            else if (longerEssay.length > 20) sectionDScore = 2;
+            
+            score += sectionDScore;
+            feedback += `SECTION D - Extended Response: ${sectionDScore}/20 marks\n`;
+            
+            // Calculate percentage and grade
+            const percentage = (score / totalScore * 100).toFixed(1);
+            let grade = '';
+            if (percentage >= 90) grade = 'A+';
+            else if (percentage >= 85) grade = 'A';
+            else if (percentage >= 80) grade = 'A-';
+            else if (percentage >= 75) grade = 'B+';
+            else if (percentage >= 70) grade = 'B';
+            else if (percentage >= 65) grade = 'B-';
+            else if (percentage >= 60) grade = 'C+';
+            else if (percentage >= 55) grade = 'C';
+            else if (percentage >= 50) grade = 'C-';
+            else if (percentage >= 45) grade = 'D+';
+            else if (percentage >= 40) grade = 'D';
+            else grade = 'F';
+            
+            // Stop timer
+            clearInterval(timerInterval);
+            const timeSpent = document.getElementById('timer').textContent;
+            
+            // Display results
+            document.getElementById('scoreDisplay').innerHTML = `
+                <h3>🎉 Assessment Results</h3>
+                <div style="font-size: 1.4em; margin: 15px 0;">
+                    Total Score: <span style="color: #2e7d32; font-size: 1.3em;">${score}/${totalScore}</span> 
+                    (${percentage}%)
+                </div>
+                <div style="font-size: 1.2em; margin: 10px 0;">
+                    Grade: <span style="color: #1b5e20; font-size: 1.2em;">${grade}</span>
+                </div>
+                <div style="margin: 10px 0;">
+                    ${timeSpent}
+                </div>
+                <div style="margin-top: 20px; font-size: 0.95em; white-space: pre-line; text-align: left; background: white; padding: 15px; border-radius: 8px;">
+                    ${feedback}
+                </div>
+                <div style="margin-top: 15px; padding: 15px; background: #e8f5e9; border-radius: 8px;">
+                    <strong>💡 Note:</strong> This is an automated estimation based on response length and completeness. 
+                    For accurate grading, please review the answer key and marking criteria below.
+                </div>
+            `;
+            document.getElementById('scoreDisplay').style.display = 'block';
+            
+            // Scroll to results
+            document.getElementById('scoreDisplay').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function showAnswerKey() {
+            const answerKey = document.getElementById('answerKey');
+            const scoringGuides = document.querySelectorAll('.scoring-guide');
+            
+            if (answerKey.style.display === 'none' || answerKey.style.display === '') {
+                answerKey.style.display = 'block';
+                scoringGuides.forEach(guide => {
+                    guide.style.display = 'block';
+                });
+                // Scroll to answer key
+                answerKey.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else {
+                answerKey.style.display = 'none';
+                scoringGuides.forEach(guide => {
+                    guide.style.display = 'none';
+                });
+            }
+        }
+
+        function downloadExercise() {
+            const element = document.createElement('a');
+            const content = document.documentElement.outerHTML;
+            const file = new Blob([content], {type: 'text/html; charset=utf-8'});
+            element.href = URL.createObjectURL(file);
+            element.download = 'S2_Geography_Food_Problem_Assessment.html';
+            element.click();
+            
+            alert('✅ Assessment downloaded successfully!\n\nYou can open this file in any web browser to continue your work.');
+        }
+
+        function printExercise() {
+            window.print();
+        }
+    </script>
+</body>
+</html>
