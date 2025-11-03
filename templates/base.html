@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="{{ session.get('lang', 'zh_CN') }}">
+<html lang="{{ session.get('lang', 'en') }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}{{ _('作业管理系统') }}{% endblock %}</title>
+    <title>{% block title %}{{ _('Assignment Management System') }}{% endblock %}</title>
     <style>
         /* Global styles */
         :root {
@@ -330,7 +330,7 @@
                             {% else %}
                                 <a href="{{ url_for('student_dashboard', lang=request.args.get('lang')) }}">{{ _('仪表盘') }}</a>
                             {% endif %}
-                            <a href="{{ url_for('change_password', lang=request.args.get('lang')) }}">{{ _('Change Password') }}</a>
+                            <a href="{{ url_for('change_password', lang=request.args.get('lang')) }}">{{ _('修改密码') }}</a>
                             <a href="{{ url_for('logout', lang=request.args.get('lang')) }}">{{ _('退出登录') }}</a>
                         </div>
                     </nav>

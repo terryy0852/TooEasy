@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ _('学生仪表盘 - 作业管理系统') }}{% endblock %}
+{% block title %}{{ _('学生仪表盘') }} - {{ _('作业管理系统') }}{% endblock %}
 
 {% block content %}
     <h2 style="margin-bottom: 1.5rem; color: var(--primary-color);">{{ _('可用作业') }}</h2>
@@ -49,7 +49,7 @@
         </div>
     {% else %}
         <div style="text-align: center; padding: 3rem; background-color: #f9f9f9; border-radius: var(--border-radius);">
-            <p style="color: #666;">{{ _('当前没有可用的作业') }}</p>
+            <p style="color: #666;">{{ _('暂无可用作业') }}</p>
         </div>
     {% endif %}
 {% endblock %}

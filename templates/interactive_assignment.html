@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ assignment.title }} - {{ _('完成作业') }}{% endblock %}
+{% block title %}{{ assignment.title }} - {{ _('Complete Assignment') }}{% endblock %}
 
 {% block content %}
     <h2 style="color: var(--primary-color);">{{ assignment.title }}</h2>
@@ -15,15 +15,15 @@
         </div>
     {% elif assignment.file_path %}
         <div style="margin-bottom: 1.5rem;">
-            <p>{{ _('该作业无法在线完成，请下载作业文件。') }}</p>
-            <a href="{{ url_for('download_file', filename=assignment.file_path) }}" class="btn btn-secondary">{{ _('下载作业') }}</a>
+            <p>{{ _('This assignment cannot be completed online. Please download the file.') }}</p>
+            <a href="{{ url_for('download_file', filename=assignment.file_path) }}" class="btn btn-secondary">{{ _('Download Assignment') }}</a>
         </div>
     {% endif %}
 
     <form action="{{ url_for('submit_interactive_assignment', assignment_id=assignment.id) }}" method="post" id="interactive-submission-form">
         <input type="hidden" name="assignment_answers" id="assignment-answers">
         <input type="hidden" name="html_submission" id="html-submission">
-        <button type="submit" class="btn btn-primary">{{ _('提交作业') }}</button>
+        <button type="submit" class="btn btn-primary">{{ _('Submit Assignment') }}</button>
     </form>
 
     <script>

@@ -328,16 +328,11 @@ def monkey_patched_gettext(string):
     try:
         if has_request_context():
             print(f"[BABEL DEBUG] In request context")
-            # Try to get locale from session first
-            session_locale = session.get('lang')
-            if session_locale:
-                print(f"[BABEL DEBUG] Using session locale: {session_locale}")
-                return monkey_patched_gettext_with_locale(string, session_locale)
-            
-            # Fallback to get_locale()
-            current_locale = str(get_locale())
-            print(f"[BABEL DEBUG] Using request locale: {current_locale}")
-            return monkey_patched_gettext_with_locale(string, current_locale)
+            # Always resolve via get_locale(), which applies precedence:
+            # URL lang > session > Accept-Language > default, and persists to session.
+            effective_locale = str(get_locale())
+            print(f"[BABEL DEBUG] Using effective locale from get_locale(): {effective_locale}")
+            return monkey_patched_gettext_with_locale(string, effective_locale)
         else:
             print(f"[BABEL DEBUG] Not in request context, using default locale")
             # Use default locale when not in request context
@@ -655,6 +650,13 @@ class Assignment(db.Model):
     tutor_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     # Relationship to submissions for this assignment
     submissions = db.relationship('Submission', backref='assignment', lazy=True)
+    # Students explicitly assigned to this assignment (many-to-many)
+    assigned_students = db.relationship(
+        'User',
+        secondary='assignment_students',
+        backref=db.backref('assigned_assignments', lazy='dynamic'),
+        lazy='dynamic'
+    )
 
 # Submission model
 class Submission(db.Model):
@@ -667,6 +669,13 @@ class Submission(db.Model):
     # Foreign keys
     student_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     assignment_id = db.Column(db.Integer, db.ForeignKey('assignment.id'), nullable=False)
+
+# Association table mapping assignments to students (targeting)
+assignment_students = db.Table(
+    'assignment_students',
+    db.Column('assignment_id', db.Integer, db.ForeignKey('assignment.id'), primary_key=True),
+    db.Column('student_id', db.Integer, db.ForeignKey('user.id'), primary_key=True)
+)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -828,8 +837,46 @@ def tutor_dashboard():
         flash(_('You are not authorized to access this page'))
         return redirect(url_for('index'))
     
-    assignments = Assignment.query.filter_by(tutor_id=current_user.id).all()
-    return render_template('tutor_dashboard.html', assignments=assignments)
+    # Show all assignments so any tutor can manage all students' submissions
+    assignments = Assignment.query.order_by(Assignment.created_at.desc()).all()
+
+    # Build submissions query with optional filters
+    submissions_query = db.session.query(Submission).join(User, Submission.student_id == User.id).join(Assignment, Submission.assignment_id == Assignment.id)
+
+    status = request.args.get('status')  # 'graded', 'ungraded', or None
+    student_q = request.args.get('student')
+    student_id = request.args.get('student_id')
+    assignment_q = request.args.get('assignment')
+
+    if status == 'graded':
+        submissions_query = submissions_query.filter(Submission.grade.isnot(None))
+    elif status == 'ungraded':
+        submissions_query = submissions_query.filter(Submission.grade.is_(None))
+
+    if student_q:
+        submissions_query = submissions_query.filter(User.username.ilike(f"%{student_q}%"))
+
+    if student_id and student_id.isdigit():
+        submissions_query = submissions_query.filter(Submission.student_id == int(student_id))
+
+    if assignment_q:
+        submissions_query = submissions_query.filter(Assignment.title.ilike(f"%{assignment_q}%"))
+
+    submissions = submissions_query.order_by(Submission.submitted_at.desc()).all()
+
+    # Students list for dropdown (non-tutors)
+    students = User.query.filter_by(is_tutor=False).order_by(User.username.asc()).all()
+
+    return render_template(
+        'tutor_dashboard.html',
+        assignments=assignments,
+        submissions=submissions,
+        status=status or '',
+        student_q=student_q or '',
+        student_id=student_id or '',
+        students=students,
+        assignment_q=assignment_q or ''
+    )
 
 @app.route('/create_assignment', methods=['GET', 'POST'])
 @login_required
@@ -841,6 +888,7 @@ def create_assignment():
     if request.method == 'POST':
         title = request.form['title']
         description = request.form['description']
+        assigned_student_ids = request.form.getlist('assigned_students')
         
         # Handle file upload
         file_path = None
@@ -856,6 +904,12 @@ def create_assignment():
         due_date_str = request.form.get('due_date')
         due_date = datetime.strptime(due_date_str, '%Y-%m-%d') if due_date_str else None
         
+        # Require at least one student to be selected
+        if not assigned_student_ids:
+            flash(_('请至少选择一名学生'), 'error')
+            students = User.query.filter_by(is_tutor=False).all()
+            return render_template('create_assignment.html', students=students)
+
         new_assignment = Assignment(
             title=title,
             description=description,
@@ -865,12 +919,22 @@ def create_assignment():
         )
         
         db.session.add(new_assignment)
+        # Assign selected students to the assignment
+        try:
+            ids = [int(sid) for sid in assigned_student_ids]
+            selected_students = User.query.filter(User.id.in_(ids), User.is_tutor == False).all()
+            for s in selected_students:
+                new_assignment.assigned_students.append(s)
+        except Exception:
+            # Fallback: ignore assignment if parsing fails
+            pass
         db.session.commit()
         
         flash(_('Assignment created successfully!'))
         return redirect(url_for('tutor_dashboard'))
     
-    return render_template('create_assignment.html')
+    students = User.query.filter_by(is_tutor=False).all()
+    return render_template('create_assignment.html', students=students)
 
 # Delete assignment (tutor-only)
 @app.route('/delete_assignment/<int:assignment_id>', methods=['POST'])
@@ -987,10 +1051,16 @@ def student_dashboard():
         flash('You are not authorized to access this page')
         return redirect(url_for('index'))
     
-    # Show assignments only related to the current student via their submissions.
-    # This prevents new students from seeing assignments belonging to other users.
-    assignments = Assignment.query.join(Submission, Assignment.id == Submission.assignment_id)\
-                                  .filter(Submission.student_id == current_user.id).all()
+    # Show assignments targeted to the current student, plus any they have submissions for
+    assigned_q = Assignment.query.join(
+        assignment_students, Assignment.id == assignment_students.c.assignment_id
+    ).filter(assignment_students.c.student_id == current_user.id)
+
+    submitted_q = Assignment.query.join(
+        Submission, Assignment.id == Submission.assignment_id
+    ).filter(Submission.student_id == current_user.id)
+
+    assignments = assigned_q.union(submitted_q).all()
     # Get submitted assignments
     submitted_assignment_ids = [sub.assignment_id for sub in current_user.submissions]
     
@@ -1004,6 +1074,12 @@ def view_assignment(assignment_id):
     # Check if student has submitted this assignment
     submission = Submission.query.filter_by(student_id=current_user.id, 
                                           assignment_id=assignment_id).first()
+    # Restrict visibility: students must be assigned or have submitted
+    if not current_user.is_tutor:
+        is_assigned = assignment.assigned_students.filter(User.id == current_user.id).count() > 0
+        if not is_assigned and not submission:
+            flash(_('您没有权限查看该作业'), 'error')
+            return redirect(url_for('student_dashboard'))
     return render_template('view_assignment.html', assignment=assignment, submission=submission)
 
 @app.route('/interactive_assignment/<int:assignment_id>')
@@ -1069,8 +1145,8 @@ def download_file(filename):
         submission = Submission.query.filter_by(file_path=filename).first()
         if submission:
             assignment = Assignment.query.get(submission.assignment_id)
-            # Tutors can download submissions for their assignments
-            if current_user.is_tutor and assignment.tutor_id == current_user.id:
+            # Tutors can download any submission
+            if current_user.is_tutor:
                 is_authorized = True
             # Students can download their own submissions
             elif not current_user.is_tutor and submission.student_id == current_user.id:
@@ -1164,7 +1240,8 @@ def serve_submission_content(filename):
         submission = Submission.query.filter_by(file_path=filename).first()
         if submission:
             assignment = Assignment.query.get(submission.assignment_id)
-            if current_user.is_tutor and assignment and assignment.tutor_id == current_user.id:
+            # Tutors can view any submission content inline
+            if current_user.is_tutor:
                 is_authorized = True
             elif not current_user.is_tutor and submission.student_id == current_user.id:
                 is_authorized = True
@@ -1266,7 +1343,7 @@ def submit_interactive_assignment(assignment_id):
         with open(answers_filepath, 'w', encoding='utf-8') as f:
             f.write(html_doc)
     except Exception as e:
-        flash(_('保存答案时出错: ') + str(e))
+        flash(_('Error saving answers: ') + str(e))
         return redirect(url_for('view_assignment', assignment_id=assignment_id))
 
     # Create a new submission (HTML file)

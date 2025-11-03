@@ -85,6 +85,26 @@ msgstr "You haven't created any assignments yet"
 msgid "创建第一个作业"
 msgstr "Create your first assignment"
 
+# Header and change password
+msgid "修改密码"
+msgstr "Change Password"
+
+# Change password page
+msgid "请使用强密码：至少8个字符，包含大写、小写、数字和特殊字符。"
+msgstr "Use a strong password: at least 8 characters including upper, lower, digit, and special character."
+
+msgid "当前密码"
+msgstr "Current Password"
+
+msgid "新密码"
+msgstr "New Password"
+
+msgid "确认新密码"
+msgstr "Confirm New Password"
+
+msgid "更新密码"
+msgstr "Update Password"
+
 # Create assignment
 msgid "创建作业"
 msgstr "Create Assignment"
@@ -109,6 +129,22 @@ msgstr "Create Assignment"
 
 msgid "取消"
 msgstr "Cancel"
+
+# Create assignment – student selection and helpers
+msgid "分配给学生"
+msgstr "Assign to Students"
+
+msgid "选择学生…"
+msgstr "Select student…"
+
+msgid "添加"
+msgstr "Add"
+
+msgid "清除"
+msgstr "Clear"
+
+msgid "选择多个学生；使用下拉菜单逐个添加"
+msgstr "Select multiple students; use the dropdown to add individually"
 
 # View submissions
 msgid "查看提交"

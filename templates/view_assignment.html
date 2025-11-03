@@ -24,34 +24,34 @@
         {% if assignment.file_path %}
             <div style="margin-bottom: 1.5rem;">
                 <a href="{{ url_for('download_file', filename=assignment.file_path) }}" class="btn btn-outline">
-                    {{ _('下载作业材料') }}
+                    {{ _('下载文件') }}
                 </a>
             </div>
         {% endif %}
         
         {% if submission %}
             <div class="card" style="background-color: #f0f8ff;">
-                <h3 style="color: var(--primary-color); margin-bottom: 1rem;">{{ _('提交状态') }}</h3>
-                <p>{{ _('提交时间') }}: {{ submission.submitted_at.strftime('%Y-%m-%d %H:%M') }}</p>
-                <p>{{ _('提交文件') }}: <a href="{{ url_for('download_file', filename=submission.file_path) }}" style="color: var(--primary-color);">{{ _('下载') }}</a></p>
+                <h3 style="color: var(--primary-color); margin-bottom: 1rem;">{{ _('Submission Status') }}</h3>
+                <p>{{ _('Submitted At') }}: {{ submission.submitted_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                <p>{{ _('Submitted File') }}: <a href="{{ url_for('download_file', filename=submission.file_path) }}" style="color: var(--primary-color);">{{ _('Download') }}</a></p>
                 
                 {% if submission.is_graded %}
                     <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e0e0e0;">
-                        <h4 style="color: var(--secondary-color); margin-bottom: 0.5rem;">{{ _('评分反馈') }}</h4>
-                        <p style="margin-bottom: 0.5rem;">{{ _('分数') }}: <strong>{{ submission.grade }}</strong></p>
+                        <h4 style="color: var(--secondary-color); margin-bottom: 0.5rem;">{{ _('Grading Feedback') }}</h4>
+                        <p style="margin-bottom: 0.5rem;">{{ _('Score') }}: <strong>{{ submission.grade }}</strong></p>
                         {% if submission.feedback %}
-                            <p>{{ _('反馈') }}: {{ submission.feedback }}</p>
+                            <p>{{ _('Feedback') }}: {{ submission.feedback }}</p>
                         {% else %}
-                            <p>{{ _('暂无反馈') }}</p>
+                            <p>{{ _('No feedback') }}</p>
                         {% endif %}
                     </div>
                 {% else %}
-                    <p style="margin-top: 1rem; color: #666;">{{ _('教师尚未评分') }}</p>
+                    <p style="margin-top: 1rem; color: #666;">{{ _('Not graded yet') }}</p>
                 {% endif %}
             </div>
         {% else %}
             <div style="margin-top: 2rem;">
-                <h3 style="margin-bottom: 1.5rem;">{{ _('提交作业') }}</h3>
+                <h3 style="margin-bottom: 1.5rem;">{{ _('Submit Assignment') }}</h3>
                 
                 <!-- Interactive Assignment Option -->
                 {% if assignment.file_path and (assignment.file_path.endswith('.html') or assignment.file_path.endswith('.htm')) %}
@@ -60,7 +60,7 @@
                                 class="btn btn-primary" 
                                 onclick="window.open('{{ url_for('start_interactive_assignment', assignment_id=assignment.id) }}', '_blank');">{{ _('开始作业') }}</button>
                         <p style="color: #666; font-size: 0.875rem; margin-top: 0.5rem;">
-                            {{ _('点击以上按钮在新标签页中完成交互式作业') }}
+                            {{ _('点击上面的按钮，在新标签页中完成互动作业') }}
                         </p>
                     </div>
                 {% endif %}
@@ -68,15 +68,15 @@
                 <!-- File Upload Option -->
                 <form method="POST" enctype="multipart/form-data" action="{{ url_for('submit_assignment', assignment_id=assignment.id) }}">
                     <div class="form-group">
-                        <label for="file">{{ _('上传作业文件') }}</label>
+                        <label for="file">{{ _('Upload assignment file') }}</label>
                         <input type="file" id="file" name="file" required>
                         <p style="color: #666; font-size: 0.875rem; margin-top: 0.5rem;">
-                            {{ _('支持的格式：txt, pdf, doc, docx, xls, xlsx, ppt, pptx, zip, html, htm') }}
+                            {{ _('Supported formats: txt, pdf, doc, docx, xls, xlsx, ppt, pptx, zip, html, htm') }}
                         </p>
                     </div>
                     
                     <div class="form-group">
-                        <button type="submit" class="btn btn-primary">{{ _('提交作业') }}</button>
+                        <button type="submit" class="btn btn-primary">{{ _('Submit Assignment') }}</button>
                     </div>
                 </form>
             </div>

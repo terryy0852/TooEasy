@@ -1,25 +1,25 @@
 {% extends "base.html" %}
 
-{% block title %}{{ _('查看提交') }} - {{ assignment.title }}{% endblock %}
+{% block title %}{{ _('View Submissions') }} - {{ assignment.title }}{% endblock %}
 
 {% block content %}
-    <h2 style="color: var(--primary-color);">{{ _('提交列表') }} - {{ assignment.title }}</h2>
+    <h2 style="color: var(--primary-color);">{{ _('Submission List') }} - {{ assignment.title }}</h2>
 
     {% if submissions %}
         <div class="submissions-grid">
             {% for submission in submissions %}
                 <div class="card">
-                    <p>{{ _('提交者') }}: {{ submission.student.username }}</p>
-                    <p>{{ _('提交时间') }}: {{ submission.submitted_at.strftime('%Y-%m-%d %H:%M') }}</p>
-                    <a href="{{ url_for('download_file', filename=submission.file_path) }}" class="btn btn-outline">{{ _('下载作业') }}</a>
-                    <a href="{{ url_for('grade_submission', submission_id=submission.id) }}" class="btn btn-primary">{{ _('评分') }}</a>
+                    <p>{{ _('Submitted by') }}: {{ submission.student.username }}</p>
+                    <p>{{ _('Submitted At') }}: {{ submission.submitted_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                    <a href="{{ url_for('download_file', filename=submission.file_path) }}" class="btn btn-outline">{{ _('Download Assignment') }}</a>
+                    <a href="{{ url_for('grade_submission', submission_id=submission.id) }}" class="btn btn-primary">{{ _('Grade') }}</a>
                     {% if submission.file_path and (submission.file_path.lower().endswith('.html') or submission.file_path.lower().endswith('.htm')) %}
-                        <a href="{{ url_for('serve_submission_content', filename=submission.file_path) }}" target="_blank" class="btn btn-secondary">{{ _('在新标签查看') }}</a>
+                        <a href="{{ url_for('serve_submission_content', filename=submission.file_path) }}" target="_blank" class="btn btn-secondary">{{ _('Open in new tab') }}</a>
                     {% endif %}
                 </div>
             {% endfor %}
         </div>
     {% else %}
-        <p>{{ _('暂无提交') }}</p>
+        <p>{{ _('No submissions') }}</p>
     {% endif %}
 {% endblock %}
