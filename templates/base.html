@@ -330,6 +330,7 @@
                             {% else %}
                                 <a href="{{ url_for('student_dashboard', lang=request.args.get('lang')) }}">{{ _('仪表盘') }}</a>
                             {% endif %}
+                            <a href="{{ url_for('change_password', lang=request.args.get('lang')) }}">{{ _('Change Password') }}</a>
                             <a href="{{ url_for('logout', lang=request.args.get('lang')) }}">{{ _('退出登录') }}</a>
                         </div>
                     </nav>

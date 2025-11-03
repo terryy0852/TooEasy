@@ -5,6 +5,7 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, log
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 import os
+import re
 from datetime import datetime
 import uuid
 from flask_babel import Babel, gettext as flask_babel_gettext
@@ -17,8 +18,18 @@ babel = Babel()
 
 # 配置Flask应用
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secret-key-here'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///assignments.db'
+# Read sensitive and deployment configs from environment variables when available
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-here')
+# Database configuration: prefer env-provided PostgreSQL URL, fallback to SQLite
+database_url = os.environ.get('DATABASE_URL', 'sqlite:///assignments.db')
+# Normalize legacy postgres:// to postgresql:// for SQLAlchemy/psycopg2 compatibility
+if database_url.startswith('postgres://'):
+    database_url = database_url.replace('postgres://', 'postgresql://', 1)
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+# Engine options to improve reliability in hosted environments
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'pool_pre_ping': True
+}
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'uploads'
 
@@ -464,6 +475,28 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
+# Ensure tables are created across different Flask versions/environments
+def ensure_tables():
+    try:
+        with app.app_context():
+            db.create_all()
+            print("[DB INIT] Tables ensured on startup")
+    except Exception as e:
+        print(f"[DB INIT] Error creating tables: {e}")
+
+# Register the init hook compatibly (Flask 2.x/3.x)
+try:
+    if hasattr(app, 'before_first_request'):
+        app.before_first_request(ensure_tables)
+    elif hasattr(app, 'before_serving'):
+        app.before_serving(ensure_tables)
+    else:
+        # Fallback: ensure tables immediately
+        ensure_tables()
+except Exception as _hook_err:
+    # As a last resort, try to ensure tables without hooks
+    ensure_tables()
+
 # Language switch route
 @app.route('/switch_language/<lang>')
 def switch_language(lang):
@@ -602,7 +635,8 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(120), nullable=False)
+    # Store secure password hashes (length accommodates common schemes)
+    password = db.Column(db.String(255), nullable=False)
     is_tutor = db.Column(db.Boolean, default=False)
     # Relationship to assignments created by this user (tutor)
     created_assignments = db.relationship('Assignment', backref='creator', lazy=True)
@@ -648,6 +682,18 @@ ALLOWED_EXTENSIONS = {'html', 'htm'}
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def validate_password_strength(password):
+    """Basic password strength validation: length, cases, digit, special"""
+    if not isinstance(password, str):
+        return False
+    has_len = len(password) >= 8
+    has_upper = any(c.isupper() for c in password)
+    has_lower = any(c.islower() for c in password)
+    has_digit = any(c.isdigit() for c in password)
+    special_chars = "!@#$%^&*()-_=+[]{};:'\",.<>/?\\|`~"
+    has_special = any(c in special_chars for c in password)
+    return has_len and has_upper and has_lower and has_digit and has_special
+
 @app.route('/')
 def index():
     if current_user.is_authenticated:
@@ -673,15 +719,28 @@ def login():
         username = request.form['username']
         password = request.form['password']
         user = User.query.filter_by(username=username).first()
-        if user and user.password == password:  # In a real app, use hashed passwords
-            login_user(user)
-            # Preserve language parameter after login
-            lang = request.args.get('lang')
-            if lang:
-                return redirect(url_for('index', lang=lang))
-            else:
-                return redirect(url_for('index'))
-        else:
+        if user:
+            # First, try hashed verification
+            if check_password_hash(user.password, password):
+                login_user(user)
+                lang = request.args.get('lang')
+                if lang:
+                    return redirect(url_for('index', lang=lang))
+                else:
+                    return redirect(url_for('index'))
+
+            # Fallback for legacy plaintext passwords: upgrade on successful match
+            if user.password == password:
+                user.password = generate_password_hash(password)
+                db.session.commit()
+                login_user(user)
+                lang = request.args.get('lang')
+                if lang:
+                    return redirect(url_for('index', lang=lang))
+                else:
+                    return redirect(url_for('index'))
+
+            # If neither hashed nor plaintext matched
             flash(_('Invalid username or password'))
     return render_template('login.html')
 
@@ -701,13 +760,54 @@ def register():
             flash(_('Email already exists'))
             return redirect(url_for('register'))
         
-        new_user = User(username=username, email=email, password=password, is_tutor=is_tutor)
+        # Store a secure password hash
+        hashed_password = generate_password_hash(password)
+        new_user = User(username=username, email=email, password=hashed_password, is_tutor=is_tutor)
         db.session.add(new_user)
         db.session.commit()
         
         flash(_('Registration successful! Please login.'))
         return redirect(url_for('login'))
     return render_template('register.html')
+
+@app.route('/change_password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    if request.method == 'POST':
+        current_password = request.form.get('current_password', '')
+        new_password = request.form.get('new_password', '')
+        confirm_password = request.form.get('confirm_password', '')
+
+        if new_password != confirm_password:
+            flash(_('New passwords do not match'), 'error')
+            return redirect(url_for('change_password'))
+
+        if not validate_password_strength(new_password):
+            flash(_('Password must be at least 8 chars and include upper, lower, digit, and special.'), 'error')
+            return redirect(url_for('change_password'))
+
+        # Verify current password (hashed or legacy plaintext)
+        user = current_user
+        verified = False
+        try:
+            if check_password_hash(user.password, current_password):
+                verified = True
+        except Exception:
+            pass
+        if not verified and user.password == current_password:
+            verified = True
+
+        if not verified:
+            flash(_('Current password is incorrect'), 'error')
+            return redirect(url_for('change_password'))
+
+        # Update to new hashed password
+        user.password = generate_password_hash(new_password)
+        db.session.commit()
+        flash(_('Password updated successfully'), 'success')
+        return redirect(url_for('index'))
+
+    return render_template('change_password.html')
 
 @app.route('/logout')
 @login_required

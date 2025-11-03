@@ -75,3 +75,54 @@ templates/             # HTML 模板
   student_dashboard.html # 学生仪表盘
   view_assignment.html # 作业详情页面
 ```
+
+## 部署到 Render（包含修改密码功能）
+
+本项目已包含用于 Render 部署的文件：
+- `Procfile`：`web: gunicorn app:app --bind 0.0.0.0:$PORT`
+- `requirements.txt`：包含 Flask、Flask-Login、Flask-Babel、Flask-SQLAlchemy、gunicorn 等依赖
+
+### 1) 推送代码到 GitHub
+在本机终端（PowerShell、Git Bash 或 IDE 终端）进入项目目录，并执行：
+
+```bash
+cd "d:\OD\OneDrive\BaiduSyncdisk\Learn\Project Easy\Python Programs\Too Easy"
+# 如已是 Git 仓库，直接提交并推送
+git add .
+git commit -m "Change password feature + secure login"
+git push origin <branch>
+
+# 如果是第一次初始化（未配置仓库）
+git init
+git remote add origin https://github.com/<your-username>/<your-repo>.git
+git branch -M main
+git add .
+git commit -m "Initial commit"
+git push -u origin main
+```
+
+### 2) 在 Render 创建 Web Service
+- 在 Render 仪表盘选择“New” → “Web Service”，连接你的 GitHub 仓库和分支。
+- Build 命令：`pip install -r requirements.txt`
+- Start 命令：使用 `Procfile`（Render 会自动识别），或显式设置 `gunicorn app:app --bind 0.0.0.0:$PORT`
+- 环境变量：
+  - `SECRET_KEY`：设置为强随机值（保持一致，避免会话失效）
+  - 可选：`FLASK_ENV=production`
+
+### 3) 部署后自测
+- 访问 `/login`：
+  - 老用户能登录，若旧密码为明文，将自动升级为安全哈希并保持登录。
+  - 新用户正常注册与登录。
+- 登录后访问 `/change_password`：
+  - 输入当前密码、新密码、确认新密码。
+  - 新密码需满足强度策略：至少 8 位，包含大小写、数字、特殊字符。
+- 教师/学生仪表盘导航正常工作。
+
+### 4) 常见问题
+- 登录失败：
+  - 检查 `SECRET_KEY` 是否已在 Render 环境中设置且不变更。
+  - 查看 Render 日志定位错误。
+- 页面缺失：
+  - 登录后导航栏应显示“Change Password”链接。
+- 数据在重新部署后清空：
+  - 使用 SQLite 会出现这种情况；如需持久化数据，可以之后再迁移到 PostgreSQL。
