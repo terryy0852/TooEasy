@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Teacher Dashboard - Assignment Management System') }}{% endblock %}
+
+{% block content %}
+    <div class="dashboard-header">
+        <h1 class="dashboard-title">{{ _('教师仪表盘') }}</h1>
+        <a href="{{ url_for('create_assignment') }}" class="btn btn-primary">{{ _('创建新作业') }}</a>
+    </div>
+    
+    <h2 style="margin-bottom: 1.5rem;">{{ _('我的作业') }}</h2>
+    
+    {% if assignments %}
+        <div class="assignments-grid">
+            {% for assignment in assignments %}
+                <div class="card">
+                    <div class="flex justify-between align-center mb-1">
+                        <h3 style="color: var(--primary-color);">{{ assignment.title }}</h3>
+                        <span style="color: #666; font-size: 0.875rem;">{{ assignment.created_at.strftime('%Y-%m-%d') }}</span>
+                    </div>
+                    
+                    <p style="margin-bottom: 1rem; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
+                        {{ assignment.description }}
+                    </p>
+                    
+                    <div class="flex justify-between align-center">
+                        {% if assignment.file_path %}
+                            <a href="{{ url_for('download_file', filename=assignment.file_path) }}" 
+                               class="btn btn-outline" style="font-size: 0.875rem;">
+                                {{ _('下载文件') }}
+                            </a>
+                        {% endif %}
+                        
+                        <div class="flex gap-1">
+                            <a href="{{ url_for('view_submissions', assignment_id=assignment.id) }}" 
+                               class="btn btn-secondary" style="font-size: 0.875rem;">
+                                {{ _('查看提交') }} ({{ assignment.submissions|length }})
+                            </a>
+
+                            <form method="POST" 
+                                  action="{{ url_for('delete_assignment', assignment_id=assignment.id) }}" 
+                                  style="display: inline;"
+                                  onsubmit="return confirm('{{ _('确认删除此作业及其所有提交？此操作不可撤销') }}');">
+                                <button type="submit" 
+                                        class="btn btn-secondary" 
+                                        style="font-size: 0.875rem; background-color: #e74c3c; border-color: #e74c3c; color: #fff;">
+                                    {{ _('删除作业') }}
+                                </button>
+                            </form>
+
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div style="text-align: center; padding: 3rem; background-color: #f9f9f9; border-radius: var(--border-radius);">
+            <p style="color: #666;">{{ _('您还没有创建任何作业') }}</p>
+            <a href="{{ url_for('create_assignment') }}" class="btn btn-primary mt-1">{{ _('创建第一个作业') }}</a>
+        </div>
+    {% endif %}
+{% endblock %}

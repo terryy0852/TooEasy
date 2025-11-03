@@ -1,0 +1,287 @@
+# Traditional Chinese translations for PROJECT.
+# Copyright (C) 2023 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2023-12-08 10:00+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: Traditional Chinese <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.12.1\n"
+"Language: zh_TW\n"
+
+# Common terms
+msgid "作业管理系统"
+msgstr "作業管理系統"
+
+msgid "登录"
+msgstr "登錄"
+
+msgid "注册"
+msgstr "註冊"
+
+msgid "退出登录"
+msgstr "退出登錄"
+
+msgid "仪表盘"
+msgstr "儀表盤"
+
+# Login page
+msgid "用户登录"
+msgstr "用戶登錄"
+
+msgid "用户名"
+msgstr "用戶名"
+
+msgid "密码"
+msgstr "密碼"
+
+msgid "还没有账号？"
+msgstr "還沒有帳號？"
+
+msgid "立即注册"
+msgstr "立即註冊"
+
+# Register page
+msgid "用户注册"
+msgstr "用戶註冊"
+
+msgid "邮箱"
+msgstr "郵箱"
+
+msgid "我是教师"
+msgstr "我是教師"
+
+msgid "已有账号？"
+msgstr "已有帳號？"
+
+msgid "立即登录"
+msgstr "立即登錄"
+
+# Tutor dashboard
+msgid "教师仪表盘"
+msgstr "教師儀表盤"
+
+msgid "创建新作业"
+msgstr "創建新作業"
+
+msgid "我的作业"
+msgstr "我的作業"
+
+msgid "下载文件"
+msgstr "下載文件"
+
+msgid "查看提交"
+msgstr "查看提交"
+
+msgid "您还没有创建任何作业"
+msgstr "您還沒有創建任何作業"
+
+msgid "创建第一个作业"
+msgstr "創建第一個作業"
+
+# Create assignment
+msgid "创建作业"
+msgstr "創建作業"
+
+msgid "作业标题"
+msgstr "作業標題"
+
+msgid "作业描述"
+msgstr "作業描述"
+
+msgid "上传文件（可选）"
+msgstr "上傳文件（可選）"
+
+msgid "支持的格式：txt, pdf, doc, docx, xls, xlsx, ppt, pptx, zip"
+msgstr "支持的格式：txt, pdf, doc, docx, xls, xlsx, ppt, pptx, zip"
+
+msgid "截止日期（可选）"
+msgstr "截止日期（可選）"
+
+msgid "创建作业"
+msgstr "創建作業"
+
+msgid "取消"
+msgstr "取消"
+
+# View submissions
+msgid "查看提交"
+msgstr "查看提交"
+
+msgid "返回仪表盘"
+msgstr "返回儀表盤"
+
+msgid "学生"
+msgstr "學生"
+
+msgid "提交时间"
+msgstr "提交時間"
+
+msgid "文件"
+msgstr "文件"
+
+msgid "评分状态"
+msgstr "評分狀態"
+
+msgid "操作"
+msgstr "操作"
+
+msgid "下载"
+msgstr "下載"
+
+msgid "已评分"
+msgstr "已評分"
+
+msgid "未评分"
+msgstr "未評分"
+
+msgid "修改评分"
+msgstr "修改評分"
+
+msgid "评分"
+msgstr "評分"
+
+msgid "还没有学生提交此作业"
+msgstr "還沒有學生提交此作業"
+
+msgid "无文件"
+msgstr "無文件"
+
+# Grade submission
+msgid "评分"
+msgstr "評分"
+
+msgid "返回提交列表"
+msgstr "返回提交列表"
+
+msgid "学生信息"
+msgstr "學生信息"
+
+msgid "学生姓名"
+msgstr "學生姓名"
+
+msgid "提交文件"
+msgstr "提交文件"
+
+msgid "分数"
+msgstr "分數"
+
+msgid "反馈"
+msgstr "反饋"
+
+msgid "保存评分"
+msgstr "保存評分"
+
+# Student dashboard
+msgid "学生仪表盘"
+msgstr "學生儀表盤"
+
+msgid "可用作业"
+msgstr "可用作業"
+
+msgid "已提交"
+msgstr "已提交"
+
+msgid "发布者"
+msgstr "發佈者"
+
+msgid "截止日期"
+msgstr "截止日期"
+
+msgid "发布时间"
+msgstr "發佈時間"
+
+msgid "查看详情"
+msgstr "查看詳情"
+
+msgid "开始作业"
+msgstr "開始作業"
+
+msgid "当前没有可用的作业"
+msgstr "當前沒有用的作業"
+
+msgid "等待评分"
+msgstr "等待評分"
+
+msgid "得分"
+msgstr "得分"
+
+# View assignment
+msgid "返回仪表盘"
+msgstr "返回儀表盤"
+
+msgid "提交状态"
+msgstr "提交狀態"
+
+msgid "教师尚未评分"
+msgstr "教師尚未評分"
+
+msgid "提交作业"
+msgstr "提交作業"
+
+msgid "上传作业文件"
+msgstr "上傳作業文件"
+
+msgid "提交作业"
+msgstr "提交作業"
+
+msgid "作业文件"
+msgstr "作業文件"
+
+msgid "教师反馈"
+msgstr "教師反饋"
+
+msgid "暂无反馈"
+msgstr "暫無反饋"
+
+msgid "下载作业材料"
+msgstr "下載作業材料"
+
+# Flash messages
+msgid "Invalid username or password"
+msgstr "用戶名或密碼無效"
+
+msgid "Username already exists"
+msgstr "用戶名已存在"
+
+msgid "Email already exists"
+msgstr "郵箱已存在"
+
+msgid "Registration successful! Please login."
+msgstr "註冊成功！請登錄。"
+
+msgid "You are not authorized to access this page"
+msgstr "您無權訪問此頁面"
+
+msgid "Assignment created successfully!"
+msgstr "作業創建成功！"
+
+msgid "You are not authorized to view these submissions"
+msgstr "您無權查看這些提交"
+
+msgid "You are not authorized to grade this submission"
+msgstr "您無權評級此提交"
+
+msgid "Submission graded successfully!"
+msgstr "提交評分成功！"
+
+msgid "You have already submitted this assignment"
+msgstr "您已提交此作業"
+
+msgid "No file part"
+msgstr "無文件部分"
+
+msgid "No selected file"
+msgstr "未選擇文件"
+
+msgid "Assignment submitted successfully!"
+msgstr "作業提交成功！"
+
+msgid "Invalid file type"
+msgstr "無效的文件類型"

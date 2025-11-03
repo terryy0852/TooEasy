@@ -1,0 +1,299 @@
+# English translations for PROJECT.
+# Copyright (C) 2023 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2023-12-08 10:00+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: English <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.12.1\n"
+"Language: en\n"
+
+# Common terms
+msgid "作业管理系统"
+msgstr "Assignment Management System"
+
+msgid "登录"
+msgstr "Login"
+
+msgid "注册"
+msgstr "Register"
+
+msgid "退出登录"
+msgstr "Logout"
+
+msgid "仪表盘"
+msgstr "Dashboard"
+
+# Login page
+msgid "用户登录"
+msgstr "User Login"
+
+msgid "用户名"
+msgstr "Username"
+
+msgid "密码"
+msgstr "Password"
+
+msgid "还没有账号？"
+msgstr "Don't have an account?"
+
+msgid "立即注册"
+msgstr "Register now"
+
+# Register page
+msgid "用户注册"
+msgstr "User Registration"
+
+msgid "邮箱"
+msgstr "Email"
+
+msgid "我是教师"
+msgstr "I am a teacher"
+
+msgid "已有账号？"
+msgstr "Already have an account?"
+
+msgid "立即登录"
+msgstr "Login now"
+
+# Tutor dashboard
+msgid "教师仪表盘"
+msgstr "Teacher Dashboard"
+
+msgid "创建新作业"
+msgstr "Create New Assignment"
+
+msgid "我的作业"
+msgstr "My Assignments"
+
+msgid "下载文件"
+msgstr "Download File"
+
+msgid "查看提交"
+msgstr "View Submissions"
+
+msgid "您还没有创建任何作业"
+msgstr "You haven't created any assignments yet"
+
+msgid "创建第一个作业"
+msgstr "Create your first assignment"
+
+# Create assignment
+msgid "创建作业"
+msgstr "Create Assignment"
+
+msgid "作业标题"
+msgstr "Assignment Title"
+
+msgid "作业描述"
+msgstr "Assignment Description"
+
+msgid "上传文件（可选）"
+msgstr "Upload File (Optional)"
+
+msgid "支持的格式：txt, pdf, doc, docx, xls, xlsx, ppt, pptx, zip"
+msgstr "Supported formats: txt, pdf, doc, docx, xls, xlsx, ppt, pptx, zip"
+
+msgid "截止日期（可选）"
+msgstr "Due Date (Optional)"
+
+msgid "创建作业"
+msgstr "Create Assignment"
+
+msgid "取消"
+msgstr "Cancel"
+
+# View submissions
+msgid "查看提交"
+msgstr "View Submissions"
+
+msgid "返回仪表盘"
+msgstr "Back to Dashboard"
+
+msgid "学生"
+msgstr "Student"
+
+msgid "提交时间"
+msgstr "Submission Time"
+
+msgid "文件"
+msgstr "File"
+
+msgid "评分状态"
+msgstr "Grading Status"
+
+msgid "操作"
+msgstr "Actions"
+
+msgid "下载"
+msgstr "Download"
+
+msgid "已评分"
+msgstr "Graded"
+
+msgid "未评分"
+msgstr "Ungraded"
+
+msgid "修改评分"
+msgstr "Modify Grade"
+
+msgid "评分"
+msgstr "Grade"
+
+msgid "还没有学生提交此作业"
+msgstr "No students have submitted this assignment yet"
+
+msgid "无文件"
+msgstr "No File"
+
+# Grade submission
+msgid "评分"
+msgstr "Grade"
+
+msgid "返回提交列表"
+msgstr "Back to Submissions"
+
+msgid "学生信息"
+msgstr "Student Information"
+
+msgid "学生姓名"
+msgstr "Student Name"
+
+msgid "提交文件"
+msgstr "Submitted File"
+
+msgid "分数"
+msgstr "Score"
+
+msgid "反馈"
+msgstr "Feedback"
+
+msgid "保存评分"
+msgstr "Save Grade"
+
+# Student dashboard
+msgid "学生仪表盘"
+msgstr "Student Dashboard"
+
+msgid "可用作业"
+msgstr "Available Assignments"
+
+msgid "已提交"
+msgstr "Submitted"
+
+msgid "发布者"
+msgstr "Publisher"
+
+msgid "截止日期"
+msgstr "Due Date"
+
+msgid "发布时间"
+msgstr "Publish Time"
+
+msgid "查看详情"
+msgstr "View Details"
+
+msgid "开始作业"
+msgstr "Start Assignment"
+
+msgid "当前没有可用的作业"
+msgstr "No assignments available"
+
+msgid "等待评分"
+msgstr "Waiting for grading"
+
+msgid "得分"
+msgstr "Score"
+
+# View assignment
+msgid "返回仪表盘"
+msgstr "Back to Dashboard"
+
+msgid "提交状态"
+msgstr "Submission Status"
+
+msgid "教师尚未评分"
+msgstr "Teacher hasn't graded yet"
+
+msgid "提交作业"
+msgstr "Submit Assignment"
+
+msgid "上传作业文件"
+msgstr "Upload Assignment File"
+
+msgid "提交作业"
+msgstr "Submit Assignment"
+
+msgid "作业文件"
+msgstr "Assignment File"
+
+msgid "教师反馈"
+msgstr "Teacher Feedback"
+
+msgid "暂无反馈"
+msgstr "No feedback yet"
+
+msgid "下载作业材料"
+msgstr "Download Assignment Materials"
+
+# Flash messages
+msgid "Invalid username or password"
+msgstr "Invalid username or password"
+
+msgid "Username already exists"
+msgstr "Username already exists"
+
+msgid "Email already exists"
+msgstr "Email already exists"
+
+msgid "Registration successful! Please login."
+msgstr "Registration successful! Please login."
+
+msgid "You are not authorized to access this page"
+msgstr "You are not authorized to access this page"
+
+msgid "Assignment created successfully!"
+msgstr "Assignment created successfully!"
+
+msgid "You are not authorized to view these submissions"
+msgstr "You are not authorized to view these submissions"
+
+msgid "You are not authorized to grade this submission"
+msgstr "You are not authorized to grade this submission"
+
+msgid "Submission graded successfully!"
+msgstr "Submission graded successfully!"
+
+msgid "You have already submitted this assignment"
+msgstr "You have already submitted this assignment"
+
+msgid "No file part"
+msgstr "No file part"
+
+msgid "No selected file"
+msgstr "No selected file"
+
+msgid "Assignment submitted successfully!"
+msgstr "Assignment submitted successfully!"
+
+msgid "Invalid file type"
+msgstr "Invalid file type"
+
+# Delete assignment
+msgid "删除作业"
+msgstr "Delete Assignment"
+
+# View assignment feedback
+msgid "评分反馈"
+msgstr "Feedback From Your Tutor"
+
+# Student dashboard title
+msgid "学生仪表盘 - 作业管理系统"
+msgstr "Student Dashboard - Assignment Management System"

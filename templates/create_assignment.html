@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('创建作业 - 作业管理系统') }}{% endblock %}
+
+{% block content %}
+    <h2 style="margin-bottom: 2rem; color: var(--primary-color);">{{ _('创建新作业') }}</h2>
+    
+    <form method="POST" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="title">{{ _('作业标题') }}</label>
+            <input type="text" id="title" name="title" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="description">{{ _('作业描述') }}</label>
+            <textarea id="description" name="description" rows="5" required></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label for="file">{{ _('上传文件（可选）') }}</label>
+            <input type="file" id="file" name="file">
+            <p style="color: #666; font-size: 0.875rem; margin-top: 0.5rem;">
+                {{ _('支持的格式：txt, pdf, doc, docx, xls, xlsx, ppt, pptx, zip') }}
+            </p>
+        </div>
+        
+        <div class="form-group">
+            <label for="due_date">{{ _('截止日期（可选）') }}</label>
+            <input type="date" id="due_date" name="due_date">
+        </div>
+        
+        <div class="form-group">
+            <button type="submit" class="btn btn-primary">{{ _('创建作业') }}</button>
+            <a href="{{ url_for('tutor_dashboard', lang=request.args.get('lang')) }}" class="btn btn-outline" style="margin-left: 1rem;">{{ _('取消') }}</a>
+        </div>
+    </form>
+{% endblock %}

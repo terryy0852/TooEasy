@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('注册 - 作业管理系统') }}{% endblock %}
+
+{% block content %}
+    <div style="max-width: 400px; margin: 0 auto;">
+        <h2 style="text-align: center; margin-bottom: 2rem; color: var(--primary-color);">{{ _('用户注册') }}</h2>
+        
+        <form method="POST">
+            <div class="form-group">
+                <label for="username">{{ _('用户名') }}</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">{{ _('邮箱') }}</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">{{ _('密码') }}</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            
+            <div class="form-group">
+                <label style="display: flex; align-items: center; gap: 0.5rem;">
+                    <input type="checkbox" name="is_tutor">
+                    {{ _('我是教师') }}
+                </label>
+            </div>
+            
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary" style="width: 100%;">{{ _('注册') }}</button>
+            </div>
+        </form>
+        
+        <p style="text-align: center; margin-top: 1.5rem;">
+            {{ _('已有账号？') }} <a href="{{ url_for('login') }}" style="color: var(--primary-color);">{{ _('立即登录') }}</a>
+        </p>
+    </div>
+{% endblock %}

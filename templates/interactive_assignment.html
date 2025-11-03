@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block title %}{{ assignment.title }} - {{ _('完成作业') }}{% endblock %}
+
+{% block content %}
+    <h2 style="color: var(--primary-color);">{{ assignment.title }}</h2>
+    
+    <div class="assignment-description">
+        {{ assignment.description }}
+    </div>
+
+    {% if assignment.file_path and (assignment.file_path.lower().endswith('.html') or assignment.file_path.lower().endswith('.htm')) %}
+        <div style="margin-bottom: 1.5rem;">
+            <iframe src="{{ url_for('serve_assignment_content', filename=assignment.file_path) }}" width="100%" height="600px" id="assignment-iframe"></iframe>
+        </div>
+    {% elif assignment.file_path %}
+        <div style="margin-bottom: 1.5rem;">
+            <p>{{ _('该作业无法在线完成，请下载作业文件。') }}</p>
+            <a href="{{ url_for('download_file', filename=assignment.file_path) }}" class="btn btn-secondary">{{ _('下载作业') }}</a>
+        </div>
+    {% endif %}
+
+    <form action="{{ url_for('submit_interactive_assignment', assignment_id=assignment.id) }}" method="post" id="interactive-submission-form">
+        <input type="hidden" name="assignment_answers" id="assignment-answers">
+        <input type="hidden" name="html_submission" id="html-submission">
+        <button type="submit" class="btn btn-primary">{{ _('提交作业') }}</button>
+    </form>
+
+    <script>
+        // Build a full HTML snapshot that includes current input values/selections
+        function getHtmlSnapshot() {
+            var iframe = document.getElementById('assignment-iframe');
+            if (!iframe || !iframe.contentDocument) return '';
+            var doc = iframe.contentDocument;
+            try {
+                // Clone the whole document element
+                var clone = doc.documentElement.cloneNode(true);
+
+                // Sync input values and checked states
+                var origInputs = doc.querySelectorAll('input');
+                var cloneInputs = clone.querySelectorAll('input');
+                for (var i = 0; i < origInputs.length; i++) {
+                    var o = origInputs[i];
+                    var c = cloneInputs[i];
+                    if (!c) continue;
+                    var type = (o.type || 'text').toLowerCase();
+                    if (type === 'checkbox' || type === 'radio') {
+                        if (o.checked) c.setAttribute('checked', ''); else c.removeAttribute('checked');
+                    } else {
+                        c.setAttribute('value', o.value || '');
+                    }
+                }
+
+                // Sync textarea values
+                var origTextareas = doc.querySelectorAll('textarea');
+                var cloneTextareas = clone.querySelectorAll('textarea');
+                for (var j = 0; j < origTextareas.length; j++) {
+                    var ot = origTextareas[j];
+                    var ct = cloneTextareas[j];
+                    if (!ct) continue;
+                    ct.textContent = ot.value || '';
+                }
+
+                // Sync select selections
+                var origSelects = doc.querySelectorAll('select');
+                var cloneSelects = clone.querySelectorAll('select');
+                for (var k = 0; k < origSelects.length; k++) {
+                    var os = origSelects[k];
+                    var cs = cloneSelects[k];
+                    if (!cs) continue;
+                    var oopts = os.options || [];
+                    var copts = cs.options || [];
+                    for (var m = 0; m < oopts.length && m < copts.length; m++) {
+                        if (oopts[m].selected) copts[m].setAttribute('selected', ''); else copts[m].removeAttribute('selected');
+                    }
+                }
+
+                // Return HTML with DOCTYPE
+                var html = clone.outerHTML || '';
+                return '<!DOCTYPE html>\n' + html;
+            } catch (e) {
+                return '';
+            }
+        }
+        function collectAnswersFromIframe() {
+            var iframe = document.getElementById('assignment-iframe');
+            if (!iframe) return {};
+            var doc;
+            try {
+                doc = iframe.contentDocument || iframe.contentWindow.document;
+            } catch (e) {
+                return { error: 'cross_origin_access_denied', message: e.message };
+            }
+            if (!doc) return {};
+
+            var data = {};
+            var elements = doc.querySelectorAll('input, textarea, select, [contenteditable="true"]');
+            var idx = 0;
+            elements.forEach(function(el) {
+                var tag = (el.tagName || '').toLowerCase();
+                var key = el.name || el.id || ('field_' + (idx++));
+                if (tag === 'input') {
+                    var type = (el.type || 'text').toLowerCase();
+                    if (type === 'checkbox') {
+                        data[key] = !!el.checked;
+                    } else if (type === 'radio') {
+                        if (el.checked) {
+                            data[key] = el.value;
+                        }
+                    } else {
+                        data[key] = el.value;
+                    }
+                } else if (tag === 'textarea') {
+                    data[key] = el.value;
+                } else if (tag === 'select') {
+                    if (el.multiple) {
+                        data[key] = Array.from(el.selectedOptions).map(function(o){ return o.value; });
+                    } else {
+                        data[key] = el.value;
+                    }
+                } else if (el.getAttribute('contenteditable') === 'true') {
+                    data[key] = (el.innerText || '').trim();
+                }
+            });
+
+            // Fallback: capture body text if no fields found
+            if (Object.keys(data).length === 0 && doc.body) {
+                var bodyText = (doc.body.innerText || '').trim();
+                if (bodyText) {
+                    data['body_text'] = bodyText;
+                }
+            }
+            return data;
+        }
+
+        document.getElementById('interactive-submission-form').addEventListener('submit', function(event) {
+            var answers = {};
+            try {
+                var iframe = document.getElementById('assignment-iframe');
+                if (iframe) {
+                    var win = iframe.contentWindow;
+                    if (win && typeof win.getAnswers === 'function') {
+                        answers = win.getAnswers();
+                    } else {
+                        answers = collectAnswersFromIframe();
+                    }
+                }
+            } catch (e) {
+                answers = { error: 'collect_failed', message: e.message };
+            }
+
+            // Remove empty keys to avoid sending {}
+            if (answers && typeof answers === 'object' && !Array.isArray(answers)) {
+                Object.keys(answers).forEach(function(k){
+                    var v = answers[k];
+                    if (v === undefined || v === null || (typeof v === 'string' && v.trim() === '')) {
+                        delete answers[k];
+                    }
+                });
+            }
+
+            // Capture the full HTML from the iframe for tutor viewing, including typed values
+            var fullHtml = getHtmlSnapshot();
+
+            document.getElementById('assignment-answers').value = JSON.stringify(answers || {});
+            document.getElementById('html-submission').value = fullHtml || '';
+        });
+    </script>
+{% endblock %}
