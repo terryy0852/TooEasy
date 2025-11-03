@@ -72,3 +72,58 @@ msgstr "作业提交成功！"
 
 msgid "无效的文件类型"
 msgstr "无效的文件类型"
+
+# Tutor dashboard (English msgids used in templates)
+msgid "Filters"
+msgstr "筛选"
+
+msgid "Status"
+msgstr "状态"
+
+msgid "Student"
+msgstr "学生"
+
+msgid "Assignment"
+msgstr "作业"
+
+msgid "Apply Filters"
+msgstr "应用筛选"
+
+msgid "Quick Search"
+msgstr "快速搜索"
+
+msgid "Quick search in table"
+msgstr "表格快速搜索"
+
+msgid "All Submissions"
+msgstr "所有提交"
+
+msgid "All Assignments"
+msgstr "所有作业"
+
+msgid "All"
+msgstr "全部"
+
+msgid "Submitted At"
+msgstr "提交时间"
+
+msgid "Score"
+msgstr "分数"
+
+msgid "Actions"
+msgstr "操作"
+
+msgid "Grade"
+msgstr "评分"
+
+msgid "Download"
+msgstr "下载"
+
+msgid "Open in new tab"
+msgstr "在新标签页打开"
+
+msgid "No submissions"
+msgstr "无提交"
+
+msgid "Search by assignment"
+msgstr "按作业搜索"

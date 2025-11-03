@@ -321,3 +321,58 @@ msgstr "作業提交成功！"
 
 msgid "Invalid file type"
 msgstr "無效的文件類型"
+
+# Tutor dashboard (English msgids for consistency across mixed templates)
+msgid "Filters"
+msgstr "篩選"
+
+msgid "Status"
+msgstr "狀態"
+
+msgid "Student"
+msgstr "學生"
+
+msgid "Assignment"
+msgstr "作業"
+
+msgid "Apply Filters"
+msgstr "套用篩選"
+
+msgid "Quick Search"
+msgstr "快速搜尋"
+
+msgid "Quick search in table"
+msgstr "表格快速搜尋"
+
+msgid "All Submissions"
+msgstr "所有提交"
+
+msgid "All Assignments"
+msgstr "所有作業"
+
+msgid "All"
+msgstr "全部"
+
+msgid "Submitted At"
+msgstr "提交時間"
+
+msgid "Score"
+msgstr "分數"
+
+msgid "Actions"
+msgstr "操作"
+
+msgid "Grade"
+msgstr "評分"
+
+msgid "Download"
+msgstr "下載"
+
+msgid "Open in new tab"
+msgstr "在新分頁打開"
+
+msgid "No submissions"
+msgstr "無提交"
+
+msgid "Search by assignment"
+msgstr "按作業搜尋"

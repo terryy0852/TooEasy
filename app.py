@@ -359,6 +359,13 @@ def inject_gettext():
 
 print(f"[BABEL DEBUG] Monkey patched gettext function applied and context processor added")
 
+# Also bind the patched gettext functions into Jinja globals to ensure availability
+try:
+    app.jinja_env.globals.update({'_': monkey_patched_gettext, '_with_locale': monkey_patched_gettext_with_locale})
+    print("[BABEL DEBUG] Injected patched gettext into Jinja globals")
+except Exception as e:
+    print(f"[BABEL DEBUG] Failed to inject gettext into Jinja globals: {e}")
+
 # Enhanced debug endpoint to directly test Babel translation functionality
 @app.route('/debug_translation/<string:locale>/<string:text>')
 def debug_translation(locale, text):
