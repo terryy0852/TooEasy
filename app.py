@@ -31,7 +31,7 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     'pool_pre_ping': True
 }
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['UPLOAD_FOLDER'] = 'uploads'
+app.config['UPLOAD_FOLDER'] = os.environ.get('UPLOAD_FOLDER', 'uploads')
 
 # 配置Babel用于国际化
 # Using a different approach to configure Babel that works better with Flask-Babel 4.0.0
@@ -677,6 +677,11 @@ def create_tables():
     with app.app_context():
         db.create_all()
 
+# Simple health check route for uptime monitoring
+@app.route('/health')
+def health():
+    return 'ok', 200
+
 # Routes
 ALLOWED_EXTENSIONS = {'html', 'htm'}
 def allowed_file(filename):
@@ -982,8 +987,10 @@ def student_dashboard():
         flash('You are not authorized to access this page')
         return redirect(url_for('index'))
     
-    # Get all assignments
-    assignments = Assignment.query.all()
+    # Show assignments only related to the current student via their submissions.
+    # This prevents new students from seeing assignments belonging to other users.
+    assignments = Assignment.query.join(Submission, Assignment.id == Submission.assignment_id)\
+                                  .filter(Submission.student_id == current_user.id).all()
     # Get submitted assignments
     submitted_assignment_ids = [sub.assignment_id for sub in current_user.submissions]
     
