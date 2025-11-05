@@ -16,13 +16,6 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: DATABASE_URL
-        fromDatabase:
-          name: too-easy-db
-          property: connectionString
+        value: "postgresql://postgres:n5jTtilYoz2S1LwO@db.xqjscxsvcespsrkyoekf.supabase.co:5432/postgres"
       - key: UPLOAD_FOLDER
         value: /opt/render/project/src/uploads
-
-databases:
-  - name: too-easy-db
-    plan: free
-    region: oregon
