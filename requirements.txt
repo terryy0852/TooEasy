@@ -5,3 +5,4 @@ flask-babel
 polib
 psycopg2-binary
 gunicorn
+python-dotenv

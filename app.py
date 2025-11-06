@@ -28,7 +28,10 @@ if database_url.startswith('postgres://'):
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 # Engine options to improve reliability in hosted environments
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-    'pool_pre_ping': True
+    'pool_pre_ping': True,
+    'pool_recycle': 300,  # Recycle connections after 5 minutes
+    'pool_timeout': 30,   # 30 second timeout for getting connections
+    'max_overflow': 10    # Allow up to 10 connections beyond pool size
 }
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = os.environ.get('UPLOAD_FOLDER', 'uploads')
@@ -520,6 +523,27 @@ except Exception as _hook_err:
 # Also ensure tables are created immediately on application startup
 # This handles cases where Flask hooks might not fire in certain environments
 ensure_tables()
+
+# Database connectivity test endpoint for Render deployment debugging
+@app.route('/db_test')
+def db_test():
+    """Test database connectivity for deployment debugging"""
+    try:
+        # Test database connection
+        with app.app_context():
+            result = db.session.execute(db.text('SELECT 1')).scalar()
+        return jsonify({
+            'status': 'success',
+            'message': 'Database connection successful',
+            'result': result,
+            'database_url': app.config['SQLALCHEMY_DATABASE_URI'][:50] + '...' if app.config['SQLALCHEMY_DATABASE_URI'] else 'not set'
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': f'Database connection failed: {str(e)}',
+            'database_url': app.config['SQLALCHEMY_DATABASE_URI'][:50] + '...' if app.config['SQLALCHEMY_DATABASE_URI'] else 'not set'
+        }), 500
 
 # Language switch route
 @app.route('/switch_language/<lang>')
