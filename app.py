@@ -978,9 +978,11 @@ def create_assignment():
             selected_students = User.query.filter(User.id.in_(ids), User.is_tutor == False).all()
             for s in selected_students:
                 new_assignment.assigned_students.append(s)
-        except Exception:
-            # Fallback: ignore assignment if parsing fails
-            pass
+            print(f"Successfully assigned {len(selected_students)} students to assignment")
+        except Exception as e:
+            # Log the error instead of silently ignoring it
+            print(f"Error assigning students to assignment: {e}")
+            flash(_('Warning: Some students could not be assigned to this assignment'), 'warning')
         db.session.commit()
         
         flash(_('Assignment created successfully!'))
