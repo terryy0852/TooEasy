@@ -21,7 +21,7 @@ app = Flask(__name__)
 # Read sensitive and deployment configs from environment variables when available
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-here')
 # 配置会话持久性 - 解决会话过期问题
-app.config['PERMANENT_SESSION_LIFETIME'] = 86400  # 24小时（秒）
+app.config['PERMANENT_SESSION_LIFETIME'] = 604800  # 7天（秒）
 app.config['SESSION_REFRESH_EACH_REQUEST'] = True  # 每次请求刷新会话
 app.config['SESSION_COOKIE_SECURE'] = True  # 仅通过HTTPS传输cookie
 app.config['SESSION_COOKIE_HTTPONLY'] = True  # 防止JavaScript访问
