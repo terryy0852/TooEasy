@@ -481,10 +481,28 @@ login_manager.login_view = 'login'
 def ensure_tables():
     try:
         with app.app_context():
-            db.create_all()
-            print("[DB INIT] Tables ensured on startup")
+            # Check if tables already exist to avoid unnecessary creation
+            inspector = db.inspect(db.engine)
+            existing_tables = inspector.get_table_names()
+            
+            required_tables = ['user', 'assignment', 'submission', 'assignment_students']
+            missing_tables = [table for table in required_tables if table not in existing_tables]
+            
+            if missing_tables:
+                print(f"[DB INIT] Creating missing tables: {missing_tables}")
+                db.create_all()
+                print("[DB INIT] Tables created successfully")
+            else:
+                print("[DB INIT] All tables already exist")
     except Exception as e:
-        print(f"[DB INIT] Error creating tables: {e}")
+        print(f"[DB INIT] Error checking/creating tables: {e}")
+        # Try to create tables anyway as fallback
+        try:
+            with app.app_context():
+                db.create_all()
+                print("[DB INIT] Fallback: Tables created after error")
+        except Exception as fallback_error:
+            print(f"[DB INIT] Critical error creating tables: {fallback_error}")
 
 # Register the init hook compatibly (Flask 2.x/3.x)
 try:
@@ -498,6 +516,10 @@ try:
 except Exception as _hook_err:
     # As a last resort, try to ensure tables without hooks
     ensure_tables()
+
+# Also ensure tables are created immediately on application startup
+# This handles cases where Flask hooks might not fire in certain environments
+ensure_tables()
 
 # Language switch route
 @app.route('/switch_language/<lang>')
