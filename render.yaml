@@ -14,7 +14,7 @@ services:
       sizeGB: 1
     envVars:
       - key: SECRET_KEY
-        generateValue: true
+        value: your-permanent-secret-key-here
       - key: DATABASE_URL
         value: "postgresql://postgres:n5jTtilYoz2S1LwO@db.xqjscxsvcespsrkyoekf.supabase.co:5432/postgres"
       - key: UPLOAD_FOLDER
