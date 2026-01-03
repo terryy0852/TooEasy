@@ -86,7 +86,7 @@ templates/             # HTML 模板
 在本机终端（PowerShell、Git Bash 或 IDE 终端）进入项目目录，并执行：
 
 ```bash
-cd "d:\OD\OneDrive\BaiduSyncdisk\Learn\Project Easy\Python Programs\Too Easy"
+cd "d:\OD\OneDrive\BaiduSyncdisk\Learn\Project Easy\Python Programs\Project Light"
 # 如已是 Git 仓库，直接提交并推送
 git add .
 git commit -m "Change password feature + secure login"

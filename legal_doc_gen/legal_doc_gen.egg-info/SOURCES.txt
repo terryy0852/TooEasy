@@ -1,0 +1,9 @@
+README.md
+setup.py
+legal_doc_gen/__init__.py
+legal_doc_gen/legal_doc_generator.py
+legal_doc_gen.egg-info/PKG-INFO
+legal_doc_gen.egg-info/SOURCES.txt
+legal_doc_gen.egg-info/dependency_links.txt
+legal_doc_gen.egg-info/requires.txt
+legal_doc_gen.egg-info/top_level.txt

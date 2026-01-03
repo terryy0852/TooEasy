@@ -25,5 +25,8 @@
         <p style="text-align: center; margin-top: 1.5rem;">
             {{ _('没有账号？') }} <a href="{{ url_for('register') }}" style="color: var(--primary-color);">{{ _('立即注册') }}</a>
         </p>
+        <p style="text-align: center; margin-top: 1rem;">
+            <a href="{{ url_for('password_reset_request') }}" style="color: var(--primary-color); font-size: 0.9rem;">{{ _('忘记密码？') }}</a>
+        </p>
     </div>
 {% endblock %}
