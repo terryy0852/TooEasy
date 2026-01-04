@@ -18,7 +18,15 @@ app.secret_key = os.environ.get('SECRET_KEY', 'fallback-secret-key-change-in-pro
 # For SQLite, use the instance folder to ensure consistency across scripts
 # Use absolute path for better reliability on Windows
 instance_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instance')
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', f'sqlite:///{os.path.join(instance_dir, "assignments.db")}')
+
+db_url = os.environ.get('DATABASE_URL')
+if db_url:
+    # Fix PostgreSQL URL for SQLAlchemy (replace postgres:// with postgresql://)
+    if db_url.startswith('postgres://'):
+        db_url = db_url.replace('postgres://', 'postgresql://', 1)
+    app.config['SQLALCHEMY_DATABASE_URI'] = db_url
+else:
+    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{os.path.join(instance_dir, "assignments.db")}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Set to False in production
@@ -424,13 +432,30 @@ def logout():
     return redirect(url_for('login'))
 
 # Initialize the database
+import logging
+
+# Set up logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
 def create_tables():
     with app.app_context():
-        db.create_all()
-        print("[DB INIT] All tables already exist")
+        try:
+            db.create_all()
+            logger.info("[DB INIT] All tables created successfully")
+        except Exception as e:
+            logger.error(f"[DB INIT] Error creating tables: {str(e)}")
+            # In production, we should handle this gracefully
+            raise
 
 # Create tables when the app is imported, not just when run directly
-create_tables()
+try:
+    create_tables()
+except Exception as e:
+    logger.critical(f"Failed to initialize database: {str(e)}")
+    # This will allow the app to start but with database functionality disabled
+    # In a real production environment, we might want to exit instead
+    print(f"CRITICAL ERROR: Database initialization failed - {str(e)}")
 
 # Start the application
 if __name__ == '__main__':
