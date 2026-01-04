@@ -210,7 +210,7 @@
     <nav class="navbar">
         <ul>
             {% if current_user.is_authenticated %}
-                <li><a href="{{ url_for('student_dashboard') if not current_user.is_tutor else url_for('tutor_dashboard') }}">Dashboard</a></li>
+                <li><a href="{{ url_for('student_dashboard') if current_user.role == 'student' else url_for('student_dashboard') }}">Dashboard</a></li>
                 <li><a href="{{ url_for('change_password') }}">Change Password</a></li>
                 <li><a href="{{ url_for('logout') }}">Logout</a></li>
             {% else %}
