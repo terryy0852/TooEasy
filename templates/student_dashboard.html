@@ -1,9 +1,19 @@
 {% extends "base.html" %}
 
-{% block title %}Student Dashboard{% endblock %}
+{% block title %}
+{% if current_user.role == 'teacher' %}{{ _('Teacher Dashboard') }}
+{% elif current_user.role == 'admin' %}{{ _('Admin Dashboard') }}
+{% else %}{{ _('Student Dashboard') }}
+{% endif %}
+{% endblock %}
 
 {% block content %}
-<h1>{{ _('Student Dashboard') }}</h1>
+<h1>
+{% if current_user.role == 'teacher' %}{{ _('Teacher Dashboard') }}
+{% elif current_user.role == 'admin' %}{{ _('Admin Dashboard') }}
+{% else %}{{ _('Student Dashboard') }}
+{% endif %}
+</h1>
 
 <div class="dashboard-header">
     <h2>{{ _('Welcome,') }} {{ current_user.username }}!</h2>
