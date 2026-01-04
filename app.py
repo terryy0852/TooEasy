@@ -15,7 +15,10 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'fallback-secret-key-change-in-production')
 
 # Database configuration - use PostgreSQL from Railway environment variable
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///app.db')
+# For SQLite, use the instance folder to ensure consistency across scripts
+# Use absolute path for better reliability on Windows
+instance_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instance')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', f'sqlite:///{os.path.join(instance_dir, "assignments.db")}')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Set to False in production
