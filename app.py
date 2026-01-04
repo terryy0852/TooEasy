@@ -192,6 +192,7 @@ def view_assignment(assignment_id):
     return render_template('view_assignment.html', assignment=assignment)
 
 @app.route('/submit_assignment/<int:assignment_id>', methods=['POST'])
+@login_required
 def submit_assignment(assignment_id):
     if request.method == 'POST':
         content = request.form['content']
@@ -279,6 +280,7 @@ def submit_assignment(assignment_id):
             flash(_('Failed to submit assignment'))
             print(f"Error submitting assignment: {e}")
             return redirect(url_for('view_assignment', assignment_id=assignment_id))
+    return redirect(url_for('view_assignment', assignment_id=assignment_id))
 
 @app.route('/view_submissions/<int:assignment_id>')
 @login_required
@@ -351,6 +353,67 @@ def change_password():
         else:
             flash(_('Current password is incorrect'))
     return render_template('change_password.html')
+
+@app.route('/admin/users')
+@login_required
+def admin_users():
+    if current_user.role != 'admin':
+        flash(_('Access denied'))
+        return redirect(url_for('student_dashboard'))
+    
+    users = User.query.all()
+    return render_template('admin_users.html', users=users)
+
+@app.route('/admin/user/<int:user_id>/edit', methods=['GET', 'POST'])
+@login_required
+def admin_edit_user(user_id):
+    if current_user.role != 'admin':
+        flash(_('Access denied'))
+        return redirect(url_for('student_dashboard'))
+    
+    user = User.query.get_or_404(user_id)
+    
+    if request.method == 'POST':
+        # Update user information
+        user.username = request.form['username']
+        user.email = request.form['email']
+        user.role = request.form['role']
+        
+        # Update password if provided
+        if request.form['password']:
+            user.set_password(request.form['password'])
+        
+        try:
+            db.session.commit()
+            flash(_('User updated successfully'))
+            return redirect(url_for('admin_users'))
+        except:
+            flash(_('Failed to update user'))
+    
+    return render_template('admin_edit_user.html', user=user)
+
+@app.route('/admin/user/<int:user_id>/delete', methods=['POST'])
+@login_required
+def admin_delete_user(user_id):
+    if current_user.role != 'admin':
+        flash(_('Access denied'))
+        return redirect(url_for('student_dashboard'))
+    
+    user = User.query.get_or_404(user_id)
+    
+    # Prevent deleting current user
+    if user.id == current_user.id:
+        flash(_('Cannot delete your own account'))
+        return redirect(url_for('admin_users'))
+    
+    try:
+        db.session.delete(user)
+        db.session.commit()
+        flash(_('User deleted successfully'))
+    except:
+        flash(_('Failed to delete user'))
+    
+    return redirect(url_for('admin_users'))
 
 @app.route('/logout')
 def logout():
