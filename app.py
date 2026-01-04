@@ -1,5 +1,5 @@
 # Flask Application for Educational Platform
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from flask_babel import Babel, gettext as _
@@ -10,11 +10,16 @@ import json
 
 # Initialize Flask app
 app = Flask(__name__)
-app.secret_key = 'your-secret-key-here'  # Change this in production
 
-# Database configuration (SQLite for development)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+# Use environment variables for configuration
+app.secret_key = os.environ.get('SECRET_KEY', 'fallback-secret-key-change-in-production')
+
+# Database configuration - use PostgreSQL from Railway environment variable
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///app.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Set to False in production
+app.config['DEBUG'] = False
 
 # Babel configuration for translations
 babel = Babel(app)
@@ -77,6 +82,14 @@ def get_locale():
     return request.accept_languages.best_match(['zh_CN', 'en', 'zh_TW']) or 'en'
 
 babel.init_app(app, locale_selector=get_locale)
+
+# Add health check endpoint for Railway
+@app.route('/health')
+def health_check():
+    return jsonify({
+        'status': 'healthy',
+        'timestamp': datetime.utcnow().isoformat()
+    }), 200
 
 # Routes
 @app.route('/')
@@ -355,3 +368,4 @@ if __name__ == '__main__':
     create_tables()
     # Run without debug mode to prevent auto-restarting
     app.run(debug=False, host='0.0.0.0', port=5000)
+
