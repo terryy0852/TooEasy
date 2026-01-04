@@ -25,13 +25,20 @@
 
 {% if assignments %}
 <div class="assignments-list">
+    {% if current_user.role == 'student' %}
     <h3>{{ _('Available Assignments') }}</h3>
+    {% else %}
+    <h3>{{ _('All Assignments') }}</h3>
+    {% endif %}
     <ul>
         {% for assignment in assignments %}
         <li class="assignment-item">
             <div class="assignment-header">
                 <h4>{{ assignment.title }}</h4>
-                <span class="assignment-status">{{ _('Active') if assignment.is_active else _('Inactive') }}</span>
+                <div class="assignment-badges">
+                    <span class="assignment-status">{{ _('Active') if assignment.is_active else _('Inactive') }}</span>
+                    <span class="html-badge">{{ _('HTML Assignment') }}</span>
+                </div>
             </div>
             <p>{{ assignment.description[:100] }}...</p>
             <div class="assignment-meta">
@@ -40,9 +47,32 @@
                 <span>{{ _('Due:') }} {{ assignment.due_date.strftime('%Y-%m-%d') }}</span>
                 {% endif %}
             </div>
-            <a href="{{ url_for('view_assignment', assignment_id=assignment.id) }}" class="view-btn">
-                {{ _('View Assignment') }}
-            </a>
+            <div class="assignment-actions">
+                {% if current_user.role == 'student' %}
+                <!-- Student view: Show submission status -->
+                {% if assignment_submissions and assignment_submissions[assignment.id] %}
+                    <!-- Assignment already submitted -->
+                    <span class="submitted-badge">{{ _('Submitted') }}</span>
+                    <span class="submission-status">{{ _('Pending Grading') }}</span>
+                {% else %}
+                    <!-- Assignment not submitted yet -->
+                    <a href="{{ url_for('view_assignment', assignment_id=assignment.id) }}?v=2" class="view-btn html-btn" target="_blank" onclick="openHTMLAssignment(event, {{ assignment.id }})" data-assignment-id="{{ assignment.id }}">
+                        {{ _('Complete HTML Assignment') }}
+                    </a>
+                {% endif %}
+                {% else %}
+                <!-- Teacher/Admin view: Show management options -->
+                <a href="{{ url_for('view_submissions', assignment_id=assignment.id) }}" class="view-btn submissions-btn">
+                    {{ _('View Submissions') }}
+                </a>
+                {% if current_user.role in ['admin', 'teacher'] and (current_user.role == 'admin' or assignment.created_by == current_user.id) %}
+                <form action="{{ url_for('delete_assignment', assignment_id=assignment.id) }}" method="post" class="delete-form" onsubmit="return confirmDeleteAssignment()">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+                    <button type="submit" class="delete-btn">{{ _('Delete Assignment') }}</button>
+                </form>
+                {% endif %}
+                {% endif %}
+            </div>
         </li>
         {% endfor %}
     </ul>
@@ -102,12 +132,26 @@
     margin-bottom: 10px;
 }
 
+.assignment-badges {
+    display: flex;
+    gap: 10px;
+}
+
 .assignment-status {
     padding: 5px 10px;
     border-radius: 4px;
     background-color: #4a6fa5;
     color: white;
     font-size: 12px;
+}
+
+.html-badge {
+    padding: 5px 10px;
+    border-radius: 4px;
+    background-color: #28a745;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
 }
 
 .assignment-meta {
@@ -118,7 +162,7 @@
     margin: 10px 0;
 }
 
-.view-btn, .create-btn {
+.view-btn, .create-btn, .submissions-btn {
     display: inline-block;
     padding: 8px 15px;
     background-color: #4a6fa5;
@@ -128,8 +172,33 @@
     margin-top: 10px;
 }
 
-.view-btn:hover, .create-btn:hover {
+.view-btn:hover, .create-btn:hover, .submissions-btn:hover {
     background-color: #3a5a85;
+}
+
+.assignment-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.delete-btn {
+    padding: 8px 15px;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.delete-btn:hover {
+    background-color: #c82333;
+}
+
+.delete-form {
+    margin: 0;
 }
 
 .no-assignments {
@@ -170,3 +239,69 @@
 }
 </style>
 {% endblock %}
+
+<script>
+function openHTMLAssignment(event, assignmentId) {
+    // Prevent default link behavior
+    event.preventDefault();
+    
+    // Get the original href
+    const originalHref = event.currentTarget.href;
+    
+    // Try to open in new tab with multiple approaches
+    try {
+        // Method 1: Standard window.open
+        const newWindow = window.open(originalHref, '_blank');
+        
+        // If window.open was blocked, try alternative methods
+        if (!newWindow || newWindow.closed || typeof newWindow.closed == 'undefined') {
+            // Method 2: Create a temporary link and click it
+            const tempLink = document.createElement('a');
+            tempLink.href = originalHref;
+            tempLink.target = '_blank';
+            tempLink.style.display = 'none';
+            document.body.appendChild(tempLink);
+            tempLink.click();
+            document.body.removeChild(tempLink);
+            
+            // If still not working, show a message
+            setTimeout(() => {
+                if (!window.focus) {
+                    alert('Please allow pop-ups for this site to open HTML assignments in new tabs.');
+                }
+            }, 100);
+        } else {
+            // Focus the new window
+            newWindow.focus();
+        }
+    } catch (error) {
+        console.error('Error opening HTML assignment:', error);
+        
+        // Fallback: Open in same tab with a message
+        if (confirm('Unable to open in new tab. Would you like to open in this tab instead?')) {
+            window.location.href = originalHref;
+        }
+    }
+}
+
+// Add click handler to all HTML assignment links on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const htmlLinks = document.querySelectorAll('.html-btn');
+    htmlLinks.forEach(link => {
+        link.addEventListener('click', function(event) {
+            // Get assignment ID from data attribute or parse from URL
+            const assignmentId = this.getAttribute('data-assignment-id') || 
+                                this.href.match(/\/(\d+)$/)?.[1];
+            
+            if (assignmentId) {
+                openHTMLAssignment(event, assignmentId);
+            }
+        });
+    });
+});
+
+// Confirmation function for assignment deletion
+function confirmDeleteAssignment() {
+    return confirm('Are you sure you want to delete this assignment? This action cannot be undone and will also delete all associated submissions.');
+}
+</script>

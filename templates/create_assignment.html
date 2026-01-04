@@ -6,7 +6,7 @@
 <h1>{{ _('Create New Assignment') }}</h1>
 
 <div class="create-assignment-form">
-    <form method="POST" action="{{ url_for('create_assignment') }}">
+    <form method="POST" action="{{ url_for('create_assignment') }}" enctype="multipart/form-data">
         <div class="form-group">
             <label for="title">{{ _('Title') }}</label>
             <input type="text" id="title" name="title" required>
@@ -15,6 +15,12 @@
         <div class="form-group">
             <label for="description">{{ _('Description') }}</label>
             <textarea id="description" name="description" rows="6" required></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label for="html_file">{{ _('HTML File') }}</label>
+            <input type="file" id="html_file" name="html_file" accept=".html" required>
+            <small style="color: #666; font-size: 0.9em;">{{ _('Upload an HTML file for interactive assignment') }}</small>
         </div>
         
         <div class="form-group">
@@ -68,6 +74,7 @@
 
 .form-group input[type="text"],
 .form-group input[type="datetime-local"],
+.form-group input[type="file"],
 .form-group textarea,
 .form-group select {
     width: 100%;

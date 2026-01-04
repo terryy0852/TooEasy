@@ -1,8 +1,9 @@
 # Flask Application for Educational Platform
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from flask_babel import Babel, gettext as _
+from flask_wtf.csrf import CSRFProtect
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 import os
@@ -24,15 +25,32 @@ logger = logging.getLogger(__name__)
 
 # Initialize Flask app
 app = Flask(__name__)
-
-# Configure from environment variables
 app.secret_key = os.environ.get('SECRET_KEY', 'fallback-secret-key-change-in-production')
+
+# Initialize CSRF protection
+csrf = CSRFProtect(app)
 
 # Session configuration
 app.config['SESSION_COOKIE_SECURE'] = False  # Set to True in production with HTTPS
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hour
+
+# Babel configuration
+babel = Babel(app)
+app.config['BABEL_DEFAULT_LOCALE'] = 'en'
+app.config['BABEL_TRANSLATION_DIRECTORIES'] = './translations'
+
+# Configure from environment variables
+
+# Session configuration
+app.config['SESSION_COOKIE_SECURE'] = False  # Set to True in production with HTTPS
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hour
+
+# CSRF protection (temporarily disabled to focus on session issues)
+# csrf = CSRFProtect(app)
 
 # Babel configuration
 babel = Babel(app)
@@ -99,6 +117,10 @@ class Assignment(db.Model):
     due_date = db.Column(db.DateTime, nullable=True)
     is_active = db.Column(db.Boolean, default=True)
     
+    # All assignments are now HTML assignments
+    html_filename = db.Column(db.String(255), nullable=True)  # Name of uploaded HTML file
+    html_content = db.Column(db.Text, nullable=True)  # Content of HTML assignment
+    
     # Relationship to students (many-to-many)
     assigned_students = db.relationship('User', secondary=student_assignment, backref='assigned_assignments', lazy='dynamic')
 
@@ -111,6 +133,10 @@ class Submission(db.Model):
     submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
     grade = db.Column(db.Float, nullable=True)
     feedback = db.Column(db.Text, nullable=True)
+    screenshot_filename = db.Column(db.String(255), nullable=True)  # For HTML assignment screenshots
+    
+    # Add relationship to User model
+    user = db.relationship('User', backref='submissions', lazy=True)
 
 # Setup Flask-Login
 login_manager = LoginManager()
@@ -147,6 +173,15 @@ def health_check():
         'timestamp': datetime.utcnow().isoformat(),
         'version': '1.0'
     }), 200
+
+# Route to serve files from uploads directory
+@app.route('/uploads/<path:filename>')
+def serve_uploaded_file(filename):
+    try:
+        return send_from_directory('uploads', filename)
+    except Exception as e:
+        logger.error(f"Error serving file {filename}: {e}")
+        return "File not found", 404
 
 # Database initialization function
 def init_database():
@@ -202,6 +237,7 @@ def login():
         user = User.query.filter_by(username=username).first()
         if user and user.check_password(password):
             login_user(user, remember=True)
+            session.permanent = True  # Make session permanent
             flash(_('Login successful!'))
             # Redirect based on user role
             if user.role == 'admin' or user.role == 'teacher':
@@ -263,7 +299,19 @@ def student_dashboard():
             student_assignment.c.student_id == current_user.id,
             Assignment.is_active == True
         ).all()
-        return render_template('student_dashboard.html', assignments=assignments)
+        
+        # Get submission status for each assignment
+        assignment_submissions = {}
+        for assignment in assignments:
+            submission = Submission.query.filter_by(
+                assignment_id=assignment.id, 
+                student_id=current_user.id
+            ).first()
+            assignment_submissions[assignment.id] = submission
+        
+        return render_template('student_dashboard.html', 
+                             assignments=assignments,
+                             assignment_submissions=assignment_submissions)
     else:
         # For teachers/admin, show all assignments and submissions
         assignments = Assignment.query.all()
@@ -276,7 +324,6 @@ def create_assignment():
         flash(_('Access denied'))
         return redirect(url_for('student_dashboard'))
     
-    # Get all students for the dropdown
     students = User.query.filter_by(role='student').all()
     
     if request.method == 'POST':
@@ -284,18 +331,14 @@ def create_assignment():
         description = request.form['description']
         due_date_str = request.form.get('due_date')
         is_active = 'is_active' in request.form
-        
-        # Get selected student IDs
         selected_student_ids = request.form.getlist('student_ids')
         
-        # Parse due date if provided
+        # All assignments are now HTML assignments
+        html_file = request.files.get('html_file')
+        
         due_date = None
         if due_date_str:
-            try:
-                due_date = datetime.strptime(due_date_str, '%Y-%m-%dT%H:%M')
-            except ValueError:
-                flash(_('Invalid due date format'))
-                return render_template('create_assignment.html', students=students)
+            due_date = datetime.strptime(due_date_str, '%Y-%m-%dT%H:%M')
         
         new_assignment = Assignment(
             title=title,
@@ -308,6 +351,27 @@ def create_assignment():
         try:
             db.session.add(new_assignment)
             db.session.flush()  # Get the assignment ID
+            
+            # Handle HTML file upload (required for all assignments)
+            if html_file and html_file.filename:
+                if html_file.filename.endswith('.html'):
+                    # Save the HTML file
+                    filename = f"assignment_{new_assignment.id}_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}.html"
+                    filepath = os.path.join('uploads', filename)
+                    html_file.save(filepath)
+                    
+                    # Read the HTML content for display
+                    with open(filepath, 'r', encoding='utf-8') as f:
+                        html_content = f.read()
+                    
+                    new_assignment.html_filename = filename
+                    new_assignment.html_content = html_content
+                else:
+                    flash(_('Only HTML files are allowed for assignments'))
+                    return render_template('create_assignment.html', students=students)
+            else:
+                flash(_('HTML file is required for assignments'))
+                return render_template('create_assignment.html', students=students)
             
             # Assign to selected students
             if selected_student_ids:
@@ -347,7 +411,232 @@ def view_assignment(assignment_id):
             flash(_('Access denied - this assignment is not assigned to you'))
             return redirect(url_for('student_dashboard'))
     
-    return render_template('view_assignment.html', assignment=assignment)
+    # Get submission for current user
+    submission = None
+    if current_user.role == 'student':
+        submission = Submission.query.filter_by(
+            assignment_id=assignment_id, 
+            student_id=current_user.id
+        ).first()
+    
+    # All assignments are HTML assignments - redirect to interactive view
+    return render_template('interactive_assignment.html', 
+                         assignment=assignment, 
+                         submission=submission)
+
+@app.route('/submit_html_assignment/<int:assignment_id>', methods=['POST'])
+@login_required
+def submit_html_assignment(assignment_id):
+    if request.method == 'POST':
+        # Check if assignment exists
+        assignment = Assignment.query.get_or_404(assignment_id)
+        
+        # Check if student has access to this assignment
+        if current_user.role == 'student':
+            assignment_assigned = db.session.query(student_assignment).filter(
+                student_assignment.c.assignment_id == assignment_id,
+                student_assignment.c.student_id == current_user.id
+            ).first()
+            
+            if not assignment_assigned:
+                flash(_('Access denied - this assignment is not assigned to you'))
+                return redirect(url_for('student_dashboard'))
+        
+        # Check if student has already submitted
+        existing_submission = Submission.query.filter_by(
+            assignment_id=assignment_id, 
+            student_id=current_user.id
+        ).first()
+        
+        if existing_submission:
+            flash(_('You have already submitted this assignment'))
+            return redirect(url_for('view_assignment', assignment_id=assignment_id))
+        
+        # Validate form content exists
+        if 'content' not in request.form or not request.form['content'].strip():
+            flash(_('Please provide your HTML content'))
+            return redirect(url_for('view_assignment', assignment_id=assignment_id))
+        
+        content = request.form['content']
+        
+        # Handle screenshot upload if provided
+        screenshot_filename = None
+        if 'screenshot' in request.files:
+            screenshot = request.files['screenshot']
+            if screenshot and screenshot.filename:
+                if screenshot.filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
+                    screenshot_filename = f"screenshot_{assignment_id}_{current_user.id}_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}.{screenshot.filename.split('.')[-1]}"
+                    try:
+                        screenshot.save(os.path.join('uploads', screenshot_filename))
+                    except Exception as e:
+                        print(f"Error saving screenshot: {e}")
+                        screenshot_filename = None  # Continue without screenshot
+        
+        new_submission = Submission(
+            assignment_id=assignment_id,
+            student_id=current_user.id,
+            content=content,
+            screenshot_filename=screenshot_filename,
+            submitted_at=datetime.utcnow()
+        )
+        
+        try:
+            db.session.add(new_submission)
+            db.session.commit()
+            
+            # Generate HTML file for submission
+            try:
+                # Generate HTML file for submission using format() instead of f-string
+                html_template = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML Assignment Submission - {assignment_title}</title>
+    <style>
+        :root {{
+            --background-color: #ffffff !important;
+            --text-color: #000000 !important;
+            --code-background: #f5f5f5 !important;
+            --code-text: #000000 !important;
+        }}
+        
+        * {{
+            background-color: var(--background-color) !important;
+            color: var(--text-color) !important;
+        }}
+        
+        body {{
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }}
+        
+        .header {{
+            background-color: #4a6fa5 !important;
+            color: white !important;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }}
+        
+        .header h1 {{
+            margin: 0 0 10px 0;
+            color: white !important;
+        }}
+        
+        .submission-info {{
+            background-color: #f9f9f9 !important;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            color: #333 !important;
+        }}
+        
+        .content-section {{
+            background-color: #f9f9f9 !important;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }}
+        
+        .content-section h2 {{
+            color: #4a6fa5 !important;
+            margin-top: 0;
+        }}
+        
+        pre {{
+            background-color: var(--code-background) !important;
+            color: var(--code-text) !important;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }}
+        
+        .screenshot-section {{
+            margin-top: 20px;
+        }}
+        
+        .screenshot-section img {{
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>HTML Assignment Submission</h1>
+        <p><strong>Assignment:</strong> {assignment_title}</p>
+        <p><strong>Student:</strong> {student_username}</p>
+    </div>
+    
+    <div class="submission-info">
+        <p><strong>Assignment ID:</strong> {assignment_id}</p>
+        <p><strong>Student ID:</strong> {student_id}</p>
+        <p><strong>Submitted at:</strong> {submitted_at}</p>
+    </div>
+    
+    <div class="content-section">
+        <h2>Submitted HTML Content:</h2>
+        <pre>{content}</pre>
+    </div>
+"""
+                
+                # Format the template with actual values
+                html_doc = html_template.format(
+                    assignment_title=assignment.title,
+                    student_username=current_user.username,
+                    assignment_id=assignment_id,
+                    student_id=current_user.id,
+                    submitted_at=new_submission.submitted_at.strftime('%Y-%m-%d %H:%M:%S'),
+                    content=content
+                )
+                
+                # Add screenshot section if screenshot exists
+                if screenshot_filename:
+                    html_doc += f"""
+    <div class="screenshot-section">
+        <h2>Screenshot:</h2>
+        <img src="/uploads/{screenshot_filename}" alt="Submission Screenshot">
+    </div>
+"""
+                
+                html_doc += """
+</body>
+</html>
+"""
+                
+                # Save the HTML file
+                filename = f"html_submission_{assignment_id}_{current_user.id}_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}.html"
+                try:
+                    with open(os.path.join('uploads', filename), 'w', encoding='utf-8') as f:
+                        f.write(html_doc)
+                        print(f"Saved HTML submission as {filename}")
+                except Exception as e:
+                    print(f"Error saving HTML submission file: {e}")
+                    # Continue without saving the HTML file
+                    
+            except Exception as e:
+                print(f"Error generating HTML submission: {e}")
+                # Continue even if HTML generation fails
+            
+            flash(_('HTML assignment submitted successfully!'))
+            return redirect(url_for('student_dashboard'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(_('Failed to submit HTML assignment'))
+            print(f"Error submitting HTML assignment: {e}")
+            return redirect(url_for('view_assignment', assignment_id=assignment_id))
+    
+    return redirect(url_for('view_assignment', assignment_id=assignment_id))
 
 @app.route('/submit_assignment/<int:assignment_id>', methods=['POST'])
 @login_required
@@ -447,8 +736,9 @@ def view_submissions(assignment_id):
         flash(_('Access denied'))
         return redirect(url_for('student_dashboard'))
     
+    assignment = Assignment.query.get_or_404(assignment_id)
     submissions = Submission.query.filter_by(assignment_id=assignment_id).all()
-    return render_template('view_submissions.html', submissions=submissions, assignment_id=assignment_id)
+    return render_template('view_submissions.html', submissions=submissions, assignment=assignment)
 
 @app.route('/grade_submission/<int:submission_id>', methods=['GET', 'POST'])
 @login_required
@@ -573,6 +863,45 @@ def admin_delete_user(user_id):
     
     return redirect(url_for('admin_users'))
 
+@app.route('/assignment/<int:assignment_id>/delete', methods=['POST'])
+@login_required
+def delete_assignment(assignment_id):
+    # Only allow teachers and admins to delete assignments
+    if current_user.role not in ['admin', 'teacher']:
+        flash(_('Access denied'))
+        return redirect(url_for('student_dashboard'))
+    
+    assignment = Assignment.query.get_or_404(assignment_id)
+    
+    # Check if the current user created this assignment or is admin
+    if current_user.role != 'admin' and assignment.created_by != current_user.id:
+        flash(_('You can only delete assignments that you created'))
+        return redirect(url_for('student_dashboard'))
+    
+    try:
+        # First delete all submissions related to this assignment
+        submissions = Submission.query.filter_by(assignment_id=assignment_id).all()
+        for submission in submissions:
+            db.session.delete(submission)
+        
+        # Remove assignment-student associations
+        delete_stmt = student_assignment.delete().where(student_assignment.c.assignment_id == assignment_id)
+        db.session.execute(delete_stmt)
+        
+        # Delete the assignment itself
+        db.session.delete(assignment)
+        db.session.commit()
+        
+        flash(_('Assignment deleted successfully'))
+        logger.info(f"Assignment {assignment_id} deleted by user {current_user.username}")
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(_('Failed to delete assignment'))
+        logger.error(f"Error deleting assignment {assignment_id}: {e}")
+    
+    return redirect(url_for('student_dashboard'))
+
 # Initialize the database
 @app.errorhandler(500)
 def internal_server_error(error):
@@ -588,14 +917,8 @@ def unhandled_exception(error):
 
 # Start the application
 if __name__ == '__main__':
-    logger.info("Starting application...")
-    logger.info(f"Environment: DATABASE_URL={'Configured' if DATABASE_URL else 'SQLite'}")
+    with app.app_context():
+        init_database()
     
-    # Initialize database
-    if init_database():
-        logger.info("Application starting successfully")
-        port = int(os.environ.get('PORT', 5000))
-        app.run(debug=False, host='0.0.0.0', port=port)
-    else:
-        logger.critical("Application failed to start due to database initialization error")
-        sys.exit(1)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=True)

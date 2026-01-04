@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login Test Instructions</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
+        .test-case { background: #f5f5f5; padding: 15px; margin: 10px 0; border-left: 4px solid #007cba; }
+        .success { border-left-color: #28a745; }
+        .warning { border-left-color: #ffc107; }
+        .info { border-left-color: #17a2b8; }
+    </style>
+</head>
+<body>
+    <h1>Login Test Instructions</h1>
+    
+    <div class="test-case info">
+        <h3>✅ Server Status</h3>
+        <p>Flask server is running on: <strong>http://127.0.0.1:5000</strong></p>
+        <p>Automated tests confirm login functionality is working correctly.</p>
+    </div>
+    
+    <div class="test-case">
+        <h3>🔧 Step 1: Clear Browser Cache</h3>
+        <p>Try these steps to resolve the login issue:</p>
+        <ul>
+            <li><strong>Chrome:</strong> Ctrl+Shift+Delete → Clear browsing data</li>
+            <li><strong>Firefox:</strong> Ctrl+Shift+Delete → Clear recent history</li>
+            <li><strong>Edge:</strong> Ctrl+Shift+Delete → Clear browsing data</li>
+        </ul>
+        <p>Or try using <strong>Incognito/Private browsing mode</strong></p>
+    </div>
+    
+    <div class="test-case success">
+        <h3>👤 Test Credentials (Confirmed Working)</h3>
+        <table border="1" cellpadding="8" style="border-collapse: collapse;">
+            <tr><th>Username</th><th>Password</th><th>Role</th></tr>
+            <tr><td>admin</td><td>admin123</td><td>Admin</td></tr>
+            <tr><td>teststudent</td><td>password123</td><td>Student</td></tr>
+            <tr><td>test_user</td><td>password123</td><td>Student</td></tr>
+        </table>
+    </div>
+    
+    <div class="test-case warning">
+        <h3>🌐 Direct Login Links</h3>
+        <p>Try these direct links after clearing cache:</p>
+        <ul>
+            <li><a href="http://127.0.0.1:5000/login" target="_blank">Login Page</a></li>
+            <li><a href="http://127.0.0.1:5000/student_dashboard" target="_blank">Dashboard (requires login)</a></li>
+        </ul>
+    </div>
+    
+    <div class="test-case">
+        <h3>📋 What to Expect</h3>
+        <p>After successful login:</p>
+        <ul>
+            <li>You should see "Login successful!" flash message</li>
+            <li>Redirect to the student dashboard</li>
+            <li>See "Admin Dashboard" or assignment list</li>
+            <li>Logout link should work</li>
+        </ul>
+    </div>
+    
+    <div class="test-case info">
+        <h3>🔍 If Still Having Issues</h3>
+        <p>If you still get "Invalid username or password":</p>
+        <ol>
+            <li>Check that you're typing passwords exactly as shown</li>
+            <li>Try a different browser</li>
+            <li>Restart the Flask server</li>
+            <li>Check browser console for JavaScript errors</li>
+        </ol>
+    </div>
+</body>
+</html>

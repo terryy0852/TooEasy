@@ -20,7 +20,7 @@
                 <tr>
                     <th>{{ _('Student') }}</th>
                     <th>{{ _('Submission Date') }}</th>
-                    <th>{{ _('Answer') }}</th>
+                    <th>{{ _('Answer Preview') }}</th>
                     <th>{{ _('Grade') }}</th>
                     <th>{{ _('Actions') }}</th>
                 </tr>
@@ -30,7 +30,20 @@
                 <tr>
                     <td>{{ submission.user.username }}</td>
                     <td>{{ submission.submitted_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                    <td class="submission-content">{{ submission.content[:50] }}{% if submission.content|length > 50 %}...{% endif %}</td>
+                    <td class="submission-preview">
+                        <button onclick="showSubmissionModal({{ submission.id }})" class="preview-btn">
+                            {{ _('View Answer') }}
+                        </button>
+                        <div id="modal-{{ submission.id }}" class="submission-modal">
+                            <div class="modal-content">
+                                <span class="close" onclick="closeSubmissionModal({{ submission.id }})">&times;</span>
+                                <h3>{{ _('Student Answer') }} - {{ submission.user.username }}</h3>
+                                <div class="submission-html-content">
+                                    <iframe srcdoc="{{ submission.content | e }}" class="submission-iframe"></iframe>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
                     <td>{{ submission.grade if submission.grade else '-' }}</td>
                     <td>
                         <a href="{{ url_for('grade_submission', submission_id=submission.id) }}" class="grade-btn">
@@ -55,9 +68,26 @@
 </div>
 {% endif %}
 
+<script>
+function showSubmissionModal(submissionId) {
+    document.getElementById('modal-' + submissionId).style.display = 'block';
+}
+
+function closeSubmissionModal(submissionId) {
+    document.getElementById('modal-' + submissionId).style.display = 'none';
+}
+
+// Close modal when clicking outside of it
+window.onclick = function(event) {
+    if (event.target.classList.contains('submission-modal')) {
+        event.target.style.display = 'none';
+    }
+}
+</script>
+
 <style>
 .assignment-submissions {
-    max-width: 1000px;
+    max-width: 1200px;
     margin: 0 auto;
     background-color: #f9f9f9;
     padding: 20px;
@@ -113,11 +143,71 @@
     background-color: #f5f5f5;
 }
 
-.submission-content {
-    max-width: 200px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+.submission-preview {
+    position: relative;
+}
+
+.preview-btn {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.preview-btn:hover {
+    background-color: #218838;
+}
+
+/* Modal Styles */
+.submission-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.4);
+    overflow: auto;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 2% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 90%;
+    max-width: 1000px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover,
+.close:focus {
+    color: #000;
+}
+
+.submission-html-content {
+    margin-top: 20px;
+}
+
+.submission-iframe {
+    width: 100%;
+    height: 600px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
 }
 
 .grade-btn {

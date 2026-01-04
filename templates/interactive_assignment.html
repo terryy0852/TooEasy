@@ -1,292 +1,483 @@
-{% extends "base.html" %}
-
-{% block title %}Interactive Assignment{% endblock %}
-
-{% block content %}
-<h1>{{ _('Interactive Assignment') }}</h1>
-
-{% if assignment %}
-<div class="interactive-assignment">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Assignment - {{ assignment.title }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .assignment-header {
+            background-color: #4a6fa5;
+            color: white;
+            padding: 15px 20px;
+            border-bottom: 3px solid #3a5a85;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+        
+        .assignment-header h1 {
+            margin: 0;
+            font-size: 1.5em;
+            flex: 1;
+        }
+        
+        .assignment-info {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .assignment-type, .due-date {
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        
+        .assignment-description {
+            background-color: #f9f9f9;
+            padding: 10px 15px;
+            border-bottom: 1px solid #ddd;
+            position: fixed;
+            top: 70px;
+            left: 0;
+            right: 0;
+            z-index: 999;
+        }
+        
+        .assignment-description h3 {
+            margin: 0 0 5px 0;
+            color: #4a6fa5;
+            font-size: 1.1em;
+        }
+        
+        .assignment-description p {
+            margin: 0;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+        
+        .main-container {
+            position: fixed;
+            top: 140px;
+            left: 0;
+            right: 0;
+            bottom: 80px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .assignment-frame-container {
+            flex: 1;
+            position: relative;
+            background-color: white;
+            border: 1px solid #ddd;
+            margin: 0 20px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .assignment-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background-color: white;
+        }
+        
+        .submission-controls {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: #f8f9fa;
+            border-top: 2px solid #dee2e6;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .submission-info {
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .submission-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-block;
+            transition: background-color 0.3s;
+        }
+        
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #218838;
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+        
+        .existing-submission {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 20px;
+            text-align: center;
+        }
+        
+        .existing-submission h3 {
+            margin: 0 0 10px 0;
+            color: #155724;
+        }
+        
+        .submission-content {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 10px;
+            text-align: left;
+        }
+        
+        .submission-grade {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            padding: 10px;
+            margin-top: 10px;
+        }
+        
+        .submission-feedback {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 4px;
+            padding: 10px;
+            margin-top: 10px;
+        }
+        
+        .hidden-form {
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            .assignment-header {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+            
+            .assignment-info {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .submission-controls {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
     <div class="assignment-header">
-        <h2>{{ assignment.title }}</h2>
-        <div class="assignment-meta">
+        <h1>{{ assignment.title }}</h1>
+        <div class="assignment-info">
+            <span class="assignment-type">HTML Assignment</span>
             {% if assignment.due_date %}
-            <span class="due-date">
-                {{ _('Due:') }} {{ assignment.due_date.strftime('%Y-%m-%d %H:%M') }}
-            </span>
+            <span class="due-date">Due: {{ assignment.due_date.strftime('%Y-%m-%d %H:%M') }}</span>
             {% endif %}
-            <span class="assignment-status">{{ _('Active') if assignment.is_active else _('Inactive') }}</span>
         </div>
     </div>
     
     <div class="assignment-description">
-        <h3>{{ _('Description') }}</h3>
+        <h3>Assignment Instructions</h3>
         <p>{{ assignment.description }}</p>
     </div>
     
-    {% if assignment.is_active or current_user.role in ['teacher', 'admin'] %}
-    <div class="assignment-interaction">
-        <h3>{{ _('Interactive Tasks') }}</h3>
+    {% if submission %}
+    <div class="existing-submission">
+        <h3>✅ Assignment Already Submitted</h3>
+        <p>You have completed this assignment. Your submission is shown below.</p>
         
-        <!-- Example interactive elements - these would be populated dynamically based on assignment type -->
-        {% if assignment.interactive_type == 'quiz' %}
-        <div class="quiz-section">
-            {% for question in questions %}
-            <div class="quiz-question">
-                <h4>{{ question.question_text }}</h4>
-                <div class="question-options">
-                    {% for option in question.options %}
-                    <label class="option-label">
-                        <input type="radio" name="question_{{ question.id }}" value="{{ option.id }}" required>
-                        <span>{{ option.option_text }}</span>
-                    </label>
-                    {% endfor %}
-                </div>
+        <div class="submission-content">
+            <h4>Your Submitted Work:</h4>
+            <div style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; background-color: #f9f9f9;">
+                <pre style="margin: 0; white-space: pre-wrap;">{{ submission.content }}</pre>
             </div>
-            {% endfor %}
         </div>
-        {% elif assignment.interactive_type == 'code' %}
-        <div class="code-section">
-            <h4>{{ _('Write your code below:') }}</h4>
-            <textarea class="code-editor" name="code_submission" rows="15" placeholder="Write your code here..."></textarea>
-        </div>
-        {% else %}
-        <div class="text-section">
-            <h4>{{ _('Your answer:') }}</h4>
-            <textarea class="text-editor" name="text_submission" rows="10" placeholder="Write your answer here..."></textarea>
+        
+        {% if submission.grade %}
+        <div class="submission-grade">
+            <h4>Grade: {{ submission.grade }}</h4>
         </div>
         {% endif %}
         
-        <form method="POST" action="{{ url_for('submit_assignment', assignment_id=assignment.id) }}">
-            {{ form.hidden_tag() }}
-            
-            {% if current_user.role == 'student' and not existing_submission %}
-            <div class="form-actions">
-                <button type="submit" class="submit-btn">{{ _('Submit Assignment') }}</button>
-            </div>
-            {% elif existing_submission %}
-            <div class="already-submitted">
-                <p>{{ _('You have already submitted this assignment.') }}</p>
-                <a href="{{ url_for('view_assignment', assignment_id=assignment.id) }}" class="view-btn">
-                    {{ _('View Your Submission') }}
-                </a>
-            </div>
-            {% endif %}
-        </form>
+        {% if submission.feedback %}
+        <div class="submission-feedback">
+            <h4>Teacher Feedback:</h4>
+            <p>{{ submission.feedback }}</p>
+        </div>
+        {% endif %}
     </div>
     {% else %}
-    <div class="assignment-inactive">
-        <p>{{ _('This assignment is currently inactive and not available for interaction.') }}</p>
+    <div class="main-container">
+        <div class="assignment-frame-container">
+            {% if assignment.html_content %}
+            <iframe id="assignmentFrame" 
+                    class="assignment-frame"
+                    srcdoc="{{ assignment.html_content|e }}"
+                    sandbox="allow-scripts allow-forms allow-same-origin">
+            </iframe>
+            {% else %}
+            <div style="display: flex; align-items: center; justify-content: center; height: 100%; background-color: #f9f9f9; color: #666;">
+                <div style="text-align: center;">
+                    <h3>No interactive content available</h3>
+                    <p>Please complete the assignment based on the description above.</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="submission-controls">
+            <div class="submission-info">
+                <span>Complete the assignment in the frame above, then click Submit.</span>
+            </div>
+            <div class="submission-actions">
+                <a href="{{ url_for('student_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+                <button type="button" id="submitBtn" class="btn btn-success">Submit Assignment</button>
+            </div>
+        </div>
     </div>
+    
+    <!-- Hidden form for submission -->
+    <form method="POST" action="{{ url_for('submit_html_assignment', assignment_id=assignment.id) }}" id="submissionForm" class="hidden-form">
+        <input type="hidden" name="content" id="submittedContent">
+        <input type="hidden" name="screenshot" id="submittedScreenshot">
+    </form>
     {% endif %}
     
-    <div class="action-buttons">
-        <a href="{{ url_for('student_dashboard') }}" class="dashboard-btn">
-            {{ _('Return to Dashboard') }}
-        </a>
-    </div>
-</div>
-{% else %}
-<div class="error-message">
-    <p>{{ _('Assignment not found.') }}</p>
-    <a href="{{ url_for('student_dashboard') }}">{{ _('Return to Dashboard') }}</a>
-</div>
-{% endif %}
-
-<style>
-.interactive-assignment {
-    max-width: 900px;
-    margin: 0 auto;
-    background-color: #f9f9f9;
-    padding: 20px;
-    border-radius: 8px;
-}
-
-.assignment-header {
-    margin-bottom: 20px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid #ddd;
-}
-
-.assignment-header h2 {
-    margin: 0 0 10px 0;
-    color: #4a6fa5;
-}
-
-.assignment-meta {
-    display: flex;
-    gap: 15px;
-    font-size: 14px;
-    color: #666;
-}
-
-.assignment-status {
-    padding: 3px 8px;
-    border-radius: 4px;
-    background-color: #4a6fa5;
-    color: white;
-    font-size: 12px;
-}
-
-.assignment-description {
-    margin-bottom: 30px;
-    background-color: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.assignment-description h3 {
-    margin-top: 0;
-    color: #4a6fa5;
-}
-
-.assignment-interaction {
-    margin-bottom: 30px;
-    background-color: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.assignment-interaction h3 {
-    margin-top: 0;
-    color: #4a6fa5;
-    margin-bottom: 20px;
-}
-
-.quiz-question {
-    margin-bottom: 25px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid #eee;
-}
-
-.quiz-question h4 {
-    margin-top: 0;
-    margin-bottom: 15px;
-    color: #333;
-}
-
-.question-options {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.option-label {
-    display: flex;
-    align-items: center;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.option-label:hover {
-    background-color: #f5f5f5;
-}
-
-.option-label input[type="radio"] {
-    margin-right: 10px;
-}
-
-.code-section, .text-section {
-    margin-bottom: 25px;
-}
-
-.code-editor, .text-editor {
-    width: 100%;
-    padding: 15px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-family: 'Courier New', monospace;
-    font-size: 14px;
-    line-height: 1.6;
-    resize: vertical;
-    box-sizing: border-box;
-}
-
-.form-actions {
-    margin-top: 30px;
-    text-align: center;
-}
-
-.submit-btn, .view-btn, .dashboard-btn {
-    padding: 10px 20px;
-    font-size: 16px;
-    border-radius: 4px;
-    text-decoration: none;
-    display: inline-block;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-.submit-btn {
-    background-color: #5cb85c;
-    color: white;
-    border: none;
-}
-
-.submit-btn:hover {
-    background-color: #4cae4c;
-}
-
-.view-btn {
-    background-color: #4a6fa5;
-    color: white;
-}
-
-.view-btn:hover {
-    background-color: #3a5a85;
-}
-
-.dashboard-btn {
-    background-color: #f0ad4e;
-    color: white;
-}
-
-.dashboard-btn:hover {
-    background-color: #ec971f;
-}
-
-.already-submitted {
-    margin-top: 30px;
-    padding: 20px;
-    background-color: #f5f5f5;
-    border-radius: 4px;
-    text-align: center;
-}
-
-.assignment-inactive {
-    margin-top: 30px;
-    padding: 20px;
-    background-color: #f5f5f5;
-    border-radius: 4px;
-    color: #666;
-}
-
-.action-buttons {
-    margin-top: 20px;
-    text-align: center;
-}
-
-.error-message {
-    text-align: center;
-    padding: 30px;
-    background-color: #f5f5f5;
-    border-radius: 8px;
-    margin: 20px 0;
-}
-
-.error-message a {
-    color: #4a6fa5;
-    text-decoration: none;
-    font-weight: bold;
-}
-
-.error-message a:hover {
-    text-decoration: underline;
-}
-</style>
-{% endblock %}
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const submitBtn = document.getElementById('submitBtn');
+        const assignmentFrame = document.getElementById('assignmentFrame');
+        const submissionForm = document.getElementById('submissionForm');
+        const submittedContent = document.getElementById('submittedContent');
+        
+        if (submitBtn && assignmentFrame && submissionForm && submittedContent) {
+            submitBtn.addEventListener('click', function() {
+                try {
+                    // Get the current content from the iframe
+                    const iframeDoc = assignmentFrame.contentDocument || assignmentFrame.contentWindow.document;
+                    
+                    // Clone the document to avoid modifying the original
+                    const clonedDoc = iframeDoc.documentElement.cloneNode(true);
+                    
+                    // Update form input values in the clone
+                    // Handle textareas
+                    const textareas = clonedDoc.querySelectorAll('textarea');
+                    textareas.forEach(textarea => {
+                        // Get the actual value from the original document
+                        const originalTextarea = iframeDoc.getElementById(textarea.id);
+                        if (originalTextarea && originalTextarea.value) {
+                            textarea.textContent = originalTextarea.value;
+                        }
+                    });
+                    
+                    // Handle input fields
+                    const inputs = clonedDoc.querySelectorAll('input');
+                    inputs.forEach(input => {
+                        // Get the actual value from the original document
+                        const originalInput = iframeDoc.getElementById(input.id);
+                        if (originalInput && originalInput.value) {
+                            input.setAttribute('value', originalInput.value);
+                        }
+                        // Handle checkboxes and radio buttons
+                        if (originalInput && (originalInput.type === 'checkbox' || originalInput.type === 'radio')) {
+                            if (originalInput.checked) {
+                                input.setAttribute('checked', 'checked');
+                            } else {
+                                input.removeAttribute('checked');
+                            }
+                        }
+                    });
+                    
+                    // Handle select elements
+                    const selects = clonedDoc.querySelectorAll('select');
+                    selects.forEach(select => {
+                        // Get the actual value from the original document
+                        const originalSelect = iframeDoc.getElementById(select.id);
+                        if (originalSelect && originalSelect.value) {
+                            // Update the selected option
+                            const options = select.querySelectorAll('option');
+                            options.forEach(option => {
+                                if (option.value === originalSelect.value) {
+                                    option.setAttribute('selected', 'selected');
+                                } else {
+                                    option.removeAttribute('selected');
+                                }
+                            });
+                        }
+                    });
+                    
+                    // Get the updated HTML content
+                    const htmlContent = clonedDoc.outerHTML;
+                    
+                    // Set the content in the hidden form
+                    submittedContent.value = htmlContent;
+                    
+                    // Confirm submission
+                    if (confirm('Are you sure you want to submit this assignment? Once submitted, you cannot make changes.')) {
+                        // Submit the form
+                        submissionForm.submit();
+                    }
+                } catch (error) {
+                    console.error('Error accessing iframe content:', error);
+                    alert('Error accessing assignment content. Please make sure you have completed the assignment and try again.');
+                }
+            });
+            
+            // Auto-save functionality
+            let autoSaveTimer;
+            
+            function autoSaveContent() {
+                try {
+                    const iframeDoc = assignmentFrame.contentDocument || assignmentFrame.contentWindow.document;
+                    
+                    // Clone the document to avoid modifying the original
+                    const clonedDoc = iframeDoc.documentElement.cloneNode(true);
+                    
+                    // Update form input values in the clone (same as above)
+                    const textareas = clonedDoc.querySelectorAll('textarea');
+                    textareas.forEach(textarea => {
+                        const originalTextarea = iframeDoc.getElementById(textarea.id);
+                        if (originalTextarea && originalTextarea.value) {
+                            textarea.textContent = originalTextarea.value;
+                        }
+                    });
+                    
+                    const inputs = clonedDoc.querySelectorAll('input');
+                    inputs.forEach(input => {
+                        const originalInput = iframeDoc.getElementById(input.id);
+                        if (originalInput && originalInput.value) {
+                            input.setAttribute('value', originalInput.value);
+                        }
+                        if (originalInput && (originalInput.type === 'checkbox' || originalInput.type === 'radio')) {
+                            if (originalInput.checked) {
+                                input.setAttribute('checked', 'checked');
+                            } else {
+                                input.removeAttribute('checked');
+                            }
+                        }
+                    });
+                    
+                    const selects = clonedDoc.querySelectorAll('select');
+                    selects.forEach(select => {
+                        const originalSelect = iframeDoc.getElementById(select.id);
+                        if (originalSelect && originalSelect.value) {
+                            const options = select.querySelectorAll('option');
+                            options.forEach(option => {
+                                if (option.value === originalSelect.value) {
+                                    option.setAttribute('selected', 'selected');
+                                } else {
+                                    option.removeAttribute('selected');
+                                }
+                            });
+                        }
+                    });
+                    
+                    const htmlContent = clonedDoc.outerHTML;
+                    
+                    if (htmlContent && htmlContent.trim()) {
+                        localStorage.setItem('assignment_{{ assignment.id }}_draft', htmlContent);
+                        console.log('Auto-saved draft');
+                    }
+                } catch (error) {
+                    console.log('Could not auto-save:', error);
+                }
+            }
+            
+            // Load saved draft if available
+            try {
+                const savedDraft = localStorage.getItem('assignment_{{ assignment.id }}_draft');
+                if (savedDraft && assignmentFrame.contentDocument) {
+                    assignmentFrame.contentDocument.documentElement.outerHTML = savedDraft;
+                    console.log('Loaded saved draft');
+                }
+            } catch (error) {
+                console.log('Could not load draft:', error);
+            }
+            
+            // Set up auto-save every 30 seconds
+            autoSaveTimer = setInterval(autoSaveContent, 30000);
+            
+            // Clear auto-save on page unload
+            window.addEventListener('beforeunload', function() {
+                clearInterval(autoSaveTimer);
+            });
+        }
+        
+        // Clear draft on successful submission (handled by form submission)
+        const originalSubmit = submissionForm.onsubmit;
+        submissionForm.onsubmit = function() {
+            localStorage.removeItem('assignment_{{ assignment.id }}_draft');
+            if (originalSubmit) {
+                return originalSubmit.call(this);
+            }
+            return true;
+        };
+    });
+    </script>
+</body>
+</html>
