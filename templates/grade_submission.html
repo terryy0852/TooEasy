@@ -1,1 +1,180 @@
-﻿{% extends "base.html" %}<h1>Grade Submission</h1>
+{% extends "base.html" %}
+
+{% block title %}Grade Submission{% endblock %}
+
+{% block content %}
+<h1>{{ _('Grade Submission') }}</h1>
+
+{% if submission %}
+<div class="grade-submission">
+    <div class="submission-details">
+        <h2>{{ _('Submission Details') }}</h2>
+        <div class="detail-item">
+            <strong>{{ _('Student:') }}</strong> {{ submission.user.username }}
+        </div>
+        <div class="detail-item">
+            <strong>{{ _('Assignment:') }}</strong> {{ submission.assignment.title }}
+        </div>
+        <div class="detail-item">
+            <strong>{{ _('Submitted on:') }}</strong> {{ submission.submitted_at.strftime('%Y-%m-%d %H:%M') }}
+        </div>
+        <div class="detail-item">
+            <strong>{{ _('Current Grade:') }}</strong> {{ submission.grade if submission.grade else _('Not graded yet') }}
+        </div>
+        <div class="submission-content">
+            <strong>{{ _('Submission Content:') }}</strong>
+            <p>{{ submission.content }}</p>
+        </div>
+    </div>
+    
+    <div class="grade-form">
+        <h2>{{ _('Grade this Submission') }}</h2>
+        <form method="POST" action="{{ url_for('grade_submission', submission_id=submission.id) }}">
+            {{ form.hidden_tag() }}
+            <div class="form-group">
+                <label for="grade">{{ _('Grade:') }}</label>
+                {{ form.grade(class="form-control", placeholder="Enter grade (e.g., 90 or A)") }}
+                {% if form.grade.errors %}
+                    <span class="error">{{ form.grade.errors[0] }}</span>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="feedback">{{ _('Feedback (optional):') }}</label>
+                {{ form.feedback(class="form-control", rows=4, placeholder="Enter feedback for the student") }}
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="submit-btn">{{ _('Save Grade') }}</button>
+                <a href="{{ url_for('view_submissions', assignment_id=submission.assignment.id) }}" class="cancel-btn">{{ _('Cancel') }}</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% else %}
+<div class="error-message">
+    <p>{{ _('Submission not found.') }}</p>
+    <a href="{{ url_for('student_dashboard') }}">{{ _('Return to Dashboard') }}</a>
+</div>
+{% endif %}
+
+<style>
+.grade-submission {
+    max-width: 900px;
+    margin: 0 auto;
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.submission-details, .grade-form {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.submission-details h2, .grade-form h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #4a6fa5;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 10px;
+}
+
+.detail-item {
+    margin-bottom: 10px;
+    font-size: 16px;
+}
+
+.submission-content {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+}
+
+.submission-content p {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #333;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+.error {
+    color: #d9534f;
+    font-size: 14px;
+    margin-top: 5px;
+    display: block;
+}
+
+.form-actions {
+    margin-top: 30px;
+    display: flex;
+    gap: 15px;
+}
+
+.submit-btn, .cancel-btn {
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 4px;
+    text-decoration: none;
+    display: inline-block;
+    cursor: pointer;
+}
+
+.submit-btn {
+    background-color: #4a6fa5;
+    color: white;
+    border: none;
+}
+
+.submit-btn:hover {
+    background-color: #3a5a85;
+}
+
+.cancel-btn {
+    background-color: #f0ad4e;
+    color: white;
+}
+
+.cancel-btn:hover {
+    background-color: #ec971f;
+}
+
+.error-message {
+    text-align: center;
+    padding: 30px;
+    background-color: #f5f5f5;
+    border-radius: 8px;
+    margin: 20px 0;
+}
+
+.error-message a {
+    color: #4a6fa5;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.error-message a:hover {
+    text-decoration: underline;
+}
+</style>
+{% endblock %}

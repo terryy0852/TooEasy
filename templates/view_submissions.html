@@ -1,1 +1,155 @@
-﻿{% extends "base.html" %}<h1>View Submissions</h1>
+{% extends "base.html" %}
+
+{% block title %}View Submissions{% endblock %}
+
+{% block content %}
+<h1>{{ _('View Submissions') }}</h1>
+
+{% if assignment %}
+<div class="assignment-submissions">
+    <div class="assignment-info">
+        <h2>{{ _('Assignment:') }} {{ assignment.title }}</h2>
+        <span class="assignment-status">{{ _('Active') if assignment.is_active else _('Inactive') }}</span>
+    </div>
+    
+    {% if submissions %}
+    <div class="submissions-table">
+        <h3>{{ _('Student Submissions') }}</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>{{ _('Student') }}</th>
+                    <th>{{ _('Submission Date') }}</th>
+                    <th>{{ _('Answer') }}</th>
+                    <th>{{ _('Grade') }}</th>
+                    <th>{{ _('Actions') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for submission in submissions %}
+                <tr>
+                    <td>{{ submission.user.username }}</td>
+                    <td>{{ submission.submitted_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td class="submission-content">{{ submission.content[:50] }}{% if submission.content|length > 50 %}...{% endif %}</td>
+                    <td>{{ submission.grade if submission.grade else '-' }}</td>
+                    <td>
+                        <a href="{{ url_for('grade_submission', submission_id=submission.id) }}" class="grade-btn">
+                            {{ _('Grade') }}
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="no-submissions">
+        <p>{{ _('No submissions yet.') }}</p>
+    </div>
+    {% endif %}
+</div>
+{% else %}
+<div class="error-message">
+    <p>{{ _('Assignment not found.') }}</p>
+    <a href="{{ url_for('student_dashboard') }}">{{ _('Return to Dashboard') }}</a>
+</div>
+{% endif %}
+
+<style>
+.assignment-submissions {
+    max-width: 1000px;
+    margin: 0 auto;
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.assignment-info {
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+.assignment-status {
+    padding: 5px 10px;
+    border-radius: 4px;
+    background-color: #4a6fa5;
+    color: white;
+    font-size: 12px;
+    margin-left: 10px;
+}
+
+.submissions-table {
+    margin-bottom: 20px;
+}
+
+.submissions-table h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #4a6fa5;
+}
+
+.submissions-table table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.submissions-table th,
+.submissions-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.submissions-table th {
+    background-color: #4a6fa5;
+    color: white;
+    font-weight: bold;
+}
+
+.submissions-table tr:hover {
+    background-color: #f5f5f5;
+}
+
+.submission-content {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.grade-btn {
+    display: inline-block;
+    padding: 5px 10px;
+    background-color: #4a6fa5;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.grade-btn:hover {
+    background-color: #3a5a85;
+}
+
+.no-submissions, .error-message {
+    text-align: center;
+    padding: 30px;
+    background-color: #f5f5f5;
+    border-radius: 8px;
+    margin: 20px 0;
+}
+
+.error-message a {
+    color: #4a6fa5;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.error-message a:hover {
+    text-decoration: underline;
+}
+</style>
+{% endblock %}

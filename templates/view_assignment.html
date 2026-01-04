@@ -1,1 +1,190 @@
-﻿{% extends "base.html" %}<h1>View Assignment</h1>
+{% extends "base.html" %}
+
+{% block title %}View Assignment{% endblock %}
+
+{% block content %}
+<h1>{{ _('View Assignment') }}</h1>
+
+{% if assignment %}
+<div class="assignment-detail">
+    <div class="assignment-header">
+        <h2>{{ assignment.title }}</h2>
+        <span class="assignment-status">{{ _('Active') if assignment.is_active else _('Inactive') }}</span>
+    </div>
+    
+    <div class="assignment-description">
+        <h3>{{ _('Description') }}</h3>
+        <p>{{ assignment.description }}</p>
+    </div>
+    
+    <div class="assignment-meta">
+        <h3>{{ _('Details') }}</h3>
+        <div class="meta-item">
+            <strong>{{ _('Created:') }}</strong> {{ assignment.created_at.strftime('%Y-%m-%d %H:%M') }}
+        </div>
+        {% if assignment.due_date %}
+        <div class="meta-item">
+            <strong>{{ _('Due Date:') }}</strong> {{ assignment.due_date.strftime('%Y-%m-%d %H:%M') }}
+        </div>
+        {% endif %}
+        <div class="meta-item">
+            <strong>{{ _('Status:') }}</strong> {{ _('Active') if assignment.is_active else _('Inactive') }}
+        </div>
+    </div>
+    
+    {% if current_user.role == 'student' %}
+    <div class="submission-section">
+        <h3>{{ _('Your Submission') }}</h3>
+        {% if submission %}
+        <div class="existing-submission">
+            <p>{{ _('You have already submitted this assignment.') }}</p>
+            <div class="submission-content">
+                <h4>{{ _('Your Answer:') }}</h4>
+                <p>{{ submission.content }}</p>
+            </div>
+            {% if submission.grade %}
+            <div class="submission-grade">
+                <h4>{{ _('Grade:') }}</h4>
+                <p>{{ submission.grade }}</p>
+            </div>
+            {% endif %}
+            {% if submission.feedback %}
+            <div class="submission-feedback">
+                <h4>{{ _('Feedback:') }}</h4>
+                <p>{{ submission.feedback }}</p>
+            </div>
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="new-submission">
+            <h4>{{ _('Submit Your Answer') }}</h4>
+            <form method="POST" action="{{ url_for('view_assignment', assignment_id=assignment.id) }}">
+                <div class="form-group">
+                    <label for="content">{{ _('Your Answer:') }}</label>
+                    <textarea id="content" name="content" rows="8" required></textarea>
+                </div>
+                <button type="submit" class="submit-btn">{{ _('Submit Assignment') }}</button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+    {% elif current_user.role in ['admin', 'teacher'] %}
+    <div class="submissions-list">
+        <h3>{{ _('Student Submissions') }}</h3>
+        <a href="{{ url_for('view_submissions', assignment_id=assignment.id) }}" class="view-all-btn">
+            {{ _('View All Submissions') }}
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% else %}
+<div class="error-message">
+    <p>{{ _('Assignment not found.') }}</p>
+    <a href="{{ url_for('student_dashboard') }}">{{ _('Return to Dashboard') }}</a>
+</div>
+{% endif %}
+
+<style>
+.assignment-detail {
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.assignment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+.assignment-status {
+    padding: 5px 10px;
+    border-radius: 4px;
+    background-color: #4a6fa5;
+    color: white;
+    font-size: 12px;
+}
+
+.assignment-description, .assignment-meta, .submission-section, .submissions-list {
+    margin-bottom: 25px;
+    padding: 15px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.assignment-description h3, .assignment-meta h3, .submission-section h3, .submissions-list h3 {
+    margin-top: 0;
+    color: #4a6fa5;
+}
+
+.meta-item {
+    margin-bottom: 10px;
+}
+
+.submission-content, .submission-grade, .submission-feedback {
+    margin-bottom: 15px;
+    padding: 10px;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.form-group textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.submit-btn, .view-all-btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #4a6fa5;
+    color: white;
+    text-decoration: none;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.submit-btn:hover, .view-all-btn:hover {
+    background-color: #3a5a85;
+}
+
+.error-message {
+    text-align: center;
+    padding: 30px;
+    background-color: #f5f5f5;
+    border-radius: 8px;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.error-message a {
+    color: #4a6fa5;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.error-message a:hover {
+    text-decoration: underline;
+}
+</style>
+{% endblock %}

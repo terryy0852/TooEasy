@@ -1,1 +1,292 @@
-﻿{% extends "base.html" %}<h1>Interactive Assignment</h1>
+{% extends "base.html" %}
+
+{% block title %}Interactive Assignment{% endblock %}
+
+{% block content %}
+<h1>{{ _('Interactive Assignment') }}</h1>
+
+{% if assignment %}
+<div class="interactive-assignment">
+    <div class="assignment-header">
+        <h2>{{ assignment.title }}</h2>
+        <div class="assignment-meta">
+            {% if assignment.due_date %}
+            <span class="due-date">
+                {{ _('Due:') }} {{ assignment.due_date.strftime('%Y-%m-%d %H:%M') }}
+            </span>
+            {% endif %}
+            <span class="assignment-status">{{ _('Active') if assignment.is_active else _('Inactive') }}</span>
+        </div>
+    </div>
+    
+    <div class="assignment-description">
+        <h3>{{ _('Description') }}</h3>
+        <p>{{ assignment.description }}</p>
+    </div>
+    
+    {% if assignment.is_active or current_user.role in ['teacher', 'admin'] %}
+    <div class="assignment-interaction">
+        <h3>{{ _('Interactive Tasks') }}</h3>
+        
+        <!-- Example interactive elements - these would be populated dynamically based on assignment type -->
+        {% if assignment.interactive_type == 'quiz' %}
+        <div class="quiz-section">
+            {% for question in questions %}
+            <div class="quiz-question">
+                <h4>{{ question.question_text }}</h4>
+                <div class="question-options">
+                    {% for option in question.options %}
+                    <label class="option-label">
+                        <input type="radio" name="question_{{ question.id }}" value="{{ option.id }}" required>
+                        <span>{{ option.option_text }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% elif assignment.interactive_type == 'code' %}
+        <div class="code-section">
+            <h4>{{ _('Write your code below:') }}</h4>
+            <textarea class="code-editor" name="code_submission" rows="15" placeholder="Write your code here..."></textarea>
+        </div>
+        {% else %}
+        <div class="text-section">
+            <h4>{{ _('Your answer:') }}</h4>
+            <textarea class="text-editor" name="text_submission" rows="10" placeholder="Write your answer here..."></textarea>
+        </div>
+        {% endif %}
+        
+        <form method="POST" action="{{ url_for('submit_assignment', assignment_id=assignment.id) }}">
+            {{ form.hidden_tag() }}
+            
+            {% if current_user.role == 'student' and not existing_submission %}
+            <div class="form-actions">
+                <button type="submit" class="submit-btn">{{ _('Submit Assignment') }}</button>
+            </div>
+            {% elif existing_submission %}
+            <div class="already-submitted">
+                <p>{{ _('You have already submitted this assignment.') }}</p>
+                <a href="{{ url_for('view_assignment', assignment_id=assignment.id) }}" class="view-btn">
+                    {{ _('View Your Submission') }}
+                </a>
+            </div>
+            {% endif %}
+        </form>
+    </div>
+    {% else %}
+    <div class="assignment-inactive">
+        <p>{{ _('This assignment is currently inactive and not available for interaction.') }}</p>
+    </div>
+    {% endif %}
+    
+    <div class="action-buttons">
+        <a href="{{ url_for('student_dashboard') }}" class="dashboard-btn">
+            {{ _('Return to Dashboard') }}
+        </a>
+    </div>
+</div>
+{% else %}
+<div class="error-message">
+    <p>{{ _('Assignment not found.') }}</p>
+    <a href="{{ url_for('student_dashboard') }}">{{ _('Return to Dashboard') }}</a>
+</div>
+{% endif %}
+
+<style>
+.interactive-assignment {
+    max-width: 900px;
+    margin: 0 auto;
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.assignment-header {
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #ddd;
+}
+
+.assignment-header h2 {
+    margin: 0 0 10px 0;
+    color: #4a6fa5;
+}
+
+.assignment-meta {
+    display: flex;
+    gap: 15px;
+    font-size: 14px;
+    color: #666;
+}
+
+.assignment-status {
+    padding: 3px 8px;
+    border-radius: 4px;
+    background-color: #4a6fa5;
+    color: white;
+    font-size: 12px;
+}
+
+.assignment-description {
+    margin-bottom: 30px;
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.assignment-description h3 {
+    margin-top: 0;
+    color: #4a6fa5;
+}
+
+.assignment-interaction {
+    margin-bottom: 30px;
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.assignment-interaction h3 {
+    margin-top: 0;
+    color: #4a6fa5;
+    margin-bottom: 20px;
+}
+
+.quiz-question {
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.quiz-question h4 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.question-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.option-label {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.option-label:hover {
+    background-color: #f5f5f5;
+}
+
+.option-label input[type="radio"] {
+    margin-right: 10px;
+}
+
+.code-section, .text-section {
+    margin-bottom: 25px;
+}
+
+.code-editor, .text-editor {
+    width: 100%;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    resize: vertical;
+    box-sizing: border-box;
+}
+
+.form-actions {
+    margin-top: 30px;
+    text-align: center;
+}
+
+.submit-btn, .view-btn, .dashboard-btn {
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 4px;
+    text-decoration: none;
+    display: inline-block;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.submit-btn {
+    background-color: #5cb85c;
+    color: white;
+    border: none;
+}
+
+.submit-btn:hover {
+    background-color: #4cae4c;
+}
+
+.view-btn {
+    background-color: #4a6fa5;
+    color: white;
+}
+
+.view-btn:hover {
+    background-color: #3a5a85;
+}
+
+.dashboard-btn {
+    background-color: #f0ad4e;
+    color: white;
+}
+
+.dashboard-btn:hover {
+    background-color: #ec971f;
+}
+
+.already-submitted {
+    margin-top: 30px;
+    padding: 20px;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.assignment-inactive {
+    margin-top: 30px;
+    padding: 20px;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+    color: #666;
+}
+
+.action-buttons {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.error-message {
+    text-align: center;
+    padding: 30px;
+    background-color: #f5f5f5;
+    border-radius: 8px;
+    margin: 20px 0;
+}
+
+.error-message a {
+    color: #4a6fa5;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.error-message a:hover {
+    text-decoration: underline;
+}
+</style>
+{% endblock %}
