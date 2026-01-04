@@ -71,6 +71,13 @@ class User(db.Model, UserMixin):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
+# Association table for student assignments
+student_assignment = db.Table('student_assignment',
+    db.Column('student_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
+    db.Column('assignment_id', db.Integer, db.ForeignKey('assignment.id'), primary_key=True),
+    db.Column('assigned_at', db.DateTime, default=datetime.utcnow)
+)
+
 # Assignment model
 class Assignment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -80,6 +87,9 @@ class Assignment(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     due_date = db.Column(db.DateTime, nullable=True)
     is_active = db.Column(db.Boolean, default=True)
+    
+    # Relationship to students (many-to-many)
+    assigned_students = db.relationship('User', secondary=student_assignment, backref='assigned_assignments', lazy='dynamic')
 
 # Submission model
 class Submission(db.Model):
@@ -215,8 +225,14 @@ def register():
 @login_required
 def student_dashboard():
     if current_user.role == 'student':
-        # Get assignments for student
-        assignments = Assignment.query.filter_by(is_active=True).all()
+        # Get assignments assigned to this student
+        assignments = Assignment.query.join(
+            student_assignment, 
+            Assignment.id == student_assignment.c.assignment_id
+        ).filter(
+            student_assignment.c.student_id == current_user.id,
+            Assignment.is_active == True
+        ).all()
         return render_template('student_dashboard.html', assignments=assignments)
     else:
         # For teachers/admin, show all assignments and submissions
@@ -230,30 +246,77 @@ def create_assignment():
         flash(_('Access denied'))
         return redirect(url_for('student_dashboard'))
     
+    # Get all students for the dropdown
+    students = User.query.filter_by(role='student').all()
+    
     if request.method == 'POST':
         title = request.form['title']
         description = request.form['description']
+        due_date_str = request.form.get('due_date')
+        is_active = 'is_active' in request.form
+        
+        # Get selected student IDs
+        selected_student_ids = request.form.getlist('student_ids')
+        
+        # Parse due date if provided
+        due_date = None
+        if due_date_str:
+            try:
+                due_date = datetime.strptime(due_date_str, '%Y-%m-%dT%H:%M')
+            except ValueError:
+                flash(_('Invalid due date format'))
+                return render_template('create_assignment.html', students=students)
         
         new_assignment = Assignment(
             title=title,
             description=description,
-            created_by=current_user.id
+            created_by=current_user.id,
+            due_date=due_date,
+            is_active=is_active
         )
         
         try:
             db.session.add(new_assignment)
+            db.session.flush()  # Get the assignment ID
+            
+            # Assign to selected students
+            if selected_student_ids:
+                for student_id in selected_student_ids:
+                    student = User.query.get(int(student_id))
+                    if student and student.role == 'student':
+                        new_assignment.assigned_students.append(student)
+            else:
+                # If no students selected, assign to all students
+                for student in students:
+                    new_assignment.assigned_students.append(student)
+            
             db.session.commit()
             flash(_('Assignment created successfully'))
             return redirect(url_for('student_dashboard'))
-        except:
+        except Exception as e:
+            db.session.rollback()
             flash(_('Failed to create assignment'))
+            print(f"Error creating assignment: {e}")
     
-    return render_template('create_assignment.html')
+    return render_template('create_assignment.html', students=students)
 
 @app.route('/view_assignment/<int:assignment_id>')
 @login_required
 def view_assignment(assignment_id):
     assignment = Assignment.query.get_or_404(assignment_id)
+    
+    # Check if student has access to this assignment
+    if current_user.role == 'student':
+        # Check if assignment is assigned to this student
+        assignment_assigned = db.session.query(student_assignment).filter(
+            student_assignment.c.assignment_id == assignment_id,
+            student_assignment.c.student_id == current_user.id
+        ).first()
+        
+        if not assignment_assigned:
+            flash(_('Access denied - this assignment is not assigned to you'))
+            return redirect(url_for('student_dashboard'))
+    
     return render_template('view_assignment.html', assignment=assignment)
 
 @app.route('/submit_assignment/<int:assignment_id>', methods=['POST'])
