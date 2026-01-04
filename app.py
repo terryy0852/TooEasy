@@ -363,9 +363,10 @@ def create_tables():
         db.create_all()
         print("[DB INIT] All tables already exist")
 
+# Create tables when the app is imported, not just when run directly
+create_tables()
+
 # Start the application
 if __name__ == '__main__':
-    create_tables()
     # Run without debug mode to prevent auto-restarting
     app.run(debug=False, host='0.0.0.0', port=5000)
-
