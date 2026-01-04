@@ -1,1 +1,134 @@
-﻿{% extends "base.html" %}<h1>Student Dashboard</h1>
+{% extends "base.html" %}
+
+{% block title %}Student Dashboard{% endblock %}
+
+{% block content %}
+<h1>{{ _('Student Dashboard') }}</h1>
+
+<div class="dashboard-header">
+    <h2>{{ _('Welcome,') }} {{ current_user.username }}!</h2>
+    <div class="user-info">
+        <span>{{ _('Role:') }} {{ current_user.role }}</span>
+        <a href="{{ url_for('logout') }}">{{ _('Logout') }}</a>
+    </div>
+</div>
+
+{% if assignments %}
+<div class="assignments-list">
+    <h3>{{ _('Available Assignments') }}</h3>
+    <ul>
+        {% for assignment in assignments %}
+        <li class="assignment-item">
+            <div class="assignment-header">
+                <h4>{{ assignment.title }}</h4>
+                <span class="assignment-status">{{ _('Active') if assignment.is_active else _('Inactive') }}</span>
+            </div>
+            <p>{{ assignment.description[:100] }}...</p>
+            <div class="assignment-meta">
+                <span>{{ _('Created:') }} {{ assignment.created_at.strftime('%Y-%m-%d') }}</span>
+                {% if assignment.due_date %}
+                <span>{{ _('Due:') }} {{ assignment.due_date.strftime('%Y-%m-%d') }}</span>
+                {% endif %}
+            </div>
+            <a href="{{ url_for('view_assignment', assignment_id=assignment.id) }}" class="view-btn">
+                {{ _('View Assignment') }}
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% else %}
+<div class="no-assignments">
+    <p>{{ _('There are no assignments available at the moment.') }}</p>
+</div>
+{% endif %}
+
+{% if current_user.role in ['admin', 'teacher'] %}
+<div class="admin-section">
+    <h3>{{ _('Admin/Teacher Options') }}</h3>
+    <a href="{{ url_for('create_assignment') }}" class="create-btn">
+        {{ _('Create New Assignment') }}
+    </a>
+</div>
+{% endif %}
+
+<style>
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #f5f5f5;
+    border-radius: 8px;
+}
+
+.user-info {
+    display: flex;
+    gap: 15px;
+}
+
+.assignments-list {
+    margin: 20px 0;
+}
+
+.assignment-item {
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.assignment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.assignment-status {
+    padding: 5px 10px;
+    border-radius: 4px;
+    background-color: #4a6fa5;
+    color: white;
+    font-size: 12px;
+}
+
+.assignment-meta {
+    display: flex;
+    gap: 20px;
+    color: #666;
+    font-size: 14px;
+    margin: 10px 0;
+}
+
+.view-btn, .create-btn {
+    display: inline-block;
+    padding: 8px 15px;
+    background-color: #4a6fa5;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    margin-top: 10px;
+}
+
+.view-btn:hover, .create-btn:hover {
+    background-color: #3a5a85;
+}
+
+.no-assignments {
+    text-align: center;
+    padding: 30px;
+    background-color: #f5f5f5;
+    border-radius: 8px;
+}
+
+.admin-section {
+    margin-top: 30px;
+    padding: 20px;
+    background-color: #f5f5f5;
+    border-radius: 8px;
+}
+</style>
+{% endblock %}
