@@ -7,32 +7,48 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 import os
 import json
+import logging
+import sys
+from sqlalchemy import text
+
+# Set up logging (early to capture all errors)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout),
+        logging.FileHandler('app.log')
+    ]
+)
+logger = logging.getLogger(__name__)
 
 # Initialize Flask app
 app = Flask(__name__)
 
-# Use environment variables for configuration
+# Configure from environment variables
 app.secret_key = os.environ.get('SECRET_KEY', 'fallback-secret-key-change-in-production')
 
-# Database configuration - use PostgreSQL from Railway environment variable
-# For SQLite, use the instance folder to ensure consistency across scripts
-# Use absolute path for better reliability on Windows
+# Database configuration
 instance_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instance')
 
-db_url = os.environ.get('DATABASE_URL')
-if db_url:
-    # Fix PostgreSQL URL for SQLAlchemy (replace postgres:// with postgresql://)
-    if db_url.startswith('postgres://'):
-        db_url = db_url.replace('postgres://', 'postgresql://', 1)
-    app.config['SQLALCHEMY_DATABASE_URI'] = db_url
+# Handle PostgreSQL URL conversion for SQLAlchemy compatibility
+DATABASE_URL = os.environ.get('DATABASE_URL')
+if DATABASE_URL:
+    logger.info(f"Using DATABASE_URL from environment: {DATABASE_URL[:20]}...")
+    # Fix Railway PostgreSQL URL format
+    if DATABASE_URL.startswith('postgres://'):
+        DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
+        logger.info(f"Converted to SQLAlchemy format: {DATABASE_URL[:20]}...")
+    app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 else:
-    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{os.path.join(instance_dir, "assignments.db")}'
+    sqlite_path = f'sqlite:///{os.path.join(instance_dir, "assignments.db")}'
+    app.config['SQLALCHEMY_DATABASE_URI'] = sqlite_path
+    logger.info(f"Using SQLite database: {sqlite_path}")
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['DEBUG'] = False  # Always False in production
 
-# Set to False in production
-app.config['DEBUG'] = False
-
-# Babel configuration for translations
+# Babel configuration
 babel = Babel(app)
 app.config['BABEL_DEFAULT_LOCALE'] = 'en'
 app.config['BABEL_TRANSLATION_DIRECTORIES'] = './translations'
@@ -82,27 +98,65 @@ login_manager.login_view = 'login'
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    try:
+        return User.query.get(int(user_id))
+    except Exception as e:
+        logger.error(f"Error loading user {user_id}: {e}")
+        return None
 
 # Babel locale selector
 def get_locale():
-    # Try to get locale from session
-    if 'language' in session:
-        return session['language']
-    # Fall back to browser's preferred language
-    return request.accept_languages.best_match(['zh_CN', 'en', 'zh_TW']) or 'en'
+    try:
+        if 'language' in session:
+            return session['language']
+        return request.accept_languages.best_match(['zh_CN', 'en', 'zh_TW']) or 'en'
+    except Exception as e:
+        logger.error(f"Error in locale selector: {e}")
+        return 'en'
 
 babel.init_app(app, locale_selector=get_locale)
 
-# Add health check endpoint for Railway
+# Health check endpoint for Railway
 @app.route('/health')
 def health_check():
     return jsonify({
         'status': 'healthy',
-        'timestamp': datetime.utcnow().isoformat()
+        'timestamp': datetime.utcnow().isoformat(),
+        'version': '1.0'
     }), 200
 
-# Routes
+# Database initialization function
+def init_database():
+    with app.app_context():
+        try:
+            logger.info("Initializing database...")
+            # Test connection first using text() for raw SQL
+            db.session.execute(text('SELECT 1'))
+            logger.info("Database connection successful")
+            
+            # Create tables if they don't exist
+            db.create_all()
+            logger.info("Database tables initialized successfully")
+            
+            # Create admin user if it doesn't exist
+            admin_user = User.query.filter_by(username='admin').first()
+            if not admin_user:
+                logger.info("Creating admin user...")
+                admin_user = User(username='admin', email='admin@example.com', role='admin')
+                admin_user.set_password('admin123')  # Use a secure password in production
+                db.session.add(admin_user)
+                db.session.commit()
+                logger.info("Admin user created successfully")
+            
+            logger.info("Database initialization complete")
+            return True
+            
+        except Exception as e:
+            logger.critical(f"Failed to initialize database: {e}")
+            logger.exception("Detailed error:")
+            return False
+
+# Routes and application logic
 @app.route('/')
 def index():
     return redirect(url_for('login'))
@@ -432,32 +486,28 @@ def logout():
     return redirect(url_for('login'))
 
 # Initialize the database
-import logging
+@app.errorhandler(500)
+def internal_server_error(error):
+    logger.error(f"Internal Server Error: {error}")
+    logger.exception("Error details:")
+    return render_template('error.html', error="Internal Server Error"), 500
 
-# Set up logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
-
-def create_tables():
-    with app.app_context():
-        try:
-            db.create_all()
-            logger.info("[DB INIT] All tables created successfully")
-        except Exception as e:
-            logger.error(f"[DB INIT] Error creating tables: {str(e)}")
-            # In production, we should handle this gracefully
-            raise
-
-# Create tables when the app is imported, not just when run directly
-try:
-    create_tables()
-except Exception as e:
-    logger.critical(f"Failed to initialize database: {str(e)}")
-    # This will allow the app to start but with database functionality disabled
-    # In a real production environment, we might want to exit instead
-    print(f"CRITICAL ERROR: Database initialization failed - {str(e)}")
+@app.errorhandler(Exception)
+def unhandled_exception(error):
+    logger.error(f"Unhandled Exception: {error}")
+    logger.exception("Exception details:")
+    return render_template('error.html', error="Server Error"), 500
 
 # Start the application
 if __name__ == '__main__':
-    # Run without debug mode to prevent auto-restarting
-    app.run(debug=False, host='0.0.0.0', port=5000)
+    logger.info("Starting application...")
+    logger.info(f"Environment: DATABASE_URL={'Configured' if DATABASE_URL else 'SQLite'}")
+    
+    # Initialize database
+    if init_database():
+        logger.info("Application starting successfully")
+        port = int(os.environ.get('PORT', 5000))
+        app.run(debug=False, host='0.0.0.0', port=port)
+    else:
+        logger.critical("Application failed to start due to database initialization error")
+        sys.exit(1)
