@@ -157,9 +157,18 @@ def init_database():
             db.session.execute(text('SELECT 1'))
             logger.info("Database connection successful")
             
-            # Create tables if they don't exist
-            db.create_all()
-            logger.info("Database tables initialized successfully")
+            # Import inspect to check if tables exist
+            from sqlalchemy import inspect
+            inspector = inspect(db.engine)
+            existing_tables = inspector.get_table_names()
+            
+            # Only create tables if they don't exist
+            if not existing_tables:
+                logger.info("Creating database tables...")
+                db.create_all()
+                logger.info("Database tables created successfully")
+            else:
+                logger.info("Database tables already exist, preserving data")
             
             # Create admin user if it doesn't exist
             admin_user = User.query.filter_by(username='admin').first()
