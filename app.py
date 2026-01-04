@@ -34,6 +34,11 @@ app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hour
 
+# Babel configuration
+babel = Babel(app)
+app.config['BABEL_DEFAULT_LOCALE'] = 'en'
+app.config['BABEL_TRANSLATION_DIRECTORIES'] = './translations'
+
 # Database configuration
 instance_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instance')
 
