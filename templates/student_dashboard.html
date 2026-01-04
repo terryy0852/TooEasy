@@ -59,6 +59,11 @@
     <a href="{{ url_for('create_assignment') }}" class="create-btn">
         {{ _('Create New Assignment') }}
     </a>
+    {% if current_user.role == 'admin' %}
+    <a href="{{ url_for('admin_users') }}" class="admin-btn">
+        {{ _('Manage Users') }}
+    </a>
+    {% endif %}
 </div>
 {% endif %}
 
@@ -139,6 +144,29 @@
     padding: 20px;
     background-color: #f5f5f5;
     border-radius: 8px;
+}
+
+.create-btn, .admin-btn {
+    display: inline-block;
+    margin: 10px 10px 10px 0;
+    padding: 10px 15px;
+    background-color: #4CAF50;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+.create-btn:hover, .admin-btn:hover {
+    background-color: #45a049;
+}
+
+.admin-btn {
+    background-color: #2196F3;
+}
+
+.admin-btn:hover {
+    background-color: #0b7dda;
 }
 </style>
 {% endblock %}
