@@ -28,6 +28,12 @@ app = Flask(__name__)
 # Configure from environment variables
 app.secret_key = os.environ.get('SECRET_KEY', 'fallback-secret-key-change-in-production')
 
+# Session configuration
+app.config['SESSION_COOKIE_SECURE'] = False  # Set to True in production with HTTPS
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hour
+
 # Database configuration
 instance_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instance')
 
@@ -105,6 +111,8 @@ class Submission(db.Model):
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
+login_manager.login_message = 'Please log in to access this page.'
+login_manager.session_protection = 'strong'
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -179,7 +187,8 @@ def login():
         
         user = User.query.filter_by(username=username).first()
         if user and user.check_password(password):
-            login_user(user)
+            login_user(user, remember=True)
+            flash(_('Login successful!'))
             # Redirect based on user role
             if user.role == 'admin' or user.role == 'teacher':
                 return redirect(url_for('student_dashboard'))
@@ -189,6 +198,13 @@ def login():
             flash(_('Invalid username or password'))
     
     return render_template('login.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash(_('You have been logged out.'))
+    return redirect(url_for('login'))
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -542,11 +558,6 @@ def admin_delete_user(user_id):
         flash(_('Failed to delete user'))
     
     return redirect(url_for('admin_users'))
-
-@app.route('/logout')
-def logout():
-    logout_user()
-    return redirect(url_for('login'))
 
 # Initialize the database
 @app.errorhandler(500)
