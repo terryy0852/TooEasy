@@ -987,7 +987,7 @@ def view_submission_content(submission_id):
         .back-btn:hover {{
             background-color: #5a6268;
         }}
-        .print-btn {{
+        .download-btn {{
             background-color: #28a745;
             color: white;
             padding: 8px 16px;
@@ -996,12 +996,8 @@ def view_submission_content(submission_id):
             cursor: pointer;
             float: right;
         }}
-        .print-btn:hover {{
+        .download-btn:hover {{
             background-color: #218838;
-        }}
-        @media print {{
-            .header, .back-btn, .print-btn {{ display: none; }}
-            .submission-content {{ box-shadow: none; border: 1px solid #000; }}
         }}
     </style>
 </head>
@@ -1012,7 +1008,7 @@ def view_submission_content(submission_id):
     
     <div class="submission-info">
         <a href="javascript:history.back()" class="back-btn">← Back to Submissions</a>
-        <button onclick="window.print()" class="print-btn">🖨️ Print</button>
+        <button onclick="downloadSubmission()" class="download-btn">📥 Download</button>
         <div style="clear: both;"></div>
         <p><strong>Student:</strong> {submission.user.username}</p>
         <p><strong>Assignment:</strong> {submission.assignment.title}</p>
@@ -1023,10 +1019,28 @@ def view_submission_content(submission_id):
     
     <div class="submission-content">
         <h2>Student's Work</h2>
+        <div id="submissionContent" style="display: none;">{submission.content.replace('"', '&quot;')}</div>
         <iframe srcdoc="{submission.content.replace('"', '&quot;')}" class="submission-iframe"></iframe>
     </div>
     
     <script>
+        function downloadSubmission() {{
+            const content = document.getElementById('submissionContent').innerHTML;
+            const studentName = '{submission.user.username}';
+            const assignmentTitle = '{submission.assignment.title}';
+            const submissionDate = '{submission.submitted_at.strftime('%Y-%m-%d_%H-%M')}';
+            const filename = `{{studentName}}_{{assignmentTitle}}_{{submissionDate}}.html`;
+            
+            const blob = new Blob([content], {{ type: 'text/html' }});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }}
         // Auto-adjust iframe height based on content
         window.addEventListener('load', function() {{
             const iframe = document.querySelector('.submission-iframe');
