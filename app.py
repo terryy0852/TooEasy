@@ -133,9 +133,9 @@ class Submission(db.Model):
     submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
     grade = db.Column(db.Float, nullable=True)
     feedback = db.Column(db.Text, nullable=True)
-    screenshot_filename = db.Column(db.String(255), nullable=True)  # For HTML assignment screenshots
+    screenshot_filename = db.Column(db.String(255), nullable=True)
     
-    # Add relationship to User model
+    assignment = db.relationship('Assignment', backref='submissions', lazy=True)
     user = db.relationship('User', backref='submissions', lazy=True)
 
 # Setup Flask-Login
@@ -390,7 +390,8 @@ def create_assignment():
         except Exception as e:
             db.session.rollback()
             flash(_('Failed to create assignment'))
-            print(f"Error creating assignment: {e}")
+            logger.error(f"Error creating assignment: {e}")
+            logger.exception("Detailed error traceback:")
     
     return render_template('create_assignment.html', students=students)
 
@@ -458,6 +459,12 @@ def submit_html_assignment(assignment_id):
             return redirect(url_for('view_assignment', assignment_id=assignment_id))
         
         content = request.form['content']
+        print(f"[DEBUG] Received content length: {len(content)}")
+        print(f"[DEBUG] Content preview (first 500 chars): {content[:500]}")
+        
+        # Check if content contains form values
+        if '<textarea' in content and 'value=' not in content:
+            print("[WARNING] Content may not contain filled form values")
         
         # Handle screenshot upload if provided
         screenshot_filename = None
@@ -521,6 +528,7 @@ def submit_html_assignment(assignment_id):
             padding: 20px;
             border-radius: 8px;
             margin-bottom: 20px;
+            color: #333 !important;
         }}
         
         .header h1 {{
@@ -914,6 +922,134 @@ def unhandled_exception(error):
     logger.error(f"Unhandled Exception: {error}")
     logger.exception("Exception details:")
     return render_template('error.html', error="Server Error"), 500
+
+@app.route('/view_submission_content/<int:submission_id>')
+@login_required
+def view_submission_content(submission_id):
+    if current_user.role not in ['admin', 'teacher']:
+        flash(_('Access denied'))
+        return redirect(url_for('student_dashboard'))
+    
+    submission = Submission.query.get_or_404(submission_id)
+    
+    # Create a clean HTML page to display the submission content
+    html_content = f"""
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Submission - {submission.user.username}</title>
+    <style>
+        body {{
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }}
+        .header {{
+            background-color: #4a6fa5;
+            color: white;
+            padding: 15px 20px;
+            margin: -20px -20px 20px -20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }}
+        .submission-info {{
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }}
+        .submission-content {{
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            min-height: 400px;
+        }}
+        .submission-iframe {{
+            width: 100%;
+            height: 600px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }}
+        .back-btn {{
+            background-color: #6c757d;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            text-decoration: none;
+            display: inline-block;
+            margin-bottom: 10px;
+        }}
+        .back-btn:hover {{
+            background-color: #5a6268;
+        }}
+        .print-btn {{
+            background-color: #28a745;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            float: right;
+        }}
+        .print-btn:hover {{
+            background-color: #218838;
+        }}
+        @media print {{
+            .header, .back-btn, .print-btn {{ display: none; }}
+            .submission-content {{ box-shadow: none; border: 1px solid #000; }}
+        }}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Student Submission Details</h1>
+    </div>
+    
+    <div class="submission-info">
+        <a href="javascript:history.back()" class="back-btn">← Back to Submissions</a>
+        <button onclick="window.print()" class="print-btn">🖨️ Print</button>
+        <div style="clear: both;"></div>
+        <p><strong>Student:</strong> {submission.user.username}</p>
+        <p><strong>Assignment:</strong> {submission.assignment.title}</p>
+        <p><strong>Submission Date:</strong> {submission.submitted_at.strftime('%Y-%m-%d %H:%M:%S')}</p>
+        <p><strong>Grade:</strong> {submission.grade if submission.grade else 'Not graded'}</p>
+        {f'<p><strong>Feedback:</strong> {submission.feedback}</p>' if submission.feedback else ''}
+    </div>
+    
+    <div class="submission-content">
+        <h2>Student's Work</h2>
+        <iframe srcdoc="{submission.content.replace('"', '&quot;')}" class="submission-iframe"></iframe>
+    </div>
+    
+    <script>
+        // Auto-adjust iframe height based on content
+        window.addEventListener('load', function() {{
+            const iframe = document.querySelector('.submission-iframe');
+            if (iframe) {{
+                iframe.onload = function() {{
+                    try {{
+                        // Try to set height based on content
+                        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                        if (iframeDoc && iframeDoc.body) {{
+                            iframe.style.height = Math.max(600, iframeDoc.body.scrollHeight + 50) + 'px';
+                        }}
+                    }} catch (e) {{
+                        console.log('Could not auto-adjust iframe height');
+                    }}
+                }};
+            }}
+        }});
+    </script>
+</body>
+</html>
+    """
+    
+    return html_content
 
 # Start the application
 if __name__ == '__main__':

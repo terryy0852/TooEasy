@@ -278,7 +278,7 @@
             <iframe id="assignmentFrame" 
                     class="assignment-frame"
                     srcdoc="{{ assignment.html_content|e }}"
-                    sandbox="allow-scripts allow-forms allow-same-origin">
+                    sandbox="allow-scripts allow-forms allow-same-origin allow-modals allow-popups">
             </iframe>
             {% else %}
             <div style="display: flex; align-items: center; justify-content: center; height: 100%; background-color: #f9f9f9; color: #666;">
@@ -303,6 +303,7 @@
     
     <!-- Hidden form for submission -->
     <form method="POST" action="{{ url_for('submit_html_assignment', assignment_id=assignment.id) }}" id="submissionForm" class="hidden-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="content" id="submittedContent">
         <input type="hidden" name="screenshot" id="submittedScreenshot">
     </form>
@@ -318,63 +319,60 @@
         if (submitBtn && assignmentFrame && submissionForm && submittedContent) {
             submitBtn.addEventListener('click', function() {
                 try {
-                    // Get the current content from the iframe
+                    console.log('Starting submission capture...');
                     const iframeDoc = assignmentFrame.contentDocument || assignmentFrame.contentWindow.document;
                     
-                    // Clone the document to avoid modifying the original
-                    const clonedDoc = iframeDoc.documentElement.cloneNode(true);
+                    if (!iframeDoc) {
+                        console.error('Could not access iframe document');
+                        alert('Error: Cannot access assignment content. Please try refreshing the page.');
+                        return;
+                    }
                     
-                    // Update form input values in the clone
-                    // Handle textareas
-                    const textareas = clonedDoc.querySelectorAll('textarea');
-                    textareas.forEach(textarea => {
-                        // Get the actual value from the original document
-                        const originalTextarea = iframeDoc.getElementById(textarea.id);
-                        if (originalTextarea && originalTextarea.value) {
-                            textarea.textContent = originalTextarea.value;
-                        }
-                    });
+                    console.log('Iframe document accessed successfully');
                     
-                    // Handle input fields
-                    const inputs = clonedDoc.querySelectorAll('input');
+                    let inputCount = 0;
+                    const inputs = iframeDoc.querySelectorAll('input');
                     inputs.forEach(input => {
-                        // Get the actual value from the original document
-                        const originalInput = iframeDoc.getElementById(input.id);
-                        if (originalInput && originalInput.value) {
-                            input.setAttribute('value', originalInput.value);
-                        }
-                        // Handle checkboxes and radio buttons
-                        if (originalInput && (originalInput.type === 'checkbox' || originalInput.type === 'radio')) {
-                            if (originalInput.checked) {
+                        inputCount++;
+                        if (input.type === 'checkbox' || input.type === 'radio') {
+                            if (input.checked) {
                                 input.setAttribute('checked', 'checked');
                             } else {
                                 input.removeAttribute('checked');
                             }
+                        } else {
+                            input.setAttribute('value', input.value);
                         }
                     });
+                    console.log('Processed', inputCount, 'input elements');
                     
-                    // Handle select elements
-                    const selects = clonedDoc.querySelectorAll('select');
+                    let textareaCount = 0;
+                    const textareas = iframeDoc.querySelectorAll('textarea');
+                    textareas.forEach(textarea => {
+                        textareaCount++;
+                        textarea.textContent = textarea.value;
+                    });
+                    console.log('Processed', textareaCount, 'textarea elements');
+                    
+                    let selectCount = 0;
+                    const selects = iframeDoc.querySelectorAll('select');
                     selects.forEach(select => {
-                        // Get the actual value from the original document
-                        const originalSelect = iframeDoc.getElementById(select.id);
-                        if (originalSelect && originalSelect.value) {
-                            // Update the selected option
-                            const options = select.querySelectorAll('option');
-                            options.forEach(option => {
-                                if (option.value === originalSelect.value) {
-                                    option.setAttribute('selected', 'selected');
-                                } else {
-                                    option.removeAttribute('selected');
-                                }
-                            });
-                        }
+                        selectCount++;
+                        const options = select.querySelectorAll('option');
+                        options.forEach(option => {
+                            if (option.value === select.value) {
+                                option.setAttribute('selected', 'selected');
+                            } else {
+                                option.removeAttribute('selected');
+                            }
+                        });
                     });
+                    console.log('Processed', selectCount, 'select elements');
                     
-                    // Get the updated HTML content
-                    const htmlContent = clonedDoc.outerHTML;
+                    const serializer = new XMLSerializer();
+                    let htmlContent = serializer.serializeToString(iframeDoc);
+                    console.log('Serialized HTML length:', htmlContent.length);
                     
-                    // Set the content in the hidden form
                     submittedContent.value = htmlContent;
                     
                     // Confirm submission
@@ -395,49 +393,35 @@
                 try {
                     const iframeDoc = assignmentFrame.contentDocument || assignmentFrame.contentWindow.document;
                     
-                    // Clone the document to avoid modifying the original
-                    const clonedDoc = iframeDoc.documentElement.cloneNode(true);
-                    
-                    // Update form input values in the clone (same as above)
-                    const textareas = clonedDoc.querySelectorAll('textarea');
-                    textareas.forEach(textarea => {
-                        const originalTextarea = iframeDoc.getElementById(textarea.id);
-                        if (originalTextarea && originalTextarea.value) {
-                            textarea.textContent = originalTextarea.value;
-                        }
-                    });
-                    
-                    const inputs = clonedDoc.querySelectorAll('input');
-                    inputs.forEach(input => {
-                        const originalInput = iframeDoc.getElementById(input.id);
-                        if (originalInput && originalInput.value) {
-                            input.setAttribute('value', originalInput.value);
-                        }
-                        if (originalInput && (originalInput.type === 'checkbox' || originalInput.type === 'radio')) {
-                            if (originalInput.checked) {
+                    iframeDoc.querySelectorAll('input').forEach(input => {
+                        if (input.type === 'checkbox' || input.type === 'radio') {
+                            if (input.checked) {
                                 input.setAttribute('checked', 'checked');
                             } else {
                                 input.removeAttribute('checked');
                             }
+                        } else {
+                            input.setAttribute('value', input.value);
                         }
                     });
                     
-                    const selects = clonedDoc.querySelectorAll('select');
-                    selects.forEach(select => {
-                        const originalSelect = iframeDoc.getElementById(select.id);
-                        if (originalSelect && originalSelect.value) {
-                            const options = select.querySelectorAll('option');
-                            options.forEach(option => {
-                                if (option.value === originalSelect.value) {
-                                    option.setAttribute('selected', 'selected');
-                                } else {
-                                    option.removeAttribute('selected');
-                                }
-                            });
-                        }
+                    iframeDoc.querySelectorAll('textarea').forEach(textarea => {
+                        textarea.textContent = textarea.value;
                     });
                     
-                    const htmlContent = clonedDoc.outerHTML;
+                    iframeDoc.querySelectorAll('select').forEach(select => {
+                        const options = select.querySelectorAll('option');
+                        options.forEach(option => {
+                            if (option.value === select.value) {
+                                option.setAttribute('selected', 'selected');
+                            } else {
+                                option.removeAttribute('selected');
+                            }
+                        });
+                    });
+                    
+                    const serializer = new XMLSerializer();
+                    let htmlContent = serializer.serializeToString(iframeDoc);
                     
                     if (htmlContent && htmlContent.trim()) {
                         localStorage.setItem('assignment_{{ assignment.id }}_draft', htmlContent);
