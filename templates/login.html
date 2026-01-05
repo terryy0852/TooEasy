@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿{% extends 'base.html' %}
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿{% extends 'base.html' %}
 {% block title %}Login - Julien Mentors{% endblock %}
 {% block content %}
 <div class="login-container">
@@ -33,21 +33,24 @@
 
 <style>
 .login-container {
-    min-height: calc(100vh - 200px);
+    min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     padding: 40px 20px;
+    background-attachment: fixed;
 }
 
 .login-box {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    padding: 50px 40px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.35);
+    padding: 60px 40px;
     width: 100%;
-    max-width: 420px;
+    max-width: 450px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .login-header {
@@ -56,12 +59,17 @@
 }
 
 .logo {
-    font-size: 28px;
-    font-weight: 700;
-    color: #667eea;
-    margin-bottom: 20px;
-    letter-spacing: -0.5px;
-}
+        font-size: 32px;
+        font-weight: 900;
+        color: #667eea;
+        margin-bottom: 25px;
+        letter-spacing: -1px;
+        text-transform: uppercase;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
 
 .login-header h1 {
     font-size: 32px;
@@ -94,20 +102,22 @@
 
 .form-group input {
     width: 100%;
-    padding: 14px 16px;
+    padding: 16px 18px;
     font-size: 16px;
-    border: 2px solid #e2e8f0;
-    border-radius: 8px;
+    border: 2px solid rgba(102, 126, 234, 0.2);
+    border-radius: 12px;
     box-sizing: border-box;
     transition: all 0.3s ease;
-    background-color: #f7fafc;
+    background-color: rgba(255, 255, 255, 0.9);
+    font-weight: 500;
 }
 
 .form-group input:focus {
     outline: none;
     border-color: #667eea;
     background-color: white;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+    border-width: 3px;
 }
 
 .form-group input::placeholder {
@@ -116,44 +126,51 @@
 
 .login-btn {
     width: 100%;
-    padding: 14px;
-    font-size: 16px;
-    font-weight: 600;
+    padding: 18px;
+    font-size: 17px;
+    font-weight: 700;
     color: white;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border: none;
-    border-radius: 8px;
+    border-radius: 12px;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 14px rgba(102, 126, 234, 0.4);
+    transition: all 0.4s ease;
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.45);
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .login-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 35px rgba(102, 126, 234, 0.65);
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
 }
 
 .login-btn:active {
-    transform: translateY(0);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
 }
 
 .login-footer {
     text-align: center;
-    padding-top: 20px;
-    border-top: 1px solid #e2e8f0;
+    padding-top: 25px;
+    border-top: 1px solid rgba(102, 126, 234, 0.15);
 }
 
 .login-footer a {
     color: #667eea;
     text-decoration: none;
     font-size: 14px;
-    font-weight: 500;
-    transition: color 0.3s ease;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    padding: 8px 16px;
+    border-radius: 8px;
 }
 
 .login-footer a:hover {
     color: #764ba2;
-    text-decoration: underline;
+    text-decoration: none;
+    background-color: rgba(102, 126, 234, 0.08);
 }
 
 @media (max-width: 768px) {
