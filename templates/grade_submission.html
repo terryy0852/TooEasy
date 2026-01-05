@@ -44,17 +44,14 @@
     <div class="grade-form">
         <h2>{{ _('Grade this Submission') }}</h2>
         <form method="POST" action="{{ url_for('grade_submission', submission_id=submission.id) }}">
-            {{ form.hidden_tag() }}
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="form-group">
                 <label for="grade">{{ _('Grade:') }}</label>
-                {{ form.grade(class="form-control", placeholder="Enter grade (e.g., 90 or A)") }}
-                {% if form.grade.errors %}
-                    <span class="error">{{ form.grade.errors[0] }}</span>
-                {% endif %}
+                <input type="text" name="grade" class="form-control" placeholder="Enter grade (e.g., 90 or A)" required>
             </div>
             <div class="form-group">
                 <label for="feedback">{{ _('Feedback (optional):') }}</label>
-                {{ form.feedback(class="form-control", rows=4, placeholder="Enter feedback for the student") }}
+                <textarea name="feedback" class="form-control" rows="4" placeholder="Enter feedback for the student"></textarea>
             </div>
             <div class="form-actions">
                 <button type="submit" class="submit-btn">{{ _('Save Grade') }}</button>
