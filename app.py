@@ -14,43 +14,40 @@ from sqlalchemy import text
 
 # Set up logging (early to capture all errors)
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,  # Changed to DEBUG for more detailed logging
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
         logging.StreamHandler(sys.stdout),
-        logging.FileHandler('app.log')
+        logging.FileHandler('app.log'),
+        logging.FileHandler('error.log', mode='a')  # Separate error log
     ]
 )
 logger = logging.getLogger(__name__)
 
-# Initialize Flask app
+# Initialize Flask app with proper error handling
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'fallback-secret-key-change-in-production')
 
+# Configure Flask to show detailed errors in development
+app.config['PROPAGATE_EXCEPTIONS'] = True
+app.config['DEBUG'] = True  # Enable debug mode for detailed error pages
+
+# Add error handler for Flask
+def log_exception(sender, exception, **extra):
+    """Log all exceptions with full traceback"""
+    logger.error(f'Exception occurred: {exception}', exc_info=True)
+
+# Register error handler
+app.errorhandler(Exception)(log_exception)
+
+# Session configuration
+app.config['SESSION_COOKIE_SECURE'] = False  # Set to True in production with HTTPS
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hour
+
 # Initialize CSRF protection
 csrf = CSRFProtect(app)
-
-# Session configuration
-app.config['SESSION_COOKIE_SECURE'] = False  # Set to True in production with HTTPS
-app.config['SESSION_COOKIE_HTTPONLY'] = True
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hour
-
-# Babel configuration
-babel = Babel(app)
-app.config['BABEL_DEFAULT_LOCALE'] = 'en'
-app.config['BABEL_TRANSLATION_DIRECTORIES'] = './translations'
-
-# Configure from environment variables
-
-# Session configuration
-app.config['SESSION_COOKIE_SECURE'] = False  # Set to True in production with HTTPS
-app.config['SESSION_COOKIE_HTTPONLY'] = True
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hour
-
-# CSRF protection (temporarily disabled to focus on session issues)
-# csrf = CSRFProtect(app)
 
 # Babel configuration
 babel = Babel(app)
@@ -290,32 +287,50 @@ def register():
 @app.route('/student_dashboard')
 @login_required
 def student_dashboard():
-    if current_user.role == 'student':
-        # Get assignments assigned to this student
-        assignments = Assignment.query.join(
-            student_assignment, 
-            Assignment.id == student_assignment.c.assignment_id
-        ).filter(
-            student_assignment.c.student_id == current_user.id,
-            Assignment.is_active == True
-        ).all()
-        
-        # Get submission status for each assignment
-        assignment_submissions = {}
-        for assignment in assignments:
-            submission = Submission.query.filter_by(
-                assignment_id=assignment.id, 
-                student_id=current_user.id
-            ).first()
-            assignment_submissions[assignment.id] = submission
-        
-        return render_template('student_dashboard.html', 
-                             assignments=assignments,
-                             assignment_submissions=assignment_submissions)
-    else:
-        # For teachers/admin, show all assignments and submissions
-        assignments = Assignment.query.all()
-        return render_template('student_dashboard.html', assignments=assignments)
+    logger.debug(f"Accessing student_dashboard - User: {current_user.username}, Role: {current_user.role}")
+    
+    try:
+        if current_user.role == 'student':
+            logger.debug(f"Student user detected - ID: {current_user.id}")
+            
+            # Get assignments assigned to this student
+            logger.debug("Querying assignments for student...")
+            assignments = Assignment.query.join(
+                student_assignment, 
+                Assignment.id == student_assignment.c.assignment_id
+            ).filter(
+                student_assignment.c.student_id == current_user.id,
+                Assignment.is_active == True
+            ).all()
+            
+            logger.debug(f"Found {len(assignments)} assignments for student")
+            
+            # Get submission status for each assignment
+            assignment_submissions = {}
+            for assignment in assignments:
+                logger.debug(f"Checking submission for assignment {assignment.id}: {assignment.title}")
+                submission = Submission.query.filter_by(
+                    assignment_id=assignment.id, 
+                    student_id=current_user.id
+                ).first()
+                assignment_submissions[assignment.id] = submission
+                logger.debug(f"Submission status for assignment {assignment.id}: {'Found' if submission else 'Not found'}")
+            
+            logger.debug("Rendering student dashboard template")
+            return render_template('student_dashboard.html', 
+                                 assignments=assignments,
+                                 assignment_submissions=assignment_submissions)
+        else:
+            logger.debug(f"Teacher/admin user detected - showing all assignments")
+            # For teachers/admin, show all assignments and submissions
+            assignments = Assignment.query.all()
+            logger.debug(f"Found {len(assignments)} total assignments for teacher/admin")
+            return render_template('student_dashboard.html', assignments=assignments)
+            
+    except Exception as e:
+        logger.error(f"Error in student_dashboard: {str(e)}", exc_info=True)
+        logger.error(f"User: {current_user.username}, Role: {current_user.role}")
+        raise
 
 @app.route('/create_assignment', methods=['GET', 'POST'])
 @login_required
