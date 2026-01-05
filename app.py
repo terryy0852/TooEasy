@@ -974,19 +974,6 @@ def view_submission_content(submission_id):
             border: 1px solid #ddd;
             border-radius: 4px;
         }}
-        .back-btn {{
-            background-color: #6c757d;
-            color: white;
-            padding: 8px 16px;
-            border: none;
-            border-radius: 4px;
-            text-decoration: none;
-            display: inline-block;
-            margin-bottom: 10px;
-        }}
-        .back-btn:hover {{
-            background-color: #5a6268;
-        }}
         .download-btn {{
             background-color: #28a745;
             color: white;
@@ -1007,9 +994,7 @@ def view_submission_content(submission_id):
     </div>
     
     <div class="submission-info">
-        <a href="javascript:history.back()" class="back-btn">← Back to Submissions</a>
         <button onclick="downloadSubmission()" class="download-btn">📥 Download</button>
-        <div style="clear: both;"></div>
         <p><strong>Student:</strong> {submission.user.username}</p>
         <p><strong>Assignment:</strong> {submission.assignment.title}</p>
         <p><strong>Submission Date:</strong> {submission.submitted_at.strftime('%Y-%m-%d %H:%M:%S')}</p>
