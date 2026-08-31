@@ -2,7 +2,23 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
-from flask_babel import Babel, gettext as _
+try:
+    from flask_babel import Babel, gettext as _
+    BABEL_AVAILABLE = True
+except Exception as babel_import_err:
+    BABEL_AVAILABLE = False
+    # Fallback: make gettext a no-op identity function so every _(str) works
+    def _(s, **kwargs):
+        if kwargs:
+            try:
+                return s.format(**kwargs)
+            except Exception:
+                return s
+        return s
+    class Babel:
+        def __init__(self, *a, **kw): pass
+        def init_app(self, *a, **kw): pass
+
 from flask_wtf.csrf import CSRFProtect
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
@@ -12,20 +28,15 @@ import logging
 import sys
 from sqlalchemy import text
 
-# Set up logging (early to capture all errors) - stdout only for Railway
-handlers_list = [logging.StreamHandler(sys.stdout)]
-try:
-    log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logs')
-    os.makedirs(log_dir, exist_ok=True)
-    handlers_list.append(logging.FileHandler(os.path.join(log_dir, 'app.log')))
-    handlers_list.append(logging.FileHandler(os.path.join(log_dir, 'error.log'), mode='a'))
-except Exception as log_err:
-    pass  # Skip file logs if filesystem is read-only (Railway container)
-
+# ============================================================
+# LOGGING: stdout ONLY at import time (no disk writes).
+# File handlers added LATER only if writable dir confirmed.
+# ============================================================
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=handlers_list
+    handlers=[logging.StreamHandler(sys.stdout)],
+    force=True
 )
 logger = logging.getLogger(__name__)
 
@@ -33,50 +44,66 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'fallback-secret-key-change-in-production')
 
-# Configure Flask to show detailed errors in development
-app.config['PROPAGATE_EXCEPTIONS'] = True
-app.config['DEBUG'] = False  # Disabled in production
+# Configure Flask
+app.config['PROPAGATE_EXCEPTIONS'] = False
+app.config['DEBUG'] = False
+app.config['TESTING'] = False
 
 # Session configuration
-app.config['SESSION_COOKIE_SECURE'] = False  # Set to True in production with HTTPS
+app.config['SESSION_COOKIE_SECURE'] = False
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hour
+app.config['PERMANENT_SESSION_LIFETIME'] = 3600
 
 # Initialize CSRF protection
 csrf = CSRFProtect(app)
 
-# Babel configuration (init_app deferred to after locale_selector defined below)
+# Uploads directory configuration - wrap in try/except
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+try:
+    UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER', os.path.join(BASE_DIR, 'uploads'))
+    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+    app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+except Exception as up_err:
+    # Fallback to /tmp/uploads if configured path is unwritable
+    import tempfile
+    UPLOAD_FOLDER = os.path.join(tempfile.gettempdir(), 'uploads')
+    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+    app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# Instance dir
+try:
+    instance_dir = os.path.join(BASE_DIR, 'instance')
+    os.makedirs(instance_dir, exist_ok=True)
+except Exception:
+    import tempfile
+    instance_dir = tempfile.gettempdir()
+
+# Babel configuration
 babel = Babel()
 app.config['BABEL_DEFAULT_LOCALE'] = 'en'
-app.config['BABEL_TRANSLATION_DIRECTORIES'] = './translations'
+app.config['BABEL_TRANSLATION_DIRECTORIES'] = os.path.join(BASE_DIR, 'translations')
 
-# Uploads directory configuration - ensure it exists
-UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER', os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads'))
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-logger.info(f"Uploads directory configured at: {UPLOAD_FOLDER}")
-
-# Database configuration
-instance_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instance')
-os.makedirs(instance_dir, exist_ok=True)
-
-# Handle PostgreSQL URL conversion for SQLAlchemy compatibility
+# Database configuration - use SQLAlchemy 2.x engine options for safer connections
 DATABASE_URL = os.environ.get('DATABASE_URL')
 if DATABASE_URL:
-    logger.info(f"Using DATABASE_URL from environment: {DATABASE_URL[:20]}...")
     # Fix Railway PostgreSQL URL format
     if DATABASE_URL.startswith('postgres://'):
-        DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
-        logger.info(f"Converted to SQLAlchemy format: {DATABASE_URL[:20]}...")
+        DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql+psycopg://', 1)
+    elif DATABASE_URL.startswith('postgresql://'):
+        DATABASE_URL = DATABASE_URL.replace('postgresql://', 'postgresql+psycopg://', 1)
     app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
+    # Safer connection pooling for Supabase/Railway
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+        'pool_pre_ping': True,
+        'pool_recycle': 300,
+        'connect_args': {'connect_timeout': 10}
+    }
 else:
     sqlite_path = f'sqlite:///{os.path.join(instance_dir, "assignments.db")}'
     app.config['SQLALCHEMY_DATABASE_URI'] = sqlite_path
-    logger.info(f"Using SQLite database: {sqlite_path}")
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['DEBUG'] = False  # Always False in production
 
 # Initialize database
 db = SQLAlchemy(app)
@@ -1089,57 +1116,53 @@ def view_submission_content(submission_id):
     return html_content
 
 # ======================================================
-# Database initialization - runs for BOTH gunicorn AND dev server
+# Database initialization - LAZY (happens AFTER gunicorn forks workers)
+# NO module-level DB access = no broken forked connections = no crashes.
 # ======================================================
-_db_initialized = False
-try:
-    logger.info("Running module-level database initialization (for Railway gunicorn)...")
-    with app.app_context():
-        init_database()
-        _db_initialized = True
-        logger.info("✅ Module-level DB init SUCCESS")
-except Exception as db_err:
-    logger.error(f"❌ Module-level DB init FAILED: {db_err}")
-    logger.exception("Detailed DB init traceback:")
-    # Don't raise - let workers start; they can retry in before_first_request
-
-# Fallback: ensure DB is initialized before the first request hits any route
-# (Flask 3.x removed before_first_request, so use before_request + flag)
-_first_request_done = False
+_db_ready_flag = False
 
 @app.before_request
-def _ensure_db_ready():
-    global _first_request_done, _db_initialized
-    if _first_request_done or _db_initialized:
+def _lazy_init():
+    global _db_ready_flag
+    if _db_ready_flag:
         return
-    _first_request_done = True
+    # Mark as attempted BEFORE running (prevent infinite retry on permanent failure)
+    _db_ready_flag = True
     try:
-        logger.info("Retrying DB init on first request...")
+        logger.info("[Lazy Init] First request received: initializing application...")
+        # 1) Try to add file log handlers now that we're in a forked & writable context
+        try:
+            log_dir = os.path.join(BASE_DIR, 'logs')
+            os.makedirs(log_dir, exist_ok=True)
+            root_logger = logging.getLogger()
+            fh1 = logging.FileHandler(os.path.join(log_dir, 'app.log'))
+            fh2 = logging.FileHandler(os.path.join(log_dir, 'error.log'), mode='a')
+            formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+            fh1.setFormatter(formatter)
+            fh2.setFormatter(formatter)
+            root_logger.addHandler(fh1)
+            root_logger.addHandler(fh2)
+        except Exception as log_add_err:
+            # Not fatal; keep using stdout
+            pass
+
+        # 2) Init DB tables & admin user
         with app.app_context():
             init_database()
-            _db_initialized = True
-            logger.info("✅ First-request DB init SUCCESS")
-    except Exception as retry_err:
-        logger.error(f"❌ First-request DB init FAILED: {retry_err}")
-        logger.exception("DB init on request traceback:")
+        logger.info("[Lazy Init] Application initialization complete ✅")
+    except Exception as lazy_err:
+        logger.error(f"[Lazy Init] FAILED: {lazy_err}")
+        logger.exception("Lazy init full traceback:")
+        # Do NOT raise - health check must still work!
 
-# Gunicorn hook: create DB tables after workers fork (best practice for gunicorn)
-def post_fork(server, worker):
-    """Called by gunicorn after forking each worker process."""
-    try:
-        logger.info(f"[gunicorn post_fork] Worker pid={os.getpid()} initializing DB...")
-        with app.app_context():
-            init_database()
-            logger.info(f"[gunicorn post_fork] Worker pid={os.getpid()} DB init SUCCESS")
-    except Exception as pf_err:
-        logger.error(f"[gunicorn post_fork] Worker DB init FAILED: {pf_err}")
-        # Do not raise - worker can still serve the health check
-
-# Start the application (dev server only; gunicorn uses app:app directly)
+# Dev server entry point
 if __name__ == '__main__':
-    if not _db_initialized:
+    # Run DB init eagerly for local development
+    try:
         with app.app_context():
             init_database()
-    
+    except Exception as dev_init_err:
+        logger.error(f"Dev init DB failed: {dev_init_err}")
+
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=True)
+    app.run(host='0.0.0.0', port=port, debug=False)
