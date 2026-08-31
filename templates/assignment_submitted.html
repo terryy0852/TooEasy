@@ -3,36 +3,36 @@
 {% block title %}Assignment Submitted{% endblock %}
 
 {% block content %}
-<h1>{{ _('Assignment Submitted') }}</h1>
+<h1>{{ 'Assignment Submitted' }}</h1>
 
 <div class="submission-success">
     <div class="success-icon">
         ✅
     </div>
-    <h2>{{ _('Your assignment has been submitted successfully!') }}</h2>
+    <h2>{{ 'Your assignment has been submitted successfully!' }}</h2>
     <p class="success-message">
-        {{ _('Thank you for completing the assignment. Your submission has been recorded and is ready for grading.') }}
+        {{ 'Thank you for completing the assignment. Your submission has been recorded and is ready for grading.' }}
     </p>
     
     {% if assignment %}
     <div class="submission-details">
-        <h3>{{ _('Submission Details') }}</h3>
+        <h3>{{ 'Submission Details' }}</h3>
         <div class="detail-item">
-            <strong>{{ _('Assignment:') }}</strong> {{ assignment.title }}
+            <strong>{{ 'Assignment:' }}</strong> {{ assignment.title }}
         </div>
         <div class="detail-item">
-            <strong>{{ _('Submitted on:') }}</strong> {{ current_time.strftime('%Y-%m-%d %H:%M') }}
+            <strong>{{ 'Submitted on:' }}</strong> {{ current_time.strftime('%Y-%m-%d %H:%M') }}
         </div>
     </div>
     {% endif %}
     
     <div class="action-buttons">
         <a href="{{ url_for('student_dashboard') }}" class="dashboard-btn">
-            {{ _('Return to Dashboard') }}
+            {{ 'Return to Dashboard' }}
         </a>
         {% if assignment %}
         <a href="{{ url_for('view_assignment', assignment_id=assignment.id) }}" class="view-btn">
-            {{ _('View HTML Assignment') }}
+            {{ 'View HTML Assignment' }}
         </a>
         {% endif %}
     </div>

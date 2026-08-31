@@ -1,25 +1,25 @@
 {% extends "base.html" %}
 
-{% block title %}{{ _('Grade Submission') }}{% endblock %}
+{% block title %}{{ 'Grade Submission' }}{% endblock %}
 
 {% block content %}
-<h1>{{ _('Grade Submission') }}</h1>
+<h1>{{ 'Grade Submission' }}</h1>
 
 {% if submission %}
 <div class="grade-submission">
     <div class="submission-details">
-        <h2>{{ _('Submission Details') }}</h2>
+        <h2>{{ 'Submission Details' }}</h2>
         <div class="detail-item">
-            <strong>{{ _('Student:') }}</strong> {{ submission.user.username }}
+            <strong>{{ 'Student:' }}</strong> {{ submission.user.username }}
         </div>
         <div class="detail-item">
-            <strong>{{ _('Assignment:') }}</strong> {{ submission.assignment.title }}
+            <strong>{{ 'Assignment:' }}</strong> {{ submission.assignment.title }}
         </div>
         <div class="detail-item">
-            <strong>{{ _('Submitted on:') }}</strong> {{ submission.submitted_at.strftime('%Y-%m-%d %H:%M') }}
+            <strong>{{ 'Submitted on:' }}</strong> {{ submission.submitted_at.strftime('%Y-%m-%d %H:%M') }}
         </div>
         <div class="detail-item">
-            <strong>{{ _('Current Grade:') }}</strong> {{ submission.grade if submission.grade else _('Not graded yet') }}
+            <strong>{{ 'Current Grade:' }}</strong> {{ submission.grade if submission.grade else _('Not graded yet') }}
         </div>
         
         <div class="submission-content">
@@ -34,7 +34,7 @@
         </div>
         
         <div class="submission-code">
-            <strong>{{ _('HTML Source Code:') }}</strong>
+            <strong>{{ 'HTML Source Code:' }}</strong>
             <div class="code-container">
                 <pre>{{ submission.content }}</pre>
             </div>
@@ -42,28 +42,28 @@
     </div>
     
     <div class="grade-form">
-        <h2>{{ _('Grade this Submission') }}</h2>
+        <h2>{{ 'Grade this Submission' }}</h2>
         <form method="POST" action="{{ url_for('grade_submission', submission_id=submission.id) }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="form-group">
-                <label for="grade">{{ _('Grade:') }}</label>
+                <label for="grade">{{ 'Grade:' }}</label>
                 <input type="text" name="grade" class="form-control" placeholder="Enter grade (e.g., 90 or A)" required>
             </div>
             <div class="form-group">
-                <label for="feedback">{{ _('Feedback (optional):') }}</label>
+                <label for="feedback">{{ 'Feedback (optional):' }}</label>
                 <textarea name="feedback" class="form-control" rows="4" placeholder="Enter feedback for the student"></textarea>
             </div>
             <div class="form-actions">
-                <button type="submit" class="submit-btn">{{ _('Save Grade') }}</button>
-                <a href="{{ url_for('view_submissions', assignment_id=submission.assignment.id) }}" class="cancel-btn">{{ _('Cancel') }}</a>
+                <button type="submit" class="submit-btn">{{ 'Save Grade' }}</button>
+                <a href="{{ url_for('view_submissions', assignment_id=submission.assignment.id) }}" class="cancel-btn">{{ 'Cancel' }}</a>
             </div>
         </form>
     </div>
 </div>
 {% else %}
 <div class="error-message">
-    <p>{{ _('Submission not found.') }}</p>
-    <a href="{{ url_for('student_dashboard') }}">{{ _('Return to Dashboard') }}</a>
+    <p>{{ 'Submission not found.' }}</p>
+    <a href="{{ url_for('student_dashboard') }}">{{ 'Return to Dashboard' }}</a>
 </div>
 {% endif %}
 

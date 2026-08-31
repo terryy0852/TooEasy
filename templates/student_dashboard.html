@@ -1,34 +1,34 @@
 {% extends "base.html" %}
 
 {% block title %}
-{% if current_user.role == 'teacher' %}{{ _('Teacher Dashboard') }}
-{% elif current_user.role == 'admin' %}{{ _('Admin Dashboard') }}
-{% else %}{{ _('Student Dashboard') }}
+{% if current_user.role == 'teacher' %}{{ 'Teacher Dashboard' }}
+{% elif current_user.role == 'admin' %}{{ 'Admin Dashboard' }}
+{% else %}{{ 'Student Dashboard' }}
 {% endif %}
 {% endblock %}
 
 {% block content %}
 <h1>
-{% if current_user.role == 'teacher' %}{{ _('Teacher Dashboard') }}
-{% elif current_user.role == 'admin' %}{{ _('Admin Dashboard') }}
-{% else %}{{ _('Student Dashboard') }}
+{% if current_user.role == 'teacher' %}{{ 'Teacher Dashboard' }}
+{% elif current_user.role == 'admin' %}{{ 'Admin Dashboard' }}
+{% else %}{{ 'Student Dashboard' }}
 {% endif %}
 </h1>
 
 <div class="dashboard-header">
-    <h2>{{ _('Welcome,') }} {{ current_user.username }}!</h2>
+    <h2>{{ 'Welcome,' }} {{ current_user.username }}!</h2>
     <div class="user-info">
-        <span>{{ _('Role:') }} {{ current_user.role }}</span>
-        <a href="{{ url_for('logout') }}">{{ _('Logout') }}</a>
+        <span>{{ 'Role:' }} {{ current_user.role }}</span>
+        <a href="{{ url_for('logout') }}">{{ 'Logout' }}</a>
     </div>
 </div>
 
 {% if assignments %}
 <div class="assignments-list">
     {% if current_user.role == 'student' %}
-    <h3>{{ _('Available Assignments') }}</h3>
+    <h3>{{ 'Available Assignments' }}</h3>
     {% else %}
-    <h3>{{ _('All Assignments') }}</h3>
+    <h3>{{ 'All Assignments' }}</h3>
     {% endif %}
     <ul>
         {% for assignment in assignments %}
@@ -37,14 +37,14 @@
                 <h4>{{ assignment.title }}</h4>
                 <div class="assignment-badges">
                     <span class="assignment-status">{{ _('Active') if assignment.is_active else _('Inactive') }}</span>
-                    <span class="html-badge">{{ _('HTML Assignment') }}</span>
+                    <span class="html-badge">{{ 'HTML Assignment' }}</span>
                 </div>
             </div>
             <p>{{ assignment.description[:100] }}...</p>
             <div class="assignment-meta">
-                <span>{{ _('Created:') }} {{ assignment.created_at.strftime('%Y-%m-%d') }}</span>
+                <span>{{ 'Created:' }} {{ assignment.created_at.strftime('%Y-%m-%d') }}</span>
                 {% if assignment.due_date %}
-                <span>{{ _('Due:') }} {{ assignment.due_date.strftime('%Y-%m-%d') }}</span>
+                <span>{{ 'Due:' }} {{ assignment.due_date.strftime('%Y-%m-%d') }}</span>
                 {% endif %}
             </div>
             <div class="assignment-actions">
@@ -52,23 +52,23 @@
                 <!-- Student view: Show submission status -->
                 {% if assignment_submissions and assignment_submissions[assignment.id] %}
                     <!-- Assignment already submitted -->
-                    <span class="submitted-badge">{{ _('Submitted') }}</span>
-                    <span class="submission-status">{{ _('Pending Grading') }}</span>
+                    <span class="submitted-badge">{{ 'Submitted' }}</span>
+                    <span class="submission-status">{{ 'Pending Grading' }}</span>
                 {% else %}
                     <!-- Assignment not submitted yet -->
                     <a href="{{ url_for('view_assignment', assignment_id=assignment.id) }}?v=2" class="view-btn html-btn" target="_blank" onclick="openHTMLAssignment(event, {{ assignment.id }})" data-assignment-id="{{ assignment.id }}">
-                        {{ _('Complete HTML Assignment') }}
+                        {{ 'Complete HTML Assignment' }}
                     </a>
                 {% endif %}
                 {% else %}
                 <!-- Teacher/Admin view: Show management options -->
                 <a href="{{ url_for('view_submissions', assignment_id=assignment.id) }}" class="view-btn submissions-btn">
-                    {{ _('View Submissions') }}
+                    {{ 'View Submissions' }}
                 </a>
                 {% if current_user.role in ['admin', 'teacher'] and (current_user.role == 'admin' or assignment.created_by == current_user.id) %}
                 <form action="{{ url_for('delete_assignment', assignment_id=assignment.id) }}" method="post" class="delete-form" onsubmit="return confirmDeleteAssignment()">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="delete-btn">{{ _('Delete Assignment') }}</button>
+                    <button type="submit" class="delete-btn">{{ 'Delete Assignment' }}</button>
                 </form>
                 {% endif %}
                 {% endif %}
@@ -79,19 +79,19 @@
 </div>
 {% else %}
 <div class="no-assignments">
-    <p>{{ _('There are no assignments available at the moment.') }}</p>
+    <p>{{ 'There are no assignments available at the moment.' }}</p>
 </div>
 {% endif %}
 
 {% if current_user.role in ['admin', 'teacher'] %}
 <div class="admin-section">
-    <h3>{{ _('Admin/Teacher Options') }}</h3>
+    <h3>{{ 'Admin/Teacher Options' }}</h3>
     <a href="{{ url_for('create_assignment') }}" class="create-btn">
-        {{ _('Create New Assignment') }}
+        {{ 'Create New Assignment' }}
     </a>
     {% if current_user.role == 'admin' %}
     <a href="{{ url_for('admin_users') }}" class="admin-btn">
-        {{ _('Manage Users') }}
+        {{ 'Manage Users' }}
     </a>
     {% endif %}
 </div>

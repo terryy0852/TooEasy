@@ -3,52 +3,52 @@
 {% block title %}Create Assignment{% endblock %}
 
 {% block content %}
-<h1>{{ _('Create New Assignment') }}</h1>
+<h1>{{ 'Create New Assignment' }}</h1>
 
 <div class="create-assignment-form">
     <form method="POST" action="{{ url_for('create_assignment') }}" enctype="multipart/form-data">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="form-group">
-            <label for="title">{{ _('Title') }}</label>
+            <label for="title">{{ 'Title' }}</label>
             <input type="text" id="title" name="title" required>
         </div>
         
         <div class="form-group">
-            <label for="description">{{ _('Description') }}</label>
+            <label for="description">{{ 'Description' }}</label>
             <textarea id="description" name="description" rows="6" required></textarea>
         </div>
         
         <div class="form-group">
-            <label for="html_file">{{ _('HTML File') }}</label>
+            <label for="html_file">{{ 'HTML File' }}</label>
             <input type="file" id="html_file" name="html_file" accept=".html" required>
-            <small style="color: #666; font-size: 0.9em;">{{ _('Upload an HTML file for interactive assignment') }}</small>
+            <small style="color: #666; font-size: 0.9em;">{{ 'Upload an HTML file for interactive assignment' }}</small>
         </div>
         
         <div class="form-group">
-            <label for="due_date">{{ _('Due Date (Optional)') }}</label>
+            <label for="due_date">{{ 'Due Date (Optional)' }}</label>
             <input type="datetime-local" id="due_date" name="due_date">
         </div>
         
         <div class="form-group">
-            <label for="student_ids">{{ _('Assign to Students') }}</label>
+            <label for="student_ids">{{ 'Assign to Students' }}</label>
             <select id="student_ids" name="student_ids" multiple size="5" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                 {% for student in students %}
                 <option value="{{ student.id }}">{{ student.username }} ({{ student.email }})</option>
                 {% endfor %}
             </select>
-            <small style="color: #666; font-size: 0.9em;">{{ _('Hold Ctrl (or Cmd on Mac) to select multiple students. If none selected, assignment will be given to all students.') }}</small>
+            <small style="color: #666; font-size: 0.9em;">{{ 'Hold Ctrl (or Cmd on Mac) to select multiple students. If none selected, assignment will be given to all students.' }}</small>
         </div>
         
         <div class="form-group">
-            <label for="is_active">{{ _('Active') }}</label>
+            <label for="is_active">{{ 'Active' }}</label>
             <input type="checkbox" id="is_active" name="is_active" checked>
         </div>
         
-        <button type="submit" class="create-btn">{{ _('Create Assignment') }}</button>
+        <button type="submit" class="create-btn">{{ 'Create Assignment' }}</button>
     </form>
     
     <div class="back-link">
-        <a href="{{ url_for('student_dashboard') }}">{{ _('Back to Dashboard') }}</a>
+        <a href="{{ url_for('student_dashboard') }}">{{ 'Back to Dashboard' }}</a>
     </div>
 </div>
 

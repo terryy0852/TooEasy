@@ -1,28 +1,28 @@
 {% extends "base.html" %}
 
-{% block title %}{{ _('View Submissions') }}{% endblock %}
+{% block title %}{{ 'View Submissions' }}{% endblock %}
 
 {% block content %}
-<h1>{{ _('View Submissions') }}</h1>
+<h1>{{ 'View Submissions' }}</h1>
 
 {% if assignment %}
 <div class="assignment-submissions">
     <div class="assignment-info">
-        <h2>{{ _('Assignment:') }} {{ assignment.title }}</h2>
+        <h2>{{ 'Assignment:' }} {{ assignment.title }}</h2>
         <span class="assignment-status">{{ _('Active') if assignment.is_active else _('Inactive') }}</span>
     </div>
     
     {% if submissions %}
     <div class="submissions-table">
-        <h3>{{ _('Student Submissions') }}</h3>
+        <h3>{{ 'Student Submissions' }}</h3>
         <table>
             <thead>
                 <tr>
-                    <th>{{ _('Student') }}</th>
-                    <th>{{ _('Submission Date') }}</th>
-                    <th>{{ _('Answer Preview') }}</th>
-                    <th>{{ _('Grade') }}</th>
-                    <th>{{ _('Actions') }}</th>
+                    <th>{{ 'Student' }}</th>
+                    <th>{{ 'Submission Date' }}</th>
+                    <th>{{ 'Answer Preview' }}</th>
+                    <th>{{ 'Grade' }}</th>
+                    <th>{{ 'Actions' }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -32,13 +32,13 @@
                     <td>{{ submission.submitted_at.strftime('%Y-%m-%d %H:%M') }}</td>
                     <td class="submission-preview">
                         <a href="{{ url_for('view_submission_content', submission_id=submission.id) }}" target="_blank" class="preview-btn">
-                            {{ _('View Answer') }}
+                            {{ 'View Answer' }}
                         </a>
                     </td>
                     <td>{{ submission.grade if submission.grade else '-' }}</td>
                     <td>
                         <a href="{{ url_for('grade_submission', submission_id=submission.id) }}" class="grade-btn">
-                            {{ _('Grade') }}
+                            {{ 'Grade' }}
                         </a>
                     </td>
                 </tr>
@@ -48,14 +48,14 @@
     </div>
     {% else %}
     <div class="no-submissions">
-        <p>{{ _('No submissions yet.') }}</p>
+        <p>{{ 'No submissions yet.' }}</p>
     </div>
     {% endif %}
 </div>
 {% else %}
 <div class="error-message">
-    <p>{{ _('Assignment not found.') }}</p>
-    <a href="{{ url_for('student_dashboard') }}">{{ _('Return to Dashboard') }}</a>
+    <p>{{ 'Assignment not found.' }}</p>
+    <a href="{{ url_for('student_dashboard') }}">{{ 'Return to Dashboard' }}</a>
 </div>
 {% endif %}
 
