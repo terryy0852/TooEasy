@@ -1,5 +1,5 @@
-# MINIMAL BULLETPROOF VERSION - Login page renders without any DB/Babel complexity
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_from_directory
+# MINIMAL STABLE VERSION - Focus on reliability over features
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from flask_wtf.csrf import CSRFProtect
@@ -9,7 +9,7 @@ import os
 import sys
 import logging
 
-# Ultra-simple logging - stdout only, never fails
+# Simple logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
@@ -19,58 +19,38 @@ logger = logging.getLogger(__name__)
 
 # Create Flask app
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
-app.config['DEBUG'] = False
-app.config['TESTING'] = False
+app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-for-testing')
 
-# Session config
-app.config['SESSION_COOKIE_HTTPONLY'] = True
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-
-# CSRF (needed for forms but won't crash if broken)
-try:
-    csrf = CSRFProtect(app)
-except Exception as e:
-    logger.warning(f"CSRF init warning (non-fatal): {e}")
-
-# Uploads directory - simple, with fallback to /tmp
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-try:
-    UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER', os.path.join(BASE_DIR, 'uploads'))
-    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-except Exception:
-    import tempfile
-    UPLOAD_FOLDER = os.path.join(tempfile.gettempdir(), 'uploads')
-    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
-# Database config - USE POSTGRES if DATABASE_URL exists, else SQLite fallback
+# Database configuration - try PostgreSQL first, fallback to SQLite
 DATABASE_URL = os.environ.get('DATABASE_URL')
 if DATABASE_URL:
-    # Convert to psycopg v3 format
+    # Convert postgres:// to postgresql:// for SQLAlchemy
     if DATABASE_URL.startswith('postgres://'):
-        DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql+psycopg://', 1)
-    elif DATABASE_URL.startswith('postgresql://'):
-        DATABASE_URL = DATABASE_URL.replace('postgresql://', 'postgresql+psycopg://', 1)
+        DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
     app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
     logger.info("Using PostgreSQL database")
 else:
-    # SQLite fallback
-    instance_dir = os.path.join(BASE_DIR, 'instance')
-    os.makedirs(instance_dir, exist_ok=True)
-    sqlite_path = f'sqlite:///{os.path.join(instance_dir, "assignments.db")}'
-    app.config['SQLALCHEMY_DATABASE_URI'] = sqlite_path
-    logger.info("Using SQLite database")
+    # SQLite fallback for local development
+    basedir = os.path.abspath(os.path.dirname(__file__))
+    instance_path = os.path.join(basedir, 'instance')
+    os.makedirs(instance_path, exist_ok=True)
+    sqlite_path = os.path.join(instance_path, 'app.db')
+    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{sqlite_path}'
+    logger.info(f"Using SQLite database: {sqlite_path}")
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Initialize SQLAlchemy
+# Initialize extensions
 db = SQLAlchemy(app)
-
-# Login manager
 login_manager = LoginManager()
-login_manager.login_view = 'login'
 login_manager.init_app(app)
+login_manager.login_view = 'login'
+
+# CSRF protection (with fallback if it fails)
+try:
+    csrf = CSRFProtect(app)
+except Exception as e:
+    logger.warning(f"CSRF initialization failed (non-critical): {e}")
 
 # Database Models
 class User(UserMixin, db.Model):
@@ -87,9 +67,6 @@ class User(UserMixin, db.Model):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
-
-    def __repr__(self):
-        return f'<User {self.username}>'
 
 class Assignment(db.Model):
     __tablename__ = 'assignment'
@@ -118,37 +95,22 @@ class Submission(db.Model):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# Database initialization
-_db_initialized = False
-
-def init_database():
-    global _db_initialized
-    if _db_initialized:
-        return True
-    try:
-        logger.info("Initializing database...")
-        db.create_all()
-        
-        # Create admin user if doesn't exist
+# Initialize database tables
+def init_db():
+    with app.app_context():
         try:
+            db.create_all()
+            # Create admin user if doesn't exist
             admin = User.query.filter_by(username='admin').first()
             if not admin:
-                logger.info("Creating admin user...")
                 admin = User(username='admin', email='admin@example.com', role='admin')
                 admin.set_password('admin123')
                 db.session.add(admin)
                 db.session.commit()
                 logger.info("Admin user created")
-        except Exception as admin_err:
-            logger.warning(f"Admin creation warning: {admin_err}")
-            db.session.rollback()
-        
-        _db_initialized = True
-        logger.info("Database initialized successfully")
-        return True
-    except Exception as e:
-        logger.error(f"Database initialization error: {e}")
-        return False
+            logger.info("Database initialized successfully")
+        except Exception as e:
+            logger.error(f"Database initialization error: {e}")
 
 # Routes
 @app.route('/')
@@ -156,15 +118,12 @@ def index():
     return redirect(url_for('login'))
 
 @app.route('/health')
-def health_check():
-    return jsonify({"status": "healthy", "timestamp": datetime.utcnow().isoformat(), "version": "1.0"})
+def health():
+    return jsonify({"status": "healthy", "timestamp": datetime.utcnow().isoformat()})
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        # Only initialize DB when user actually tries to login
-        init_database()
-        
         try:
             username = request.form['username']
             password = request.form['password']
@@ -173,13 +132,13 @@ def login():
             if user and user.check_password(password):
                 login_user(user, remember=True)
                 session.permanent = True
-                flash('Login successful!')
+                flash('Login successful!', 'success')
                 return redirect(url_for('student_dashboard'))
             else:
-                flash('Invalid username or password')
-        except Exception as login_err:
-            logger.error(f"Login error: {login_err}")
-            flash('Login error. Please try again.')
+                flash('Invalid username or password', 'error')
+        except Exception as e:
+            logger.error(f"Login error: {e}")
+            flash('Login error. Please try again.', 'error')
     
     return render_template('login.html')
 
@@ -187,50 +146,50 @@ def login():
 @login_required
 def logout():
     logout_user()
-    flash('You have been logged out.')
+    flash('You have been logged out.', 'info')
     return redirect(url_for('login'))
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        init_database()
-        
         try:
             username = request.form['username']
             email = request.form['email']
             password = request.form['password']
             role = request.form.get('role', 'student')
             
+            # Check if user exists
             if User.query.filter_by(username=username).first():
-                flash('Username already exists')
+                flash('Username already exists', 'error')
                 return redirect(url_for('register'))
             
             if User.query.filter_by(email=email).first():
-                flash('Email already registered')
+                flash('Email already registered', 'error')
                 return redirect(url_for('register'))
             
+            # Create new user
             new_user = User(username=username, email=email, role=role)
             new_user.set_password(password)
             
             db.session.add(new_user)
             db.session.commit()
-            flash('Registration successful! Please login.')
+            
+            flash('Registration successful! Please login.', 'success')
             return redirect(url_for('login'))
-        except Exception as reg_err:
+            
+        except Exception as e:
             db.session.rollback()
-            logger.error(f"Registration error: {reg_err}")
-            flash('Registration failed. Please try again.')
+            logger.error(f"Registration error: {e}")
+            flash('Registration failed. Please try again.', 'error')
     
     return render_template('register.html')
 
 @app.route('/student_dashboard')
 @login_required
 def student_dashboard():
-    init_database()
-    
     try:
         if current_user.role == 'student':
-            # Get assignments assigned to this student
+            # Get all assignments
             all_assignments = Assignment.query.all()
             student_assignments = []
             
@@ -247,7 +206,7 @@ def student_dashboard():
                                  assignments=student_assignments,
                                  submissions=submissions)
         
-        elif current_user.role == 'teacher' or current_user.role == 'admin':
+        elif current_user.role in ['teacher', 'admin']:
             # Get all students
             students = User.query.filter_by(role='student').all()
             
@@ -264,24 +223,21 @@ def student_dashboard():
     
     except Exception as e:
         logger.error(f"Dashboard error: {e}")
-        flash('Error loading dashboard')
+        flash('Error loading dashboard', 'error')
         return redirect(url_for('login'))
 
-# Create assignment route (teachers only)
 @app.route('/create_assignment', methods=['GET', 'POST'])
 @login_required
 def create_assignment():
     if current_user.role not in ['teacher', 'admin']:
-        flash('Permission denied')
+        flash('Permission denied', 'error')
         return redirect(url_for('student_dashboard'))
-    
-    init_database()
     
     if request.method == 'POST':
         try:
             title = request.form['title']
             description = request.form['description']
-            student_ids = request.form.getlist('students')  # List of selected student IDs
+            student_ids = request.form.getlist('students')
             html_file = request.files.get('html_file')
             
             # Save uploaded file if provided
@@ -303,13 +259,13 @@ def create_assignment():
             db.session.add(assignment)
             db.session.commit()
             
-            flash('Assignment created successfully!')
+            flash('Assignment created successfully!', 'success')
             return redirect(url_for('student_dashboard'))
             
         except Exception as e:
             db.session.rollback()
             logger.error(f"Assignment creation error: {e}")
-            flash('Error creating assignment')
+            flash('Error creating assignment', 'error')
     
     # GET request - show form
     try:
@@ -317,18 +273,15 @@ def create_assignment():
         return render_template('create_assignment.html', students=students)
     except Exception as e:
         logger.error(f"Create assignment form error: {e}")
-        flash('Error loading form')
+        flash('Error loading form', 'error')
         return redirect(url_for('student_dashboard'))
 
-# Submit assignment route (students only)
 @app.route('/submit_assignment/<int:assignment_id>', methods=['GET', 'POST'])
 @login_required
 def submit_assignment(assignment_id):
     if current_user.role != 'student':
-        flash('Permission denied')
+        flash('Permission denied', 'error')
         return redirect(url_for('student_dashboard'))
-    
-    init_database()
     
     try:
         assignment = Assignment.query.get_or_404(assignment_id)
@@ -337,7 +290,7 @@ def submit_assignment(assignment_id):
         if assignment.student_ids:
             student_id_list = [int(id.strip()) for id in assignment.student_ids.split(',') if id.strip()]
             if current_user.id not in student_id_list:
-                flash('You are not assigned to this assignment')
+                flash('You are not assigned to this assignment', 'error')
                 return redirect(url_for('student_dashboard'))
         
         if request.method == 'POST':
@@ -367,27 +320,24 @@ def submit_assignment(assignment_id):
                     db.session.add(submission)
                 
                 db.session.commit()
-                flash('Assignment submitted successfully!')
+                flash('Assignment submitted successfully!', 'success')
                 return redirect(url_for('student_dashboard'))
             else:
-                flash('Please upload an HTML file')
+                flash('Please upload an HTML file', 'error')
         
         return render_template('submit_assignment.html', assignment=assignment)
         
     except Exception as e:
         logger.error(f"Assignment submission error: {e}")
-        flash('Error processing submission')
+        flash('Error processing submission', 'error')
         return redirect(url_for('student_dashboard'))
 
-# View submission route (teachers only)
 @app.route('/view_submission/<int:submission_id>')
 @login_required
 def view_submission(submission_id):
     if current_user.role not in ['teacher', 'admin']:
-        flash('Permission denied')
+        flash('Permission denied', 'error')
         return redirect(url_for('student_dashboard'))
-    
-    init_database()
     
     try:
         submission = Submission.query.get_or_404(submission_id)
@@ -412,18 +362,15 @@ def view_submission(submission_id):
     
     except Exception as e:
         logger.error(f"View submission error: {e}")
-        flash('Error viewing submission')
+        flash('Error viewing submission', 'error')
         return redirect(url_for('student_dashboard'))
 
-# Delete assignment route (teachers only)
 @app.route('/delete_assignment/<int:assignment_id>', methods=['POST'])
 @login_required
 def delete_assignment(assignment_id):
     if current_user.role not in ['teacher', 'admin']:
-        flash('Permission denied')
+        flash('Permission denied', 'error')
         return redirect(url_for('student_dashboard'))
-    
-    init_database()
     
     try:
         assignment = Assignment.query.get_or_404(assignment_id)
@@ -448,31 +395,41 @@ def delete_assignment(assignment_id):
         db.session.delete(assignment)
         db.session.commit()
         
-        flash('Assignment deleted successfully!')
+        flash('Assignment deleted successfully!', 'success')
         
     except Exception as e:
         db.session.rollback()
         logger.error(f"Delete assignment error: {e}")
-        flash('Error deleting assignment')
+        flash('Error deleting assignment', 'error')
     
     return redirect(url_for('student_dashboard'))
 
-# Error handlers
-@app.errorhandler(404)
-def not_found_error(error):
-    return render_template('404.html'), 404
+# Initialize database on first request
+_db_initialized = False
 
-@app.errorhandler(500)
-def internal_error(error):
-    db.session.rollback()
-    return render_template('500.html'), 500
+@app.before_request
+def initialize_database():
+    global _db_initialized
+    if _db_initialized:
+        return
+    
+    try:
+        db.create_all()
+        
+        # Create admin user if doesn't exist
+        admin = User.query.filter_by(username='admin').first()
+        if not admin:
+            admin = User(username='admin', email='admin@example.com', role='admin')
+            admin.set_password('admin123')
+            db.session.add(admin)
+            db.session.commit()
+            logger.info("Admin user created")
+        
+        _db_initialized = True
+        logger.info("Database initialized successfully")
+    except Exception as e:
+        logger.error(f"Database initialization error: {e}")
 
-# Context processors
-@app.context_processor
-def inject_now():
-    return {'now': datetime.utcnow()}
-
-# Main entry point
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
