@@ -1,1205 +1,478 @@
-# Flask Application for Educational Platform
+# MINIMAL BULLETPROOF VERSION - Login page renders without any DB/Babel complexity
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
-try:
-    from flask_babel import Babel, gettext as _
-    BABEL_AVAILABLE = True
-except Exception as babel_import_err:
-    BABEL_AVAILABLE = False
-    # Fallback: make gettext a no-op identity function so every _(str) works
-    def _(s, **kwargs):
-        if kwargs:
-            try:
-                return s.format(**kwargs)
-            except Exception:
-                return s
-        return s
-    class Babel:
-        def __init__(self, *a, **kw): pass
-        def init_app(self, *a, **kw): pass
-
 from flask_wtf.csrf import CSRFProtect
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 import os
-import json
-import logging
 import sys
-from sqlalchemy import text
+import logging
 
-# ============================================================
-# LOGGING: stdout ONLY at import time (no disk writes).
-# File handlers added LATER only if writable dir confirmed.
-# ============================================================
+# Ultra-simple logging - stdout only, never fails
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[logging.StreamHandler(sys.stdout)],
-    force=True
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[logging.StreamHandler(sys.stdout)]
 )
 logger = logging.getLogger(__name__)
 
-# Initialize Flask app with proper error handling
+# Create Flask app
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'fallback-secret-key-change-in-production')
-
-# Configure Flask
-app.config['PROPAGATE_EXCEPTIONS'] = False
+app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
 app.config['DEBUG'] = False
 app.config['TESTING'] = False
 
-# Session configuration
-app.config['SESSION_COOKIE_SECURE'] = False
+# Session config
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-app.config['PERMANENT_SESSION_LIFETIME'] = 3600
 
-# Initialize CSRF protection
-csrf = CSRFProtect(app)
+# CSRF (needed for forms but won't crash if broken)
+try:
+    csrf = CSRFProtect(app)
+except Exception as e:
+    logger.warning(f"CSRF init warning (non-fatal): {e}")
 
-# Uploads directory configuration - wrap in try/except
+# Uploads directory - simple, with fallback to /tmp
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 try:
     UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER', os.path.join(BASE_DIR, 'uploads'))
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-    app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-except Exception as up_err:
-    # Fallback to /tmp/uploads if configured path is unwritable
+except Exception:
     import tempfile
     UPLOAD_FOLDER = os.path.join(tempfile.gettempdir(), 'uploads')
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-    app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# Instance dir
-try:
-    instance_dir = os.path.join(BASE_DIR, 'instance')
-    os.makedirs(instance_dir, exist_ok=True)
-except Exception:
-    import tempfile
-    instance_dir = tempfile.gettempdir()
-
-# Babel configuration
-babel = Babel()
-app.config['BABEL_DEFAULT_LOCALE'] = 'en'
-app.config['BABEL_TRANSLATION_DIRECTORIES'] = os.path.join(BASE_DIR, 'translations')
-
-# Database configuration - use SQLAlchemy 2.x engine options for safer connections
+# Database config - USE POSTGRES if DATABASE_URL exists, else SQLite fallback
 DATABASE_URL = os.environ.get('DATABASE_URL')
 if DATABASE_URL:
-    # Fix Railway PostgreSQL URL format
+    # Convert to psycopg v3 format
     if DATABASE_URL.startswith('postgres://'):
         DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql+psycopg://', 1)
     elif DATABASE_URL.startswith('postgresql://'):
         DATABASE_URL = DATABASE_URL.replace('postgresql://', 'postgresql+psycopg://', 1)
     app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
-    # Safer connection pooling for Supabase/Railway
-    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-        'pool_pre_ping': True,
-        'pool_recycle': 300,
-        'connect_args': {'connect_timeout': 10}
-    }
+    logger.info("Using PostgreSQL database")
 else:
+    # SQLite fallback
+    instance_dir = os.path.join(BASE_DIR, 'instance')
+    os.makedirs(instance_dir, exist_ok=True)
     sqlite_path = f'sqlite:///{os.path.join(instance_dir, "assignments.db")}'
     app.config['SQLALCHEMY_DATABASE_URI'] = sqlite_path
+    logger.info("Using SQLite database")
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Initialize database
+# Initialize SQLAlchemy
 db = SQLAlchemy(app)
 
-# User model
-class User(db.Model, UserMixin):
+# Login manager
+login_manager = LoginManager()
+login_manager.login_view = 'login'
+login_manager.init_app(app)
+
+# Database Models
+class User(UserMixin, db.Model):
+    __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(100), unique=True, nullable=False)
-    email = db.Column(db.String(100), unique=True, nullable=False)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
-    role = db.Column(db.String(50), nullable=False, default='student')
+    role = db.Column(db.String(20), default='student')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
+
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
-    
+
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-# Association table for student assignments
-student_assignment = db.Table('student_assignment',
-    db.Column('student_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
-    db.Column('assignment_id', db.Integer, db.ForeignKey('assignment.id'), primary_key=True),
-    db.Column('assigned_at', db.DateTime, default=datetime.utcnow)
-)
+    def __repr__(self):
+        return f'<User {self.username}>'
 
-# Assignment model
 class Assignment(db.Model):
+    __tablename__ = 'assignment'
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
-    description = db.Column(db.Text, nullable=False)
-    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    description = db.Column(db.Text)
+    file_path = db.Column(db.String(500))
+    student_ids = db.Column(db.Text)
+    assigned_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    due_date = db.Column(db.DateTime, nullable=True)
-    is_active = db.Column(db.Boolean, default=True)
     
-    # All assignments are now HTML assignments
-    html_filename = db.Column(db.String(255), nullable=True)  # Name of uploaded HTML file
-    html_content = db.Column(db.Text, nullable=True)  # Content of HTML assignment
-    
-    # Relationship to students (many-to-many)
-    assigned_students = db.relationship('User', secondary=student_assignment, backref='assigned_assignments', lazy='dynamic')
+    teacher = db.relationship('User', backref='assignments', lazy=True)
 
-# Submission model
 class Submission(db.Model):
+    __tablename__ = 'submission'
     id = db.Column(db.Integer, primary_key=True)
     assignment_id = db.Column(db.Integer, db.ForeignKey('assignment.id'), nullable=False)
     student_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    content = db.Column(db.Text, nullable=False)
+    file_path = db.Column(db.String(500))
     submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
-    grade = db.Column(db.Float, nullable=True)
-    feedback = db.Column(db.Text, nullable=True)
-    screenshot_filename = db.Column(db.String(255), nullable=True)
     
     assignment = db.relationship('Assignment', backref='submissions', lazy=True)
-    user = db.relationship('User', backref='submissions', lazy=True)
-
-# Setup Flask-Login
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = 'login'
-login_manager.login_message = 'Please log in to access this page.'
-login_manager.session_protection = 'strong'
+    student = db.relationship('User', backref='submissions', lazy=True)
 
 @login_manager.user_loader
 def load_user(user_id):
-    try:
-        return User.query.get(int(user_id))
-    except Exception as e:
-        logger.error(f"Error loading user {user_id}: {e}")
-        return None
+    return User.query.get(int(user_id))
 
-# Babel locale selector
-def get_locale():
-    try:
-        if 'language' in session:
-            return session['language']
-        return request.accept_languages.best_match(['zh_CN', 'en', 'zh_TW']) or 'en'
-    except Exception as e:
-        logger.error(f"Error in locale selector: {e}")
-        return 'en'
-
-babel.init_app(app, locale_selector=get_locale)
-
-# Health check endpoint for Railway
-@app.route('/health')
-def health_check():
-    return jsonify({
-        'status': 'healthy',
-        'timestamp': datetime.utcnow().isoformat(),
-        'version': '1.0'
-    }), 200
-
-# Route to serve files from uploads directory
-@app.route('/uploads/<path:filename>')
-def serve_uploaded_file(filename):
-    try:
-        return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
-    except Exception as e:
-        logger.error(f"Error serving file {filename}: {e}")
-        return "File not found", 404
-
-_db_init_completed = False
+# Database initialization
+_db_initialized = False
 
 def init_database():
-    """Safely init DB. Returns True on success, False on failure. NEVER raises."""
-    global _db_init_completed
-    if _db_init_completed:
+    global _db_initialized
+    if _db_initialized:
         return True
     try:
-        logger.info("Initializing database (safe mode)...")
-        # Step 1: Verify engine can connect (use engine.connect() directly - NO raw session queries)
+        logger.info("Initializing database...")
+        db.create_all()
+        
+        # Create admin user if doesn't exist
         try:
-            with db.engine.connect() as conn:
-                conn.commit()
-            logger.info("Database engine connection OK")
-        except Exception as conn_err:
-            logger.error(f"DB engine connect test skipped/failed (continuing anyway): {conn_err}")
-
-        # Step 2: Check existing tables via inspect (safe)
-        try:
-            from sqlalchemy import inspect
-            inspector = inspect(db.engine)
-            existing_tables = inspector.get_table_names()
-        except Exception as insp_err:
-            logger.warning(f"Could not inspect tables ({insp_err}), assuming none and running create_all")
-            existing_tables = []
-
-        # Step 3: create_all (idempotent, no-op if tables exist)
-        if not existing_tables:
-            logger.info("Running db.create_all()...")
-            try:
-                db.create_all()
-                logger.info("db.create_all() completed")
-            except Exception as ca_err:
-                logger.error(f"db.create_all() failed: {ca_err}")
-                return False
-        else:
-            logger.info(f"DB has {len(existing_tables)} tables already; preserving data")
-
-        # Step 4: Create admin user if missing (wrapped in fresh session + rollback on fail)
-        try:
-            admin_user = User.query.filter_by(username='admin').first()
-            if not admin_user:
-                logger.info("Creating default admin user...")
-                admin_user = User(username='admin', email='admin@example.com', role='admin')
-                admin_user.set_password('admin123')
-                db.session.add(admin_user)
+            admin = User.query.filter_by(username='admin').first()
+            if not admin:
+                logger.info("Creating admin user...")
+                admin = User(username='admin', email='admin@example.com', role='admin')
+                admin.set_password('admin123')
+                db.session.add(admin)
                 db.session.commit()
                 logger.info("Admin user created")
         except Exception as admin_err:
+            logger.warning(f"Admin creation warning: {admin_err}")
             db.session.rollback()
-            logger.warning(f"Admin user creation skipped: {admin_err}")
-
-        _db_init_completed = True
-        logger.info("✅ Database initialization complete (safe mode)")
+        
+        _db_initialized = True
+        logger.info("Database initialized successfully")
         return True
     except Exception as e:
-        logger.critical(f"init_database() FAILED (caught at outer level): {e}")
-        logger.exception("Detailed DB init error:")
-        try:
-            db.session.rollback()
-        except Exception:
-            pass
+        logger.error(f"Database initialization error: {e}")
         return False
 
-
-def ensure_db_ready():
-    """Small helper: try to init DB exactly once per request-context that needs it.
-    Never raises. Logs only."""
-    global _db_init_completed
-    if _db_init_completed:
-        return True
-    ok = init_database()
-    if not ok:
-        logger.warning("ensure_db_ready() -> init returned False. App may run with limited DB functionality.")
-    return ok
-
-# Routes and application logic
+# Routes
 @app.route('/')
 def index():
     return redirect(url_for('login'))
 
+@app.route('/health')
+def health_check():
+    return jsonify({"status": "healthy", "timestamp": datetime.utcnow().isoformat(), "version": "1.0"})
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        # Initialise DB ONLY when user actually tries to log in
-        ensure_db_ready()
+        # Only initialize DB when user actually tries to login
+        init_database()
+        
         try:
             username = request.form['username']
             password = request.form['password']
-
+            
             user = User.query.filter_by(username=username).first()
             if user and user.check_password(password):
                 login_user(user, remember=True)
                 session.permanent = True
-                flash(_('Login successful!'))
-                if user.role == 'admin' or user.role == 'teacher':
-                    return redirect(url_for('student_dashboard'))
-                else:
-                    return redirect(url_for('student_dashboard'))
+                flash('Login successful!')
+                return redirect(url_for('student_dashboard'))
             else:
-                flash(_('Invalid username or password'))
+                flash('Invalid username or password')
         except Exception as login_err:
-            logger.error(f"Login POST error: {login_err}")
-            flash(_('Login error. Please try again.'))
-
-    # GET /login: NEVER TOUCHES DB. Worker-safe.
+            logger.error(f"Login error: {login_err}")
+            flash('Login error. Please try again.')
+    
     return render_template('login.html')
 
 @app.route('/logout')
 @login_required
 def logout():
     logout_user()
-    flash(_('You have been logged out.'))
+    flash('You have been logged out.')
     return redirect(url_for('login'))
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        ensure_db_ready()
+        init_database()
+        
         try:
             username = request.form['username']
             email = request.form['email']
             password = request.form['password']
             role = request.form.get('role', 'student')
-
+            
             if User.query.filter_by(username=username).first():
-                flash(_('Username already exists'))
+                flash('Username already exists')
                 return redirect(url_for('register'))
-
+            
             if User.query.filter_by(email=email).first():
-                flash(_('Email already registered'))
+                flash('Email already registered')
                 return redirect(url_for('register'))
-
+            
             new_user = User(username=username, email=email, role=role)
             new_user.set_password(password)
-
+            
             db.session.add(new_user)
             db.session.commit()
-            flash(_('Registration successful! Please login.'))
+            flash('Registration successful! Please login.')
             return redirect(url_for('login'))
         except Exception as reg_err:
             db.session.rollback()
-            logger.error(f"Register POST error: {reg_err}")
-            flash(_('Registration failed. Please try again.'))
-
-    # GET /register: no DB
+            logger.error(f"Registration error: {reg_err}")
+            flash('Registration failed. Please try again.')
+    
     return render_template('register.html')
 
 @app.route('/student_dashboard')
 @login_required
 def student_dashboard():
-    ensure_db_ready()
-    logger.debug(f"Accessing student_dashboard - User: {current_user.username}, Role: {current_user.role}")
+    init_database()
     
     try:
         if current_user.role == 'student':
-            logger.debug(f"Student user detected - ID: {current_user.id}")
-            
             # Get assignments assigned to this student
-            logger.debug("Querying assignments for student...")
-            assignments = Assignment.query.join(
-                student_assignment, 
-                Assignment.id == student_assignment.c.assignment_id
-            ).filter(
-                student_assignment.c.student_id == current_user.id,
-                Assignment.is_active == True
-            ).all()
+            all_assignments = Assignment.query.all()
+            student_assignments = []
             
-            logger.debug(f"Found {len(assignments)} assignments for student")
+            for assignment in all_assignments:
+                if assignment.student_ids:
+                    student_id_list = [int(id.strip()) for id in assignment.student_ids.split(',') if id.strip()]
+                    if current_user.id in student_id_list:
+                        student_assignments.append(assignment)
             
-            # Get submission status for each assignment
-            assignment_submissions = {}
-            for assignment in assignments:
-                logger.debug(f"Checking submission for assignment {assignment.id}: {assignment.title}")
-                submission = Submission.query.filter_by(
-                    assignment_id=assignment.id, 
-                    student_id=current_user.id
-                ).first()
-                assignment_submissions[assignment.id] = submission
-                logger.debug(f"Submission status for assignment {assignment.id}: {'Found' if submission else 'Not found'}")
+            # Get submissions for this student
+            submissions = Submission.query.filter_by(student_id=current_user.id).all()
             
-            logger.debug("Rendering student dashboard template")
             return render_template('student_dashboard.html', 
-                                 assignments=assignments,
-                                 assignment_submissions=assignment_submissions)
-        else:
-            logger.debug(f"Teacher/admin user detected - showing all assignments")
-            # For teachers/admin, show all assignments and submissions
-            assignments = Assignment.query.all()
-            logger.debug(f"Found {len(assignments)} total assignments for teacher/admin")
-            return render_template('student_dashboard.html', assignments=assignments)
+                                 assignments=student_assignments,
+                                 submissions=submissions)
+        
+        elif current_user.role == 'teacher' or current_user.role == 'admin':
+            # Get all students
+            students = User.query.filter_by(role='student').all()
             
+            # Get all assignments created by this teacher
+            assignments = Assignment.query.filter_by(assigned_by=current_user.id).all()
+            
+            # Get all submissions
+            submissions = Submission.query.all()
+            
+            return render_template('teacher_dashboard.html',
+                                 students=students,
+                                 assignments=assignments,
+                                 submissions=submissions)
+    
     except Exception as e:
-        logger.error(f"Error in student_dashboard: {str(e)}", exc_info=True)
-        logger.error(f"User: {current_user.username}, Role: {current_user.role}")
-        raise
+        logger.error(f"Dashboard error: {e}")
+        flash('Error loading dashboard')
+        return redirect(url_for('login'))
 
+# Create assignment route (teachers only)
 @app.route('/create_assignment', methods=['GET', 'POST'])
 @login_required
 def create_assignment():
-    if current_user.role not in ['admin', 'teacher']:
-        flash(_('Access denied'))
+    if current_user.role not in ['teacher', 'admin']:
+        flash('Permission denied')
         return redirect(url_for('student_dashboard'))
     
-    students = User.query.filter_by(role='student').all()
+    init_database()
     
     if request.method == 'POST':
-        title = request.form['title']
-        description = request.form['description']
-        due_date_str = request.form.get('due_date')
-        is_active = 'is_active' in request.form
-        selected_student_ids = request.form.getlist('student_ids')
-        
-        # All assignments are now HTML assignments
-        html_file = request.files.get('html_file')
-        
-        due_date = None
-        if due_date_str:
-            due_date = datetime.strptime(due_date_str, '%Y-%m-%dT%H:%M')
-        
-        new_assignment = Assignment(
-            title=title,
-            description=description,
-            created_by=current_user.id,
-            due_date=due_date,
-            is_active=is_active
-        )
-        
         try:
-            db.session.add(new_assignment)
-            db.session.flush()  # Get the assignment ID
+            title = request.form['title']
+            description = request.form['description']
+            student_ids = request.form.getlist('students')  # List of selected student IDs
+            html_file = request.files.get('html_file')
             
-            # Handle HTML file upload (required for all assignments)
+            # Save uploaded file if provided
+            file_path = None
             if html_file and html_file.filename:
-                if html_file.filename.lower().endswith('.html'):
-                    # Ensure upload directory exists
-                    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-                    
-                    # Save the HTML file
-                    filename = f"assignment_{new_assignment.id}_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}.html"
-                    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                    logger.debug(f"Saving HTML file to: {filepath}")
-                    html_file.save(filepath)
-                    
-                    # Read the HTML content for display - handle encoding issues
-                    html_content = None
-                    encodings_to_try = ['utf-8', 'utf-8-sig', 'latin-1', 'cp1252']
-                    for encoding in encodings_to_try:
-                        try:
-                            with open(filepath, 'r', encoding=encoding) as f:
-                                html_content = f.read()
-                            break
-                        except UnicodeDecodeError:
-                            continue
-                    
-                    if html_content is None:
-                        # Fallback: read with errors ignored
-                        with open(filepath, 'r', encoding='utf-8', errors='replace') as f:
-                            html_content = f.read()
-                    
-                    new_assignment.html_filename = filename
-                    new_assignment.html_content = html_content
-                else:
-                    flash(_('Only HTML files are allowed for assignments'))
-                    return render_template('create_assignment.html', students=students)
-            else:
-                flash(_('HTML file is required for assignments'))
-                return render_template('create_assignment.html', students=students)
+                filename = f"assignment_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{html_file.filename}"
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                html_file.save(file_path)
             
-            # Assign to selected students
-            if selected_student_ids:
-                for student_id in selected_student_ids:
-                    try:
-                        student = User.query.get(int(student_id))
-                        if student and student.role == 'student':
-                            new_assignment.assigned_students.append(student)
-                    except (ValueError, TypeError) as ve:
-                        logger.warning(f"Invalid student ID: {student_id}, error: {ve}")
-                        continue
-            else:
-                # If no students selected, assign to all students
-                for student in students:
-                    new_assignment.assigned_students.append(student)
+            # Create assignment
+            assignment = Assignment(
+                title=title,
+                description=description,
+                file_path=file_path,
+                student_ids=','.join(student_ids),
+                assigned_by=current_user.id
+            )
             
-            db.session.commit()
-            logger.info(f"Assignment {new_assignment.id} created successfully by user {current_user.username}")
-            flash(_('Assignment created successfully'))
-            return redirect(url_for('student_dashboard'))
-        except Exception as e:
-            db.session.rollback()
-            flash(_('Failed to create assignment'))
-            logger.error(f"Error creating assignment: {e}")
-            logger.exception("Detailed error traceback:")
-            return render_template('create_assignment.html', students=students)
-    
-    return render_template('create_assignment.html', students=students)
-
-@app.route('/view_assignment/<int:assignment_id>')
-@login_required
-def view_assignment(assignment_id):
-    assignment = Assignment.query.get_or_404(assignment_id)
-    
-    # Check if student has access to this assignment
-    if current_user.role == 'student':
-        # Check if assignment is assigned to this student
-        assignment_assigned = db.session.query(student_assignment).filter(
-            student_assignment.c.assignment_id == assignment_id,
-            student_assignment.c.student_id == current_user.id
-        ).first()
-        
-        if not assignment_assigned:
-            flash(_('Access denied - this assignment is not assigned to you'))
-            return redirect(url_for('student_dashboard'))
-    
-    # Get submission for current user
-    submission = None
-    if current_user.role == 'student':
-        submission = Submission.query.filter_by(
-            assignment_id=assignment_id, 
-            student_id=current_user.id
-        ).first()
-    
-    # All assignments are HTML assignments - redirect to interactive view
-    return render_template('interactive_assignment.html', 
-                         assignment=assignment, 
-                         submission=submission)
-
-@app.route('/submit_html_assignment/<int:assignment_id>', methods=['POST'])
-@login_required
-def submit_html_assignment(assignment_id):
-    if request.method == 'POST':
-        # Check if assignment exists
-        assignment = Assignment.query.get_or_404(assignment_id)
-        
-        # Check if student has access to this assignment
-        if current_user.role == 'student':
-            assignment_assigned = db.session.query(student_assignment).filter(
-                student_assignment.c.assignment_id == assignment_id,
-                student_assignment.c.student_id == current_user.id
-            ).first()
-            
-            if not assignment_assigned:
-                flash(_('Access denied - this assignment is not assigned to you'))
-                return redirect(url_for('student_dashboard'))
-        
-        # Check if student has already submitted
-        existing_submission = Submission.query.filter_by(
-            assignment_id=assignment_id, 
-            student_id=current_user.id
-        ).first()
-        
-        if existing_submission:
-            flash(_('You have already submitted this assignment'))
-            return redirect(url_for('view_assignment', assignment_id=assignment_id))
-        
-        # Validate form content exists
-        if 'content' not in request.form or not request.form['content'].strip():
-            flash(_('Please provide your HTML content'))
-            return redirect(url_for('view_assignment', assignment_id=assignment_id))
-        
-        content = request.form['content']
-        print(f"[DEBUG] Received content length: {len(content)}")
-        print(f"[DEBUG] Content preview (first 500 chars): {content[:500]}")
-        
-        # Check if content contains form values
-        if '<textarea' in content and 'value=' not in content:
-            print("[WARNING] Content may not contain filled form values")
-        
-        # Handle screenshot upload if provided
-        screenshot_filename = None
-        if 'screenshot' in request.files:
-            screenshot = request.files['screenshot']
-            if screenshot and screenshot.filename:
-                if screenshot.filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
-                    screenshot_filename = f"screenshot_{assignment_id}_{current_user.id}_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}.{screenshot.filename.split('.')[-1]}"
-                    try:
-                        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-                        screenshot.save(os.path.join(app.config['UPLOAD_FOLDER'], screenshot_filename))
-                    except Exception as e:
-                        print(f"Error saving screenshot: {e}")
-                        screenshot_filename = None  # Continue without screenshot
-        
-        new_submission = Submission(
-            assignment_id=assignment_id,
-            student_id=current_user.id,
-            content=content,
-            screenshot_filename=screenshot_filename,
-            submitted_at=datetime.utcnow()
-        )
-        
-        try:
-            db.session.add(new_submission)
+            db.session.add(assignment)
             db.session.commit()
             
-            # Generate HTML file for submission
-            try:
-                # Generate HTML file for submission using format() instead of f-string
-                html_template = """
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HTML Assignment Submission - {assignment_title}</title>
-    <style>
-        :root {{
-            --background-color: #ffffff !important;
-            --text-color: #000000 !important;
-            --code-background: #f5f5f5 !important;
-            --code-text: #000000 !important;
-        }}
-        
-        * {{
-            background-color: var(--background-color) !important;
-            color: var(--text-color) !important;
-        }}
-        
-        body {{
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            padding: 20px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }}
-        
-        .header {{
-            background-color: #4a6fa5 !important;
-            color: white !important;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            color: #333 !important;
-        }}
-        
-        .header h1 {{
-            margin: 0 0 10px 0;
-            color: white !important;
-        }}
-        
-        .submission-info {{
-            background-color: #f9f9f9 !important;
-            padding: 15px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-            color: #333 !important;
-        }}
-        
-        .content-section {{
-            background-color: #f9f9f9 !important;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }}
-        
-        .content-section h2 {{
-            color: #4a6fa5 !important;
-            margin-top: 0;
-        }}
-        
-        pre {{
-            background-color: var(--code-background) !important;
-            color: var(--code-text) !important;
-            padding: 15px;
-            border-radius: 5px;
-            overflow-x: auto;
-            font-family: monospace;
-            white-space: pre-wrap;
-        }}
-        
-        .screenshot-section {{
-            margin-top: 20px;
-        }}
-        
-        .screenshot-section img {{
-            max-width: 100%;
-            height: auto;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }}
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>HTML Assignment Submission</h1>
-        <p><strong>Assignment:</strong> {assignment_title}</p>
-        <p><strong>Student:</strong> {student_username}</p>
-    </div>
-    
-    <div class="submission-info">
-        <p><strong>Assignment ID:</strong> {assignment_id}</p>
-        <p><strong>Student ID:</strong> {student_id}</p>
-        <p><strong>Submitted at:</strong> {submitted_at}</p>
-    </div>
-    
-    <div class="content-section">
-        <h2>Submitted HTML Content:</h2>
-        <pre>{content}</pre>
-    </div>
-"""
-                
-                # Format the template with actual values
-                html_doc = html_template.format(
-                    assignment_title=assignment.title,
-                    student_username=current_user.username,
-                    assignment_id=assignment_id,
-                    student_id=current_user.id,
-                    submitted_at=new_submission.submitted_at.strftime('%Y-%m-%d %H:%M:%S'),
-                    content=content
-                )
-                
-                # Add screenshot section if screenshot exists
-                if screenshot_filename:
-                    html_doc += f"""
-    <div class="screenshot-section">
-        <h2>Screenshot:</h2>
-        <img src="/uploads/{screenshot_filename}" alt="Submission Screenshot">
-    </div>
-"""
-                
-                html_doc += """
-</body>
-</html>
-"""
-                
-                # Save the HTML file
-                filename = f"html_submission_{assignment_id}_{current_user.id}_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}.html"
-                try:
-                    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-                    with open(os.path.join(app.config['UPLOAD_FOLDER'], filename), 'w', encoding='utf-8') as f:
-                        f.write(html_doc)
-                        print(f"Saved HTML submission as {filename}")
-                except Exception as e:
-                    print(f"Error saving HTML submission file: {e}")
-                    # Continue without saving the HTML file
-                    
-            except Exception as e:
-                print(f"Error generating HTML submission: {e}")
-                # Continue even if HTML generation fails
-            
-            flash(_('HTML assignment submitted successfully!'))
+            flash('Assignment created successfully!')
             return redirect(url_for('student_dashboard'))
             
         except Exception as e:
             db.session.rollback()
-            flash(_('Failed to submit HTML assignment'))
-            print(f"Error submitting HTML assignment: {e}")
-            return redirect(url_for('view_assignment', assignment_id=assignment_id))
+            logger.error(f"Assignment creation error: {e}")
+            flash('Error creating assignment')
     
-    return redirect(url_for('view_assignment', assignment_id=assignment_id))
+    # GET request - show form
+    try:
+        students = User.query.filter_by(role='student').all()
+        return render_template('create_assignment.html', students=students)
+    except Exception as e:
+        logger.error(f"Create assignment form error: {e}")
+        flash('Error loading form')
+        return redirect(url_for('student_dashboard'))
 
-@app.route('/submit_assignment/<int:assignment_id>', methods=['POST'])
+# Submit assignment route (students only)
+@app.route('/submit_assignment/<int:assignment_id>', methods=['GET', 'POST'])
 @login_required
 def submit_assignment(assignment_id):
-    if request.method == 'POST':
-        content = request.form['content']
-        
-        new_submission = Submission(
-            assignment_id=assignment_id,
-            student_id=current_user.id,
-            content=content
-        )
-        
-        try:
-            db.session.add(new_submission)
-            db.session.commit()
-            
-            # Generate HTML file for submission
-            try:
-                # Define the HTML template
-                html_doc = f"""
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Submission</title>
-    <style>
-        /* Browser dark mode override */
-        :root {
-            --background-color: #ffffff !important;
-            --text-color: #000000 !important;
-            --code-background: #f5f5f5 !important;
-            --code-text: #000000 !important;
-        }
-        
-        * {
-            background-color: var(--background-color) !important;
-            color: var(--text-color) !important;
-        }
-        
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            padding: 20px;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        
-        h1 {
-            color: #2c3e50;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 10px;
-        }
-        
-        pre {
-            background-color: var(--code-background) !important;
-            color: var(--code-text) !important;
-            padding: 15px;
-            border-radius: 5px;
-            overflow-x: auto;
-            font-family: monospace;
-        }
-    </style>
-</head>
-<body>
-    <h1>Student Submission</h1>
-    <p><strong>Assignment ID:</strong> {assignment_id}</p>
-    <p><strong>Student ID:</strong> {current_user.id}</p>
-    <p><strong>Submitted at:</strong> {new_submission.submitted_at.strftime('%Y-%m-%d %H:%M:%S')}</p>
-    <h2>Content:</h2>
-    <pre>{content}</pre>
-</body>
-</html>
-"""
-                
-                # Save the HTML file
-                filename = f"submission_{assignment_id}_{current_user.id}_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}.html"
-                with open(filename, 'w', encoding='utf-8') as f:
-                    f.write(html_doc)
-                    print(f"Saved submission as {filename}")
-                    
-            except Exception as e:
-                print(f"Error saving HTML: {e}")
-            
-            return render_template('assignment_submitted.html', assignment_id=assignment_id)
-        except Exception as e:
-            flash(_('Failed to submit assignment'))
-            print(f"Error submitting assignment: {e}")
-            return redirect(url_for('view_assignment', assignment_id=assignment_id))
-    return redirect(url_for('view_assignment', assignment_id=assignment_id))
-
-@app.route('/view_submissions/<int:assignment_id>')
-@login_required
-def view_submissions(assignment_id):
-    if current_user.role not in ['admin', 'teacher']:
-        flash(_('Access denied'))
+    if current_user.role != 'student':
+        flash('Permission denied')
         return redirect(url_for('student_dashboard'))
     
-    assignment = Assignment.query.get_or_404(assignment_id)
-    submissions = Submission.query.filter_by(assignment_id=assignment_id).all()
-    return render_template('view_submissions.html', submissions=submissions, assignment=assignment)
-
-@app.route('/grade_submission/<int:submission_id>', methods=['GET', 'POST'])
-@login_required
-def grade_submission(submission_id):
-    if current_user.role not in ['admin', 'teacher']:
-        flash(_('Access denied'))
-        return redirect(url_for('student_dashboard'))
-    
-    submission = Submission.query.get_or_404(submission_id)
-    
-    if request.method == 'POST':
-        grade = request.form['grade']
-        feedback = request.form['feedback']
-        
-        submission.grade = float(grade)
-        submission.feedback = feedback
-        
-        try:
-            db.session.commit()
-            flash(_('Submission graded successfully'))
-            return redirect(url_for('view_submissions', assignment_id=submission.assignment_id))
-        except:
-            flash(_('Failed to grade submission'))
-    
-    return render_template('grade_submission.html', submission=submission)
-
-@app.route('/forgot_password', methods=['GET', 'POST'])
-def forgot_password():
-    if request.method == 'POST':
-        email = request.form['email']
-        user = User.query.filter_by(email=email).first()
-        if user:
-            # In a real app, send a reset email
-            flash(_('Password reset instructions sent to your email'))
-        else:
-            flash(_('Email not found'))
-    return render_template('forgot_password.html')
-
-@app.route('/reset_password/<token>', methods=['GET', 'POST'])
-def reset_password(token):
-    if request.method == 'POST':
-        password = request.form['password']
-        # In a real app, verify the token and update password
-        flash(_('Password reset successfully'))
-        return redirect(url_for('login'))
-    return render_template('reset_password.html')
-
-@app.route('/change_password', methods=['GET', 'POST'])
-@login_required
-def change_password():
-    if request.method == 'POST':
-        current_password = request.form['current_password']
-        new_password = request.form['new_password']
-        
-        if current_user.check_password(current_password):
-            current_user.set_password(new_password)
-            db.session.commit()
-            flash(_('Password changed successfully'))
-            return redirect(url_for('student_dashboard'))
-        else:
-            flash(_('Current password is incorrect'))
-    return render_template('change_password.html')
-
-@app.route('/admin/users')
-@login_required
-def admin_users():
-    if current_user.role != 'admin':
-        flash(_('Access denied'))
-        return redirect(url_for('student_dashboard'))
-    
-    users = User.query.all()
-    return render_template('admin_users.html', users=users)
-
-@app.route('/admin/user/<int:user_id>/edit', methods=['GET', 'POST'])
-@login_required
-def admin_edit_user(user_id):
-    if current_user.role != 'admin':
-        flash(_('Access denied'))
-        return redirect(url_for('student_dashboard'))
-    
-    user = User.query.get_or_404(user_id)
-    
-    if request.method == 'POST':
-        # Update user information
-        user.username = request.form['username']
-        user.email = request.form['email']
-        user.role = request.form['role']
-        
-        # Update password if provided
-        if request.form['password']:
-            user.set_password(request.form['password'])
-        
-        try:
-            db.session.commit()
-            flash(_('User updated successfully'))
-            return redirect(url_for('admin_users'))
-        except:
-            flash(_('Failed to update user'))
-    
-    return render_template('admin_edit_user.html', user=user)
-
-@app.route('/admin/user/<int:user_id>/delete', methods=['POST'])
-@login_required
-def admin_delete_user(user_id):
-    if current_user.role != 'admin':
-        flash(_('Access denied'))
-        return redirect(url_for('student_dashboard'))
-    
-    user = User.query.get_or_404(user_id)
-    
-    # Prevent deleting current user
-    if user.id == current_user.id:
-        flash(_('Cannot delete your own account'))
-        return redirect(url_for('admin_users'))
+    init_database()
     
     try:
-        db.session.delete(user)
-        db.session.commit()
-        flash(_('User deleted successfully'))
-    except:
-        flash(_('Failed to delete user'))
-    
-    return redirect(url_for('admin_users'))
+        assignment = Assignment.query.get_or_404(assignment_id)
+        
+        # Check if student is assigned to this assignment
+        if assignment.student_ids:
+            student_id_list = [int(id.strip()) for id in assignment.student_ids.split(',') if id.strip()]
+            if current_user.id not in student_id_list:
+                flash('You are not assigned to this assignment')
+                return redirect(url_for('student_dashboard'))
+        
+        if request.method == 'POST':
+            html_file = request.files.get('html_submission')
+            
+            if html_file and html_file.filename:
+                # Save submitted file
+                filename = f"submission_{current_user.id}_{assignment_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{html_file.filename}"
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                html_file.save(file_path)
+                
+                # Create or update submission record
+                existing_submission = Submission.query.filter_by(
+                    assignment_id=assignment_id,
+                    student_id=current_user.id
+                ).first()
+                
+                if existing_submission:
+                    existing_submission.file_path = file_path
+                    existing_submission.submitted_at = datetime.utcnow()
+                else:
+                    submission = Submission(
+                        assignment_id=assignment_id,
+                        student_id=current_user.id,
+                        file_path=file_path
+                    )
+                    db.session.add(submission)
+                
+                db.session.commit()
+                flash('Assignment submitted successfully!')
+                return redirect(url_for('student_dashboard'))
+            else:
+                flash('Please upload an HTML file')
+        
+        return render_template('submit_assignment.html', assignment=assignment)
+        
+    except Exception as e:
+        logger.error(f"Assignment submission error: {e}")
+        flash('Error processing submission')
+        return redirect(url_for('student_dashboard'))
 
-@app.route('/assignment/<int:assignment_id>/delete', methods=['POST'])
+# View submission route (teachers only)
+@app.route('/view_submission/<int:submission_id>')
+@login_required
+def view_submission(submission_id):
+    if current_user.role not in ['teacher', 'admin']:
+        flash('Permission denied')
+        return redirect(url_for('student_dashboard'))
+    
+    init_database()
+    
+    try:
+        submission = Submission.query.get_or_404(submission_id)
+        assignment = Assignment.query.get(submission.assignment_id)
+        student = User.query.get(submission.student_id)
+        
+        # Read and display the submitted HTML file
+        html_content = ""
+        if submission.file_path and os.path.exists(submission.file_path):
+            try:
+                with open(submission.file_path, 'r', encoding='utf-8') as f:
+                    html_content = f.read()
+            except Exception as e:
+                logger.error(f"Error reading submission file: {e}")
+                html_content = "Error reading submission file"
+        
+        return render_template('view_submission.html',
+                             submission=submission,
+                             assignment=assignment,
+                             student=student,
+                             html_content=html_content)
+    
+    except Exception as e:
+        logger.error(f"View submission error: {e}")
+        flash('Error viewing submission')
+        return redirect(url_for('student_dashboard'))
+
+# Delete assignment route (teachers only)
+@app.route('/delete_assignment/<int:assignment_id>', methods=['POST'])
 @login_required
 def delete_assignment(assignment_id):
-    # Only allow teachers and admins to delete assignments
-    if current_user.role not in ['admin', 'teacher']:
-        flash(_('Access denied'))
+    if current_user.role not in ['teacher', 'admin']:
+        flash('Permission denied')
         return redirect(url_for('student_dashboard'))
     
-    assignment = Assignment.query.get_or_404(assignment_id)
-    
-    # Check if the current user created this assignment or is admin
-    if current_user.role != 'admin' and assignment.created_by != current_user.id:
-        flash(_('You can only delete assignments that you created'))
-        return redirect(url_for('student_dashboard'))
+    init_database()
     
     try:
-        # First delete all submissions related to this assignment
+        assignment = Assignment.query.get_or_404(assignment_id)
+        
+        # Delete associated submissions
         submissions = Submission.query.filter_by(assignment_id=assignment_id).all()
         for submission in submissions:
+            if submission.file_path and os.path.exists(submission.file_path):
+                try:
+                    os.remove(submission.file_path)
+                except Exception as e:
+                    logger.error(f"Error deleting submission file: {e}")
             db.session.delete(submission)
         
-        # Remove assignment-student associations
-        delete_stmt = student_assignment.delete().where(student_assignment.c.assignment_id == assignment_id)
-        db.session.execute(delete_stmt)
+        # Delete assignment file if it exists
+        if assignment.file_path and os.path.exists(assignment.file_path):
+            try:
+                os.remove(assignment.file_path)
+            except Exception as e:
+                logger.error(f"Error deleting assignment file: {e}")
         
-        # Delete the assignment itself
         db.session.delete(assignment)
         db.session.commit()
         
-        flash(_('Assignment deleted successfully'))
-        logger.info(f"Assignment {assignment_id} deleted by user {current_user.username}")
+        flash('Assignment deleted successfully!')
         
     except Exception as e:
         db.session.rollback()
-        flash(_('Failed to delete assignment'))
-        logger.error(f"Error deleting assignment {assignment_id}: {e}")
+        logger.error(f"Delete assignment error: {e}")
+        flash('Error deleting assignment')
     
     return redirect(url_for('student_dashboard'))
 
-# Initialize the database
+# Error handlers
+@app.errorhandler(404)
+def not_found_error(error):
+    return render_template('404.html'), 404
+
 @app.errorhandler(500)
-def internal_server_error(error):
-    logger.error(f"Internal Server Error: {error}")
-    logger.exception("Error details:")
-    return render_template('error.html', error="Internal Server Error"), 500
+def internal_error(error):
+    db.session.rollback()
+    return render_template('500.html'), 500
 
-@app.errorhandler(Exception)
-def unhandled_exception(error):
-    logger.error(f"Unhandled Exception: {error}")
-    logger.exception("Exception details:")
-    return render_template('error.html', error="Server Error"), 500
+# Context processors
+@app.context_processor
+def inject_now():
+    return {'now': datetime.utcnow()}
 
-@app.route('/view_submission_content/<int:submission_id>')
-@login_required
-def view_submission_content(submission_id):
-    if current_user.role not in ['admin', 'teacher']:
-        flash(_('Access denied'))
-        return redirect(url_for('student_dashboard'))
-    
-    submission = Submission.query.get_or_404(submission_id)
-    
-    # Create a clean HTML page to display the submission content
-    html_content = f"""
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Submission - {submission.user.username}</title>
-    <style>
-        body {{
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }}
-        .header {{
-            background-color: #4a6fa5;
-            color: white;
-            padding: 15px 20px;
-            margin: -20px -20px 20px -20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }}
-        .submission-info {{
-            background-color: white;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }}
-        .submission-content {{
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            min-height: 400px;
-        }}
-        .submission-iframe {{
-            width: 100%;
-            height: 600px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }}
-        .download-btn {{
-            background-color: #28a745;
-            color: white;
-            padding: 8px 16px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            float: right;
-        }}
-        .download-btn:hover {{
-            background-color: #218838;
-        }}
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>Student Submission Details</h1>
-    </div>
-    
-    <div class="submission-info">
-        <button onclick="downloadSubmission()" class="download-btn">📥 Download</button>
-        <p><strong>Student:</strong> {submission.user.username}</p>
-        <p><strong>Assignment:</strong> {submission.assignment.title}</p>
-        <p><strong>Submission Date:</strong> {submission.submitted_at.strftime('%Y-%m-%d %H:%M:%S')}</p>
-        <p><strong>Grade:</strong> {submission.grade if submission.grade else 'Not graded'}</p>
-        {f'<p><strong>Feedback:</strong> {submission.feedback}</p>' if submission.feedback else ''}
-    </div>
-    
-    <div class="submission-content">
-        <h2>Student's Work</h2>
-        <div id="submissionContent" style="display: none;">{submission.content.replace('"', '&quot;')}</div>
-        <iframe srcdoc="{submission.content.replace('"', '&quot;')}" class="submission-iframe"></iframe>
-    </div>
-    
-    <script>
-        function downloadSubmission() {{
-            const content = document.getElementById('submissionContent').innerHTML;
-            const studentName = '{submission.user.username}';
-            const assignmentTitle = '{submission.assignment.title}';
-            const submissionDate = '{submission.submitted_at.strftime('%Y-%m-%d_%H-%M')}';
-            const filename = `{{studentName}}_{{assignmentTitle}}_{{submissionDate}}.html`;
-            
-            const blob = new Blob([content], {{ type: 'text/html' }});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }}
-        // Auto-adjust iframe height based on content
-        window.addEventListener('load', function() {{
-            const iframe = document.querySelector('.submission-iframe');
-            if (iframe) {{
-                iframe.onload = function() {{
-                    try {{
-                        // Try to set height based on content
-                        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                        if (iframeDoc && iframeDoc.body) {{
-                            iframe.style.height = Math.max(600, iframeDoc.body.scrollHeight + 50) + 'px';
-                        }}
-                    }} catch (e) {{
-                        console.log('Could not auto-adjust iframe height');
-                    }}
-                }};
-            }}
-        }});
-    </script>
-</body>
-</html>
-    """
-    
-    return html_content
-
-# ======================================================
-# Database initialization - TRULY LAZY.
-# - NO before_request hooks (those would run on GET /login and crash worker)
-# - NO module-level DB access
-# - ensure_db_ready() is called ONLY inside routes that ACTUALLY touch the DB
-#   (login POST, register POST, dashboard handlers, etc.)
-# This guarantees GET /login works even when DB is unreachable.
-# ======================================================
-_handlers_added = False
-@app.before_request
-def _add_file_loggers_only_once():
-    """BEFORE_REQUEST: this is the ONLY thing we do on every request.
-    Adds file log handlers once, AFTER gunicorn has forked. Never touches DB."""
-    global _handlers_added
-    if _handlers_added:
-        return
-    _handlers_added = True
-    try:
-        log_dir = os.path.join(BASE_DIR, 'logs')
-        os.makedirs(log_dir, exist_ok=True)
-        root_logger = logging.getLogger()
-        fh1 = logging.FileHandler(os.path.join(log_dir, 'app.log'))
-        fh2 = logging.FileHandler(os.path.join(log_dir, 'error.log'), mode='a')
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        fh1.setFormatter(formatter)
-        fh2.setFormatter(formatter)
-        root_logger.addHandler(fh1)
-        root_logger.addHandler(fh2)
-    except Exception:
-        # stdout-only is fine
-        pass
-
-# Dev server entry point
+# Main entry point
 if __name__ == '__main__':
-    # Run DB init eagerly for local development
-    try:
-        with app.app_context():
-            init_database()
-    except Exception as dev_init_err:
-        logger.error(f"Dev init DB failed: {dev_init_err}")
-
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
