@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Submissions</title>
+    <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #ffffff;
+            color: #333333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1 {
+            color: #4a6fa5;
+            margin-bottom: 20px;
+        }
+        
+        /* Navigation bar */
+        .navbar {
+            background-color: #4a6fa5;
+            color: white;
+            padding: 10px 20px;
+            margin-bottom: 20px;
+        }
+        
+        .navbar ul {
+            list-style-type: none;
+            display: flex;
+            gap: 20px;
+        }
+        
+        .navbar li {
+            display: inline;
+        }
+        
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+        }
+        
+        .navbar a:hover {
+            background-color: #3a5a85;
+        }
+        
+        /* Form styles */
+        form {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        
+        input[type="text"],
+        input[type="password"],
+        input[type="email"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        button {
+            background-color: #4a6fa5;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        
+        button:hover {
+            background-color: #3a5a85;
+        }
+        
+        /* Link styles */
+        a {
+            color: #4a6fa5;
+            text-decoration: none;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        /* Flash messages */
+        .flash {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        
+        .flash.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .flash.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .flash.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        /* Browser dark mode override - stronger version */
+        @media (prefers-color-scheme: dark) {
+            /* Reset all elements to light mode */
+            :root {
+                --bg-color: #ffffff;
+                --text-color: #333333;
+                --card-bg: #f9f9f9;
+                --border-color: #ddd;
+                --navbar-bg: #4a6fa5;
+                --navbar-text: #ffffff;
+            }
+            
+            * {
+                background-color: var(--bg-color) !important;
+                color: var(--text-color) !important;
+                border-color: var(--border-color) !important;
+            }
+            
+            body {
+                background-color: var(--bg-color) !important;
+                color: var(--text-color) !important;
+            }
+            
+            .navbar {
+                background-color: var(--navbar-bg) !important;
+            }
+            
+            .navbar a {
+                color: var(--navbar-text) !important;
+            }
+            
+            form {
+                background-color: var(--card-bg) !important;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
+            }
+            
+            input[type="text"],
+            input[type="password"],
+            input[type="email"] {
+                background-color: var(--bg-color) !important;
+                color: var(--text-color) !important;
+                border: 1px solid var(--border-color) !important;
+            }
+            
+            /* Ensure form elements don't inherit unwanted styles */
+            input::placeholder {
+                color: #999 !important;
+            }
+            
+            button {
+                background-color: var(--navbar-bg) !important;
+                color: var(--navbar-text) !important;
+            }
+            
+            /* Flash messages */
+            .flash.success {
+                background-color: #d4edda !important;
+                color: #155724 !important;
+                border: 1px solid #c3e6cb !important;
+            }
+            
+            .flash.error {
+                background-color: #f8d7da !important;
+                color: #721c24 !important;
+                border: 1px solid #f5c6cb !important;
+            }
+            
+            .flash.info {
+                background-color: #d1ecf1 !important;
+                color: #0c5460 !important;
+                border: 1px solid #bee5eb !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <ul>
+            
+                <li><a href="/student_dashboard">Dashboard</a></li>
+                <li><a href="/change_password">Change Password</a></li>
+                <li><a href="/logout">Logout</a></li>
+            
+        </ul>
+    </nav>
+    
+    <div class="container">
+        <!-- Flash Messages -->
+        
+            
+        
+        
+        
+<h1>View Submissions</h1>
+
+
+<div class="assignment-submissions">
+    <div class="assignment-info">
+        <h2>Assignment: S2_荷塘月色</h2>
+        <span class="assignment-status">Active</span>
+    </div>
+    
+    
+    <div class="submissions-table">
+        <h3>Student Submissions</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Student</th>
+                    <th>Submission Date</th>
+                    <th>Answer Preview</th>
+                    <th>Grade</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>SY</td>
+                    <td>2026-01-04 15:18</td>
+                    <td class="submission-preview">
+                        <button onclick="showSubmissionModal(1)" class="preview-btn">
+                            View Answer
+                        </button>
+                        <div id="modal-1" class="submission-modal">
+                            <div class="modal-content">
+                                <span class="close" onclick="closeSubmissionModal(1)">&times;</span>
+                                <h3>Student Answer - SY</h3>
+                                <div class="submission-html-content">
+                                    <iframe srcdoc="&lt;html lang=&#34;zh-TW&#34;&gt;&lt;head&gt;
+    &lt;meta charset=&#34;UTF-8&#34;&gt;
+    &lt;meta name=&#34;viewport&#34; content=&#34;width=device-width, initial-scale=1.0&#34;&gt;
+    &lt;title&gt;《荷塘月色》閱讀理解練習 - 初中階段&lt;/title&gt;
+    &lt;script src=&#34;https://cdn.tailwindcss.com&#34;&gt;&lt;/script&gt;
+    &lt;link href=&#34;https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css&#34; rel=&#34;stylesheet&#34;&gt;
+    &lt;link href=&#34;https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&amp;amp;display=swap&#34; rel=&#34;stylesheet&#34;&gt;
+    &lt;style&gt;
+        body { 
+            font-family: &#39;Noto Sans TC&#39;, sans-serif;
+            line-height: 1.8;
+        }
+        .gradient-bg { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+        }
+        .card-shadow { 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+            transition: all 0.3s ease;
+        }
+        .card-shadow:hover { 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15); 
+            transform: translateY(-2px);
+        }
+        .question-card { 
+            border-left: 4px solid #3b82f6; 
+            background: white;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border-radius: 0.5rem;
+        }
+        .answer-zone { 
+            background: linear-gradient(to right, #f8fafc, #e2e8f0);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+        }
+        .vocab-highlight { 
+            background: linear-gradient(120deg, #a8edea 0%, #fed6e3 100%); 
+            padding: 2px 6px; 
+            border-radius: 4px; 
+            cursor: help;
+            position: relative;
+            font-weight: 500;
+        }
+        .vocab-highlight:hover::after {
+            content: attr(data-meaning);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1f2937;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            white-space: nowrap;
+            z-index: 1000;
+            margin-bottom: 5px;
+        }
+        .progress-bar { 
+            background: linear-gradient(90deg, #34d399, #10b981); 
+            transition: width 0.5s ease;
+        }
+        .answer-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            font-family: &#39;Noto Sans TC&#39;, sans-serif;
+        }
+        .answer-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        .correct-answer {
+            background-color: #d1fae5;
+            border-color: #10b981;
+        }
+        .incorrect-answer {
+            background-color: #fee2e2;
+            border-color: #ef4444;
+        }
+        .feedback-box {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            display: none;
+        }
+        .feedback-correct {
+            background: #d1fae5;
+            border-left: 4px solid #10b981;
+            color: #065f46;
+        }
+        .feedback-incorrect {
+            background: #fee2e2;
+            border-left: 4px solid #ef4444;
+            color: #991b1b;
+        }
+        .show-answer-btn {
+            background: #6366f1;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.875rem;
+        }
+        .show-answer-btn:hover {
+            background: #4f46e5;
+            transform: scale(1.05);
+        }
+        .reference-answer {
+            display: none;
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            border-radius: 0.5rem;
+        }
+        .reference-answer.show {
+            display: block;
+        }
+        .textarea-input {
+            width: 100%;
+            min-height: 100px;
+            padding: 0.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-family: &#39;Noto Sans TC&#39;, sans-serif;
+            resize: vertical;
+        }
+        .textarea-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        .score-badge {
+            display: inline-block;
+            background: #fef3c7;
+            color: #92400e;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+        .article-text {
+            background: #fefce8;
+            padding: 2rem;
+            border-radius: 0.75rem;
+            border: 2px solid #fde047;
+            line-height: 2;
+            font-size: 1.05rem;
+        }
+        .section-divider {
+            height: 3px;
+            background: linear-gradient(to right, #3b82f6, #8b5cf6, #ec4899);
+            margin: 2rem 0;
+            border-radius: 1.5px;
+        }
+    &lt;/style&gt;
+&lt;style&gt;*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:&#39;&#39;}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:ui-sans-serif, system-ui, sans-serif, &#34;Apple Color Emoji&#34;, &#34;Segoe UI Emoji&#34;, &#34;Segoe UI Symbol&#34;, &#34;Noto Color Emoji&#34;;font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, &#34;Liberation Mono&#34;, &#34;Courier New&#34;, monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.container{width:100%}@media (min-width: 640px){.container{max-width:640px}}@media (min-width: 768px){.container{max-width:768px}}@media (min-width: 1024px){.container{max-width:1024px}}@media (min-width: 1280px){.container{max-width:1280px}}@media (min-width: 1536px){.container{max-width:1536px}}.mx-auto{margin-left:auto;margin-right:auto}.mb-2{margin-bottom:0.5rem}.mb-3{margin-bottom:0.75rem}.mb-4{margin-bottom:1rem}.mb-6{margin-bottom:1.5rem}.ml-6{margin-left:1.5rem}.mr-2{margin-right:0.5rem}.mr-3{margin-right:0.75rem}.mt-2{margin-top:0.5rem}.mt-3{margin-top:0.75rem}.mt-4{margin-top:1rem}.flex{display:flex}.grid{display:grid}.max-w-5xl{max-width:64rem}.list-disc{list-style-type:disc}.grid-cols-1{grid-template-columns:repeat(1, minmax(0, 1fr))}.items-center{align-items:center}.gap-4{gap:1rem}.space-y-2 &gt; :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.5rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.5rem * var(--tw-space-y-reverse))}.space-y-3 &gt; :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.75rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.75rem * var(--tw-space-y-reverse))}.space-y-4 &gt; :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1rem * var(--tw-space-y-reverse))}.rounded{border-radius:0.25rem}.rounded-lg{border-radius:0.5rem}.rounded-full{border-radius:9999px}.border-l-4{border-left-width:4px}.border-blue-500{--tw-border-opacity:1;border-color:rgb(59 130 246 / var(--tw-border-opacity, 1))}.border-green-500{--tw-border-opacity:1;border-color:rgb(34 197 94 / var(--tw-border-opacity, 1))}.border-pink-500{--tw-border-opacity:1;border-color:rgb(236 72 153 / var(--tw-border-opacity, 1))}.border-purple-500{--tw-border-opacity:1;border-color:rgb(168 85 247 / var(--tw-border-opacity, 1))}.border-red-500{--tw-border-opacity:1;border-color:rgb(239 68 68 / var(--tw-border-opacity, 1))}.border-yellow-400{--tw-border-opacity:1;border-color:rgb(250 204 21 / var(--tw-border-opacity, 1))}.bg-gray-50{--tw-bg-opacity:1;background-color:rgb(249 250 251 / var(--tw-bg-opacity, 1))}.bg-white{--tw-bg-opacity:1;background-color:rgb(255 255 255 / var(--tw-bg-opacity, 1))}.bg-yellow-50{--tw-bg-opacity:1;background-color:rgb(254 252 232 / var(--tw-bg-opacity, 1))}.bg-blue-600{--tw-bg-opacity:1;background-color:rgb(37 99 235 / var(--tw-bg-opacity, 1))}.bg-gradient-to-r{background-image:linear-gradient(to right, var(--tw-gradient-stops))}.from-blue-50{--tw-gradient-from:#eff6ff var(--tw-gradient-from-position);--tw-gradient-to:rgb(239 246 255 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.from-indigo-50{--tw-gradient-from:#eef2ff var(--tw-gradient-from-position);--tw-gradient-to:rgb(238 242 255 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.to-blue-50{--tw-gradient-to:#eff6ff var(--tw-gradient-to-position)}.to-purple-50{--tw-gradient-to:#faf5ff var(--tw-gradient-to-position)}.p-4{padding:1rem}.p-6{padding:1.5rem}.px-4{padding-left:1rem;padding-right:1rem}.py-10{padding-top:2.5rem;padding-bottom:2.5rem}.py-8{padding-top:2rem;padding-bottom:2rem}.px-6{padding-left:1.5rem;padding-right:1.5rem}.py-3{padding-top:0.75rem;padding-bottom:0.75rem}.pl-4{padding-left:1rem}.text-center{text-align:center}.text-2xl{font-size:1.5rem;line-height:2rem}.text-4xl{font-size:2.25rem;line-height:2.5rem}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-sm{font-size:0.875rem;line-height:1.25rem}.text-xl{font-size:1.25rem;line-height:1.75rem}.font-bold{font-weight:700}.font-semibold{font-weight:600}.leading-relaxed{line-height:1.625}.text-blue-500{--tw-text-opacity:1;color:rgb(59 130 246 / var(--tw-text-opacity, 1))}.text-blue-600{--tw-text-opacity:1;color:rgb(37 99 235 / var(--tw-text-opacity, 1))}.text-gray-600{--tw-text-opacity:1;color:rgb(75 85 99 / var(--tw-text-opacity, 1))}.text-gray-700{--tw-text-opacity:1;color:rgb(55 65 81 / var(--tw-text-opacity, 1))}.text-gray-800{--tw-text-opacity:1;color:rgb(31 41 55 / var(--tw-text-opacity, 1))}.text-green-500{--tw-text-opacity:1;color:rgb(34 197 94 / var(--tw-text-opacity, 1))}.text-green-600{--tw-text-opacity:1;color:rgb(22 163 74 / var(--tw-text-opacity, 1))}.text-indigo-500{--tw-text-opacity:1;color:rgb(99 102 241 / var(--tw-text-opacity, 1))}.text-pink-500{--tw-text-opacity:1;color:rgb(236 72 153 / var(--tw-text-opacity, 1))}.text-purple-500{--tw-text-opacity:1;color:rgb(168 85 247 / var(--tw-text-opacity, 1))}.text-purple-600{--tw-text-opacity:1;color:rgb(147 51 234 / var(--tw-text-opacity, 1))}.text-red-500{--tw-text-opacity:1;color:rgb(239 68 68 / var(--tw-text-opacity, 1))}.text-white{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.text-yellow-500{--tw-text-opacity:1;color:rgb(234 179 8 / var(--tw-text-opacity, 1))}.opacity-80{opacity:0.8}.opacity-90{opacity:0.9}.shadow-lg{--tw-shadow:0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -4px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.transition-all{transition-property:all;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.duration-300{transition-duration:300ms}.hover\:scale-110:hover{--tw-scale-x:1.1;--tw-scale-y:1.1;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.hover\:bg-blue-700:hover{--tw-bg-opacity:1;background-color:rgb(29 78 216 / var(--tw-bg-opacity, 1))}@media (min-width: 768px){.md\:col-span-2{grid-column:span 2 / span 2}.md\:grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}}&lt;/style&gt;&lt;/head&gt;
+&lt;body class=&#34;bg-gray-50&#34;&gt;
+    &lt;!-- 標題區域 --&gt;
+    &lt;div class=&#34;gradient-bg text-white py-10&#34;&gt;
+        &lt;div class=&#34;container mx-auto px-4&#34;&gt;
+            &lt;h1 class=&#34;text-4xl font-bold text-center mb-3&#34;&gt;
+                &lt;i class=&#34;fas fa-book-open mr-3&#34;&gt;&lt;/i&gt;《荷塘月色》閱讀理解練習
+            &lt;/h1&gt;
+            &lt;p class=&#34;text-center text-xl opacity-90&#34;&gt;朱自清經典散文 | 初中階段（中一至中三）&lt;/p&gt;
+            &lt;p class=&#34;text-center text-lg opacity-80 mt-2&#34;&gt;現代抒情散文 · 景物描寫 · 情感表達&lt;/p&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;!-- 主要內容區域 --&gt;
+    &lt;div class=&#34;container mx-auto px-4 py-8 max-w-5xl&#34;&gt;
+        
+        &lt;!-- 作者簡介 --&gt;
+        &lt;div class=&#34;bg-white rounded-lg card-shadow p-6 mb-6&#34;&gt;
+            &lt;h2 class=&#34;text-2xl font-bold text-gray-800 mb-4 flex items-center&#34;&gt;
+                &lt;i class=&#34;fas fa-user-circle text-purple-500 mr-3&#34;&gt;&lt;/i&gt;作者簡介
+            &lt;/h2&gt;
+            &lt;div class=&#34;text-gray-700 leading-relaxed&#34;&gt;
+                &lt;p&gt;&lt;strong&gt;朱自清&lt;/strong&gt;（1898-1948），原名自華，字佩弦，號秋實。中國現代著名散文家、詩人、學者。其散文以語言洗練、文筆清麗著稱，代表作有《背影》、《荷塘月色》、《春》等。《荷塘月色》寫於1927年，是朱自清散文的代表作之一，通過描繪清華園荷塘的月色美景，表達了作者內心的複雜情感。&lt;/p&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+
+        &lt;!-- 文章區域 --&gt;
+        &lt;div class=&#34;bg-white rounded-lg card-shadow p-6 mb-6&#34;&gt;
+            &lt;h2 class=&#34;text-2xl font-bold text-gray-800 mb-4 flex items-center&#34;&gt;
+                &lt;i class=&#34;fas fa-scroll text-blue-500 mr-3&#34;&gt;&lt;/i&gt;閱讀文章
+            &lt;/h2&gt;
+            &lt;div class=&#34;article-text&#34;&gt;
+                &lt;p class=&#34;mb-4&#34;&gt;這幾天心裏&lt;span class=&#34;vocab-highlight&#34; data-meaning=&#34;很、相當&#34;&gt;頗&lt;/span&gt;不&lt;span class=&#34;vocab-highlight&#34; data-meaning=&#34;平靜、安寧&#34;&gt;寧靜&lt;/span&gt;。今晚在院子裏坐着乘涼，忽然想起日日走過的荷塘，在這滿月的光裏，總該另有一番樣子吧。月亮漸漸地升高了，牆外馬路上孩子們的歡笑，已經聽不見了；妻在屋裏拍着閏兒，迷迷糊糊地哼着眠歌。我悄悄地披了大衫，帶上門出去。&lt;/p&gt;
+
+                &lt;p class=&#34;mb-4&#34;&gt;沿着荷塘，是一條曲折的小煤屑路。這是一條&lt;span class=&#34;vocab-highlight&#34; data-meaning=&#34;偏僻、少人到達&#34;&gt;幽僻&lt;/span&gt;的路，白天也少人走，夜晚更加寂寞。荷塘四面，長着許多樹，&lt;span class=&#34;vocab-highlight&#34; data-meaning=&#34;形容草木茂盛的樣子&#34;&gt;蓊蓊鬱鬱&lt;/span&gt;的。路的一旁，是些楊柳，和一些不知道名字的樹。沒有月光的晚上，這路上陰森森的，有些怕人。今晚卻很好，雖然月光也還是淡淡的。&lt;/p&gt;
+
+                &lt;p class=&#34;mb-4&#34;&gt;路上祇我一個人，背着手&lt;span class=&#34;vocab-highlight&#34; data-meaning=&#34;慢慢地走&#34;&gt;踱&lt;/span&gt;着。這一片天地好像是我的；我也像超出了平常的自己，到了另一世界裏。我愛熱鬧，也愛冷靜；愛羣居，也愛獨處。像今晚上，一個人在這蒼茫的月下，甚麼都可以想，甚麼都可以不想，便覺是個自由的人；白天裏一定要做的事，一定要說的話，現在都可不理：這是獨處的妙處。我且受用這無邊的荷香月色好了。&lt;/p&gt;
+
+                &lt;p class=&#34;mb-4&#34;&gt;曲曲折折的荷塘上面，&lt;span class=&#34;vocab-highlight&#34; data-meaning=&#34;滿眼望去&#34;&gt;彌望&lt;/span&gt;的是&lt;span class=&#34;vocab-highlight&#34; data-meaning=&#34;形容荷葉茂盛&#34;&gt;田田&lt;/span&gt;的葉子。葉子出水很高，像&lt;span class=&#34;vocab-highlight&#34; data-meaning=&#34;高聳直立的樣子&#34;&gt;亭亭&lt;/span&gt;的舞女的裙。層層的葉子中間，零星地點綴着些白花，有&lt;span class=&#34;vocab-highlight&#34; data-meaning=&#34;柔美的樣子&#34;&gt;嬝娜&lt;/span&gt;地開着的，有羞澀地打着朵兒的；正如一粒粒的明珠，又如碧天裏的星星，又如剛出浴的美人。微風過處，送來縷縷清香，彷彿遠處高樓上渺茫的歌聲似的。這時候，葉子與花也有一絲的顫動，像閃電般，霎時傳過荷塘的那邊去了。葉子本是肩並肩密密的挨着，這便宛然有了一道凝碧的波痕。葉子底下是&lt;span class=&#34;vocab-highlight&#34; data-meaning=&#34;形容水流動的樣子&#34;&gt;眽眽&lt;/span&gt;的流水，遮住了，不能見一些顏色；而葉子卻更見&lt;span class=&#34;vocab-highlight&#34; data-meaning=&#34;美好的姿態&#34;&gt;風致&lt;/span&gt;了。&lt;/p&gt;
+
+                &lt;p class=&#34;mb-4&#34;&gt;月光如流水一般，靜靜地&lt;span class=&#34;vocab-highlight&#34; data-meaning=&#34;傾瀉、流動&#34;&gt;瀉&lt;/span&gt;在這一片葉子和花上。薄薄的青霧浮起在荷塘裏。葉子和花彷彿在牛乳中洗過一樣；又像籠着輕紗的夢。雖然是滿月，天上卻有一層淡淡的雲，所以不能朗照；但我以為這恰是到了好處——酣眠固不可少，小睡也別有風味的。月光是隔了樹照過來的，高處叢生的灌木，落下參差的斑駁的黑影，峭楞楞如鬼一般；彎彎的楊柳的稀疏的倩影，卻又像是畫在荷葉上。塘中的月色並不均勻；但光與影有着和諧的旋律，如&lt;span class=&#34;vocab-highlight&#34; data-meaning=&#34;小提琴&#34;&gt;梵婀玲&lt;/span&gt;上奏着的名曲。&lt;/p&gt;
+
+                &lt;p class=&#34;mb-4&#34;&gt;荷塘的四面，遠遠近近，高高低低都是樹，而楊柳最多。這些樹將一片荷塘重重圍住；只在小路一旁，漏着幾段空隙，像是特為月光留下的。樹色一例是陰陰的，乍看像一團煙霧；但楊柳的丰姿，便在煙霧裏也辨得出。樹梢上隱隱約約的是一帶遠山，只有些大意罷了。樹縫裏也漏着一兩點路燈光，沒精打采的，是渴睡人的眼。這時候最熱鬧的，要算樹上的蟬聲與水裏的蛙聲；但熱鬧是牠們的，我甚麼也沒有。&lt;/p&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+
+        &lt;div class=&#34;section-divider&#34;&gt;&lt;/div&gt;
+
+        &lt;!-- 第一部分：主旨與立意層次 --&gt;
+        &lt;div class=&#34;bg-white rounded-lg card-shadow p-6 mb-6&#34;&gt;
+            &lt;h3 class=&#34;text-2xl font-semibold text-gray-800 mb-4 flex items-center&#34;&gt;
+                &lt;i class=&#34;fas fa-lightbulb text-yellow-500 mr-3&#34;&gt;&lt;/i&gt;第一部分：主旨與立意&lt;span class=&#34;score-badge&#34;&gt;共20分&lt;/span&gt;
+            &lt;/h3&gt;
+
+            &lt;!-- 題目1 --&gt;
+            &lt;div class=&#34;question-card&#34;&gt;
+                &lt;div class=&#34;font-bold text-lg text-blue-600 mb-3&#34;&gt;1. 文章開首寫「這幾天心裏頗不寧靜」，試根據全文，分析作者為何感到不寧靜？（3分）&lt;/div&gt;
+                &lt;textarea class=&#34;textarea-input&#34; id=&#34;q1&#34; placeholder=&#34;請在此輸入你的答案...&#34;&gt;&lt;/textarea&gt;
+                &lt;button class=&#34;show-answer-btn mt-3&#34; onclick=&#34;toggleAnswer(&#39;a1&#39;)&#34;&gt;
+                    &lt;i class=&#34;fas fa-eye mr-2&#34;&gt;&lt;/i&gt;查看參考答案
+                &lt;/button&gt;
+                &lt;div class=&#34;reference-answer&#34; id=&#34;a1&#34;&gt;
+                    &lt;div class=&#34;font-bold text-blue-600 mb-2&#34;&gt;參考答案：&lt;/div&gt;
+                    &lt;p class=&#34;mb-2&#34;&gt;作者感到不寧靜，(1分) 因為當時面對現實生活的苦悶與壓力，(1分) 內心充滿矛盾與煩惱。(1分)&lt;/p&gt;
+                    &lt;div class=&#34;mt-3 text-sm text-gray-600&#34;&gt;
+                        &lt;strong&gt;評分要點：&lt;/strong&gt;提及「內心苦悶」或「現實壓力」或「矛盾煩惱」等相關意思，言之成理即可給分。
+                    &lt;/div&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+
+            &lt;!-- 題目2 --&gt;
+            &lt;div class=&#34;question-card&#34;&gt;
+                &lt;div class=&#34;font-bold text-lg text-blue-600 mb-3&#34;&gt;2. 作者在文中寫到「這是獨處的妙處」，試說明作者認為獨處有甚麼好處？（4分）&lt;/div&gt;
+                &lt;textarea class=&#34;textarea-input&#34; id=&#34;q2&#34; placeholder=&#34;請在此輸入你的答案...&#34;&gt;&lt;/textarea&gt;
+                &lt;button class=&#34;show-answer-btn mt-3&#34; onclick=&#34;toggleAnswer(&#39;a2&#39;)&#34;&gt;
+                    &lt;i class=&#34;fas fa-eye mr-2&#34;&gt;&lt;/i&gt;查看參考答案
+                &lt;/button&gt;
+                &lt;div class=&#34;reference-answer&#34; id=&#34;a2&#34;&gt;
+                    &lt;div class=&#34;font-bold text-blue-600 mb-2&#34;&gt;參考答案：&lt;/div&gt;
+                    &lt;p class=&#34;mb-2&#34;&gt;作者認為獨處可以暫時擺脫現實的束縛，(1分) 甚麼都可以想、甚麼都可以不想，(1分) 白天一定要做的事、一定要說的話，現在都可不理，(1分) 享受自由自在的感覺。(1分)&lt;/p&gt;
+                    &lt;div class=&#34;mt-3 text-sm text-gray-600&#34;&gt;
+                        &lt;strong&gt;評分要點：&lt;/strong&gt;需答出「擺脫束縛/自由」、「思想不受限制」、「不受現實約束」等要點，每點1分。
+                    &lt;/div&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+
+            &lt;!-- 題目3 --&gt;
+            &lt;div class=&#34;question-card&#34;&gt;
+                &lt;div class=&#34;font-bold text-lg text-blue-600 mb-3&#34;&gt;3. 文章結尾寫「但熱鬧是牠們的，我甚麼也沒有」，這句話表達了作者怎樣的心情？試加以說明。（3分）&lt;/div&gt;
+                &lt;textarea class=&#34;textarea-input&#34; id=&#34;q3&#34; placeholder=&#34;請在此輸入你的答案...&#34;&gt;&lt;/textarea&gt;
+                &lt;button class=&#34;show-answer-btn mt-3&#34; onclick=&#34;toggleAnswer(&#39;a3&#39;)&#34;&gt;
+                    &lt;i class=&#34;fas fa-eye mr-2&#34;&gt;&lt;/i&gt;查看參考答案
+                &lt;/button&gt;
+                &lt;div class=&#34;reference-answer&#34; id=&#34;a3&#34;&gt;
+                    &lt;div class=&#34;font-bold text-blue-600 mb-2&#34;&gt;參考答案：&lt;/div&gt;
+                    &lt;p class=&#34;mb-2&#34;&gt;表達了作者孤獨、(1分) 失落、(1分) 與自然萬物格格不入的寂寞心情。(1分)&lt;/p&gt;
+                    &lt;div class=&#34;mt-3 text-sm text-gray-600&#34;&gt;
+                        &lt;strong&gt;評分要點：&lt;/strong&gt;答出「孤獨」、「寂寞」、「失落」、「惆悵」等情感詞彙，言之成理即可。
+                    &lt;/div&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+
+            &lt;!-- 題目4 --&gt;
+            &lt;div class=&#34;question-card&#34;&gt;
+                &lt;div class=&#34;font-bold text-lg text-blue-600 mb-3&#34;&gt;4. 綜觀全文，作者通過描寫荷塘月色，表達了怎樣的思想感情？（4分）&lt;/div&gt;
+                &lt;textarea class=&#34;textarea-input&#34; id=&#34;q4&#34; placeholder=&#34;請在此輸入你的答案...&#34;&gt;&lt;/textarea&gt;
+                &lt;button class=&#34;show-answer-btn mt-3&#34; onclick=&#34;toggleAnswer(&#39;a4&#39;)&#34;&gt;
+                    &lt;i class=&#34;fas fa-eye mr-2&#34;&gt;&lt;/i&gt;查看參考答案
+                &lt;/button&gt;
+                &lt;div class=&#34;reference-answer&#34; id=&#34;a4&#34;&gt;
+                    &lt;div class=&#34;font-bold text-blue-600 mb-2&#34;&gt;參考答案：&lt;/div&gt;
+                    &lt;p class=&#34;mb-2&#34;&gt;作者通過描寫荷塘月色的寧靜優美，(1分) 表達了對現實的不滿和苦悶，(1分) 追求寧靜自由的心境，(1分) 但最終仍無法擺脫內心的孤獨與失落。(1分)&lt;/p&gt;
+                    &lt;div class=&#34;mt-3 text-sm text-gray-600&#34;&gt;
+                        &lt;strong&gt;評分要點：&lt;/strong&gt;需答出「追求寧靜/自由」、「現實苦悶」、「暫時解脫」、「最終失落」等層次，言之成理即可。
+                    &lt;/div&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+
+            &lt;!-- 題目5 --&gt;
+            &lt;div class=&#34;question-card&#34;&gt;
+                &lt;div class=&#34;font-bold text-lg text-blue-600 mb-3&#34;&gt;5. 作者在第三段寫道：「我愛熱鬧，也愛冷靜；愛羣居，也愛獨處。」這反映了作者怎樣的性格特點？（3分）&lt;/div&gt;
+                &lt;textarea class=&#34;textarea-input&#34; id=&#34;q5&#34; placeholder=&#34;請在此輸入你的答案...&#34;&gt;&lt;/textarea&gt;
+                &lt;button class=&#34;show-answer-btn mt-3&#34; onclick=&#34;toggleAnswer(&#39;a5&#39;)&#34;&gt;
+                    &lt;i class=&#34;fas fa-eye mr-2&#34;&gt;&lt;/i&gt;查看參考答案
+                &lt;/button&gt;
+                &lt;div class=&#34;reference-answer&#34; id=&#34;a5&#34;&gt;
+                    &lt;div class=&#34;font-bold text-blue-600 mb-2&#34;&gt;參考答案：&lt;/div&gt;
+                    &lt;p class=&#34;mb-2&#34;&gt;反映了作者性格矛盾複雜，(1分) 既有熱情開朗的一面，也有冷靜沉思的一面，(1分) 內心充滿矛盾和掙扎。(1分)&lt;/p&gt;
+                    &lt;div class=&#34;mt-3 text-sm text-gray-600&#34;&gt;
+                        &lt;strong&gt;評分要點：&lt;/strong&gt;答出「性格矛盾」、「兩面性」、「內心掙扎」等相關意思即可。
+                    &lt;/div&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+
+            &lt;!-- 題目6 --&gt;
+            &lt;div class=&#34;question-card&#34;&gt;
+                &lt;div class=&#34;font-bold text-lg text-blue-600 mb-3&#34;&gt;6. 試概括第四段的段落大意。（3分）&lt;/div&gt;
+                &lt;textarea class=&#34;textarea-input&#34; id=&#34;q6&#34; placeholder=&#34;請在此輸入你的答案...&#34;&gt;&lt;/textarea&gt;
+                &lt;button class=&#34;show-answer-btn mt-3&#34; onclick=&#34;toggleAnswer(&#39;a6&#39;)&#34;&gt;
+                    &lt;i class=&#34;fas fa-eye mr-2&#34;&gt;&lt;/i&gt;查看參考答案
+                &lt;/button&gt;
+                &lt;div class=&#34;reference-answer&#34; id=&#34;a6&#34;&gt;
+                    &lt;div class=&#34;font-bold text-blue-600 mb-2&#34;&gt;參考答案：&lt;/div&gt;
+                    &lt;p class=&#34;mb-2&#34;&gt;描寫荷塘的荷葉和荷花，(1分) 荷葉層層疊疊，荷花點綴其間，(1分) 微風吹過，送來陣陣清香和顫動的美感。(1分)&lt;/p&gt;
+                    &lt;div class=&#34;mt-3 text-sm text-gray-600&#34;&gt;
+                        &lt;strong&gt;評分要點：&lt;/strong&gt;需包含「描寫荷葉荷花」、「具體景物特徵」、「動態美感」等要素。
+                    &lt;/div&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+
+        &lt;div class=&#34;section-divider&#34;&gt;&lt;/div&gt;
+
+        &lt;!-- 第二部分：結構層次 --&gt;
+        &lt;div class=&#34;bg-white rounded-lg card-shadow p-6 mb-6&#34;&gt;
+            &lt;h3 class=&#34;text-2xl font-semibold text-gray-800 mb-4 flex items-center&#34;&gt;
+                &lt;i class=&#34;fas fa-sitemap text-green-500 mr-3&#34;&gt;&lt;/i&gt;第二部分：結構層次&lt;span class=&#34;score-badge&#34;&gt;共15分&lt;/span&gt;
+            &lt;/h3&gt;
+
+            &lt;!-- 題目7 --&gt;
+            &lt;div class=&#34;question-card&#34;&gt;
+                &lt;div class=&#34;font-bold text-lg text-blue-600 mb-3&#34;&gt;7. 第一段在文章結構上起甚麼作用？（3分）&lt;/div&gt;
+                &lt;textarea class=&#34;textarea-input&#34; id=&#34;q7&#34; placeholder=&#34;請在此輸入你的答案...&#34;&gt;&lt;/textarea&gt;
+                &lt;button class=&#34;show-answer-btn mt-3&#34; onclick=&#34;toggleAnswer(&#39;a7&#39;)&#34;&gt;
+                    &lt;i class=&#34;fas fa-eye mr-2&#34;&gt;&lt;/i&gt;查看參考答案
+                &lt;/button&gt;
+                &lt;div class=&#34;reference-answer&#34; id=&#34;a7&#34;&gt;
+                    &lt;div class=&#34;font-bold text-blue-600 mb-2&#34;&gt;參考答案：&lt;/div&gt;
+                    &lt;p class=&#34;mb-2&#34;&gt;第一段交代了寫作背景和心境，(1分) 為全文定下感情基調，(1分) 引出下文夜遊荷塘的情節。(1分)&lt;/p&gt;
+                    &lt;div class=&#34;mt-3 text-sm text-gray-600&#34;&gt;
+                        &lt;strong&gt;評分要點：&lt;/strong&gt;需答出「交代背景」、「定下基調」、「引出下文」等結構作用。
+                    &lt;/div&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+
+            &lt;!-- 題目8 --&gt;
+            &lt;div class=&#34;question-card&#34;&gt;
+                &lt;div class=&#34;font-bold text-lg text-blue-600 mb-3&#34;&gt;8. 文章第四、五段詳細描寫荷塘月色，第六段則描寫荷塘四周的景物。試說明這樣的安排有甚麼好處？（4分）&lt;/div&gt;
+                &lt;textarea class=&#34;textarea-input&#34; id=&#34;q8&#34; placeholder=&#34;請在此輸入你的答案...&#34;&gt;&lt;/textarea&gt;
+                &lt;button class=&#34;show-answer-btn mt-3&#34; onclick=&#34;toggleAnswer(&#39;a8&#39;)&#34;&gt;
+                    &lt;i class=&#34;fas fa-eye mr-2&#34;&gt;&lt;/i&gt;查看參考答案
+                &lt;/button&gt;
+                &lt;div class=&#34;reference-answer&#34; id=&#34;a8&#34;&gt;
+                    &lt;div class=&#34;font-bold text-blue-600 mb-2&#34;&gt;參考答案：&lt;/div&gt;
+                    &lt;p class=&#34;mb-2&#34;&gt;這樣的安排由近及遠，(1分) 先描寫荷塘的主體景物，再描寫周圍環境，(1分) 使景物描寫層次分明，(1分) 營造出幽靜深遠的意境。(1分)&lt;/p&gt;
+                    &lt;div class=&#34;mt-3 text-sm text-gray-600&#34;&gt;
+                        &lt;strong&gt;評分要點：&lt;/strong&gt;需答出「由近及遠」、「層次分明」、「環境烘托」等結構特點。
+                    &lt;/div&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+
+            &lt;!-- 題目9 --&gt;
+            &lt;div class=&#34;question-card&#34;&gt;
+                &lt;div class=&#34;font-bold text-lg text-blue-600 mb-3&#34;&gt;9. 試指出文章在情感表達上的變化軌跡。（4分）&lt;/div&gt;
+                &lt;textarea class=&#34;textarea-input&#34; id=&#34;q9&#34; placeholder=&#34;請在此輸入你的答案...&#34;&gt;&lt;/textarea&gt;
+                &lt;button class=&#34;show-answer-btn mt-3&#34; onclick=&#34;toggleAnswer(&#39;a9&#39;)&#34;&gt;
+                    &lt;i class=&#34;fas fa-eye mr-2&#34;&gt;&lt;/i&gt;查看參考答案
+                &lt;/button&gt;
+                &lt;div class=&#34;reference-answer&#34; id=&#34;a9&#34;&gt;
+                    &lt;div class=&#34;font-bold text-blue-600 mb-2&#34;&gt;參考答案：&lt;/div&gt;
+                    &lt;p class=&#34;mb-2&#34;&gt;文章情感變化為：開首內心不寧靜，(1分) 獨處時感到自由暢快，(1分) 欣賞美景時陶醉其中，(1分) 結尾卻感到孤獨寂寞。(1分)&lt;/p&gt;
+                    &lt;div class=&#34;mt-3 text-sm text-gray-600&#34;&gt;
+                        &lt;strong&gt;評分要點：&lt;/strong&gt;需答出情感的起伏變化，體現「不寧靜→自由→陶醉→孤獨」的軌跡。
+                    &lt;/div&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+
+            &lt;!-- 題目10 --&gt;
+            &lt;div class=&#34;question-card&#34;&gt;
+                &lt;div class=&#34;font-bold text-lg text-blue-600 mb-3&#34;&gt;10. 第三段寫「這是獨處的妙處。我且受用這無邊的荷香月色好了」，這兩句在結構上起甚麼作用？（4分）&lt;/div&gt;
+                &lt;textarea class=&#34;textarea-input&#34; id=&#34;q10&#34; placeholder=&#34;請在此輸入你的答案...&#34;&gt;&lt;/textarea&gt;
+                &lt;button class=&#34;show-answer-btn mt-3&#34; onclick=&#34;toggleAnswer(&#39;a10&#39;)&#34;&gt;
+                    &lt;i class=&#34;fas fa-eye mr-2&#34;&gt;&lt;/i&gt;查看參考答案
+                &lt;/button&gt;
+                &lt;div class=&#34;reference-answer&#34; id=&#34;a10&#34;&gt;
+                    &lt;div class=&#34;font-bold text-blue-600 mb-2&#34;&gt;參考答案：&lt;/div&gt;
+                    &lt;p class=&#34;mb-2&#34;&gt;這兩句起承上啟下的作用，(1分) 總結上文獨處的心情，(1分) 同時引出下文對荷塘月色的詳細描寫，(1分) 使文章過渡自然流暢。(1分)&lt;/p&gt;
+                    &lt;div class=&#34;mt-3 text-sm text-gray-600&#34;&gt;
+                        &lt;strong&gt;評分要點：&lt;/strong&gt;需答出「承上啟下」、「總結上文」、「引出下文」等結構功能。
+                    &lt;/div&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+
+        &lt;div class=&#34;section-divider&#34;&gt;&lt;/div&gt;
+
+        &lt;!-- 第三部分：手法層次 --&gt;
+        &lt;div class=&#34;bg-white rounded-lg card-shadow p-6 mb-6&#34;&gt;
+            &lt;h3 class=&#34;text-2xl font-semibold text-gray-800 mb-4 flex items-center&#34;&gt;
+                &lt;i class=&#34;fas fa-palette text-pink-500 mr-3&#34;&gt;&lt;/i&gt;第三部分：手法層次&lt;span class=&#34;score-badge&#34;&gt;共30分&lt;/span&gt;
+            &lt;/h3&gt;
+
+            &lt;!-- 題目11 --&gt;
+            &lt;div class=&#34;question-card&#34;&gt;
+                &lt;div class=&#34;font-bold text-lg text-blue-600 mb-3&#34;&gt;11. 作者在第四段用了多個比喻來描寫荷花，試舉出其中兩個比喻，並分析其表達效果。（6分）&lt;/div&gt;
+                &lt;textarea class=&#34;textarea-input&#34; id=&#34;q11&#34; placeholder=&#34;請在此輸入你的答案...&#34;&gt;&lt;/textarea&gt;
+                &lt;button class=&#34;show-answer-btn mt-3&#34; onclick=&#34;toggleAnswer(&#39;a11&#39;)&#34;&gt;
+                    &lt;i class=&#34;fas fa-eye mr-2&#34;&gt;&lt;/i&gt;查看參考答案
+                &lt;/button&gt;
+                &lt;div class=&#34;reference-answer&#34; id=&#34;a11&#34;&gt;
+                    &lt;div class=&#34;font-bold text-blue-600 mb-2&#34;&gt;參考答案：&lt;/div&gt;
+                    &lt;p class=&#34;mb-2&#34;&gt;&lt;strong&gt;比喻一：&lt;/strong&gt;「正如一粒粒的明珠」，(1分) 以明珠喻荷花，突出荷花的潔白晶瑩。(1分)&lt;/p&gt;
+                    &lt;p class=&#34;mb-2&#34;&gt;&lt;strong&gt;比喻二：&lt;/strong&gt;「又如碧天裏的星星」，(1分) 以星星喻荷花，突出荷花在綠葉中零星點綴的美態。(1分)&lt;/p&gt;
+                    &lt;p class=&#34;mb-2&#34;&gt;&lt;strong&gt;比喻三：&lt;/strong&gt;「又如剛出浴的美人」，(1分) 以美人喻荷花，突出荷花的清新嬌嫩。(1分)&lt;/p&gt;
+                    &lt;div class=&#34;mt-3 text-sm text-gray-600&#34;&gt;
+                        &lt;strong&gt;評分要點：&lt;/strong&gt;正確指出比喻本體和喻體各1分，分析效果各1分，答對兩個即可得滿分。
+                    &lt;/div&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+
+            &lt;!-- 題目12 --&gt;
+            &lt;div class=&#34;question-card&#34;&gt;
+                &lt;div class=&#34;font-bold text-lg text-blue-600 mb-3&#34;&gt;12. 「微風過處，送來縷縷清香，彷彿遠處高樓上渺茫的歌聲似的。」這句運用了甚麼修辭手法？有甚麼表達效果？（4分）&lt;/div&gt;
+                &lt;textarea class=&#34;textarea-input&#34; id=&#34;q12&#34; placeholder=&#34;請在此輸入你的答案...&#34;&gt;&lt;/textarea&gt;
+                &lt;button class=&#34;show-answer-btn mt-3&#34; onclick=&#34;toggleAnswer(&#39;a12&#39;)&#34;&gt;
+                    &lt;i class=&#34;fas fa-eye mr-2&#34;&gt;&lt;/i&gt;查看參考答案
+                &lt;/button&gt;
+                &lt;div class=&#34;reference-answer&#34; id=&#34;a12&#34;&gt;
+                    &lt;div class=&#34;font-bold text-blue-600 mb-2&#34;&gt;參考答案：&lt;/div&gt;
+                    &lt;p class=&#34;mb-2&#34;&gt;運用了通感（移覺）的修辭手法，(2分) 以聽覺（歌聲）寫嗅覺（清香），(1分) 生動地表現了荷香的飄忽、斷斷續續和若有若無的特點。(1分)&lt;/p&gt;
+                    &lt;div class=&#34;mt-3 text-sm text-gray-600&#34;&gt;
+                        &lt;strong&gt;評分要點：&lt;/strong&gt;正確指出「通感/移覺」手法2分，分析效果2分。
+                    &lt;/div&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+
+            &lt;!-- 題目13 --&gt;
+            &lt;div class=&#34;question-card&#34;&gt;
+                &lt;div class=&#34;font-bold text-lg text-blue-600 mb-3&#34;&gt;13. 「月光如流水一般，靜靜地瀉在這一片葉子和花上。」試分析這句的寫作手法和表達效果。（4分）&lt;/div&gt;
+                &lt;textarea class=&#34;textarea-input&#34; id=&#34;q13&#34; placeholder=&#34;請在此輸入你的答案...&#34;&gt;&lt;/textarea&gt;
+                &lt;button class=&#34;show-answer-btn mt-3&#34; onclick=&#34;toggleAnswer(&#39;a13&#39;)&#34;&gt;
+                    &lt;i class=&#34;fas fa-eye mr-2&#34;&gt;&lt;/i&gt;查看參考答案
+                &lt;/button&gt;
+                &lt;div class=&#34;reference-answer&#34; id=&#34;a13&#34;&gt;
+                    &lt;div class=&#34;font-bold text-blue-600 mb-2&#34;&gt;參考答案：&lt;/div&gt;
+                    &lt;p class=&#34;mb-2&#34;&gt;&lt;strong&gt;答案一（綜合角度）：&lt;/strong&gt;運用了景物描寫（環境描寫）的表達手法，(1分) 並以暗喻的修辭手法，以流水喻月光，(1分) 生動形象地寫出月光流動、柔和的特點，(1分) 營造出寧靜優美的氛圍，烘托作者內心追求寧靜的心境。(1分)&lt;/p&gt;
+                    &lt;p class=&#34;mb-2&#34;&gt;&lt;strong&gt;答案二（側重描寫角度）：&lt;/strong&gt;運用了直接描寫（正面描寫）的手法，(1分) 具體描繪月光灑落的動態美感，並以比喻修辭增強表現力，(1分) 寫出月光的流動感和柔和美，(1分) 渲染寧靜的意境，為抒發情感作鋪墊。(1分)&lt;/p&gt;
+                    &lt;div class=&#34;mt-3 text-sm text-gray-600&#34;&gt;
+                        &lt;strong&gt;評分要點：&lt;/strong&gt;「寫作手法」範圍廣於「修辭手法」。需答出表達手法（如景物描寫/直接描寫）1分，修辭手法（比喻）1分，分析效果2分。兩個答案任選其一即可。
+                    &lt;/div&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+
+            &lt;!-- 題目14 --&gt;
+            &lt;div class=&#34;question-card&#34;&gt;
+                &lt;div class=&#34;font-bold text-lg text-blue-600 mb-3&#34;&gt;14. 「葉子和花彷彿在牛乳中洗過一樣；又像籠着輕紗的夢。」這兩個比喻分別突出了甚麼特點？（4分）&lt;/div&gt;
+                &lt;textarea class=&#34;textarea-input&#34; id=&#34;q14&#34; placeholder=&#34;請在此輸入你的答案...&#34;&gt;&lt;/textarea&gt;
+                &lt;button class=&#34;show-answer-btn mt-3&#34; onclick=&#34;toggleAnswer(&#39;a14&#39;)&#34;&gt;
+                    &lt;i class=&#34;fas fa-eye mr-2&#34;&gt;&lt;/i&gt;查看參考答案
+                &lt;/button&gt;
+                &lt;div class=&#34;reference-answer&#34; id=&#34;a14&#34;&gt;
+                    &lt;div class=&#34;font-bold text-blue-600 mb-2&#34;&gt;參考答案：&lt;/div&gt;
+                    &lt;p class=&#34;mb-2&#34;&gt;「在牛乳中洗過一樣」突出了月光下荷葉荷花的潔白柔和，(2分) 「籠着輕紗的夢」突出了月光朦朧迷離、如夢如幻的美感。(2分)&lt;/p&gt;
+                    &lt;div class=&#34;mt-3 text-sm text-gray-600&#34;&gt;
+                        &lt;strong&gt;評分要點：&lt;/strong&gt;每個比喻分析2分，需準確說明突出的特點。
+                    &lt;/div&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+
+            &lt;!-- 題目15 --&gt;
+            &lt;div class=&#34;question-card&#34;&gt;
+                &lt;div class=&#34;font-bold text-lg text-blue-600 mb-3&#34;&gt;15. 「但光與影有着和諧的旋律，如梵婀玲上奏着的名曲。」這句運用了甚麼寫作手法？有甚麼作用？（4分）&lt;/div&gt;
+                &lt;textarea class=&#34;textarea-input&#34; id=&#34;q15&#34; placeholder=&#34;請在此輸入你的答案...&#34;&gt;&lt;/textarea&gt;
+                &lt;button class=&#34;show-answer-btn mt-3&#34; onclick=&#34;toggleAnswer(&#39;a15&#39;)&#34;&gt;
+                    &lt;i class=&#34;fas fa-eye mr-2&#34;&gt;&lt;/i&gt;查看參考答案
+                &lt;/button&gt;
+                &lt;div class=&#34;reference-answer&#34; id=&#34;a15&#34;&gt;
+                    &lt;div class=&#34;font-bold text-blue-600 mb-2&#34;&gt;參考答案：&lt;/div&gt;
+                    &lt;p class=&#34;mb-2&#34;&gt;運用了通感（移覺）和比喻的修辭手法，(2分) 以聽覺（音樂）寫視覺（光影），以小提琴名曲喻光影變化，(1分) 生動地表現了光影交錯的和諧優美。(1分)&lt;/p&gt;
+                    &lt;div class=&#34;mt-3 text-sm text-gray-600&#34;&gt;
+                        &lt;strong&gt;評分要點：&lt;/strong&gt;正確指出修辭手法2分，分析作用2分。
+                    &lt;/div&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+
+            &lt;!-- 題目16 --&gt;
+            &lt;div class=&#34;question-card&#34;&gt;
+                &lt;div class=&#34;font-bold text-lg text-blue-600 mb-3&#34;&gt;16. 「樹縫裏也漏着一兩點路燈光，沒精打采的，是渴睡人的眼。」這句運用了甚麼描寫手法？試加以分析。（4分）&lt;/div&gt;
+                &lt;textarea class=&#34;textarea-input&#34; id=&#34;q16&#34; placeholder=&#34;請在此輸入你的答案...&#34;&gt;&lt;/textarea&gt;
+                &lt;button class=&#34;show-answer-btn mt-3&#34; onclick=&#34;toggleAnswer(&#39;a16&#39;)&#34;&gt;
+                    &lt;i class=&#34;fas fa-eye mr-2&#34;&gt;&lt;/i&gt;查看參考答案
+                &lt;/button&gt;
+                &lt;div class=&#34;reference-answer&#34; id=&#34;a16&#34;&gt;
+                    &lt;div class=&#34;font-bold text-blue-600 mb-2&#34;&gt;參考答案：&lt;/div&gt;
+                    &lt;p class=&#34;mb-2&#34;&gt;運用了擬人的修辭手法，(1分) 以「沒精打采」和「渴睡人的眼」描寫路燈光，(1分) 賦予路燈人的神態和感覺，(1分) 生動地寫出燈光微弱暗淡的特點，烘托出夜晚的寧靜氛圍。(1分)&lt;/p&gt;
+                    &lt;div class=&#34;mt-3 text-sm text-gray-600&#34;&gt;
+                        &lt;strong&gt;評分要點：&lt;/strong&gt;指出擬人手法1分，說明具體表現1分，分析效果2分。
+                    &lt;/div&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+
+            &lt;!-- 題目17 --&gt;
+            &lt;div class=&#34;question-card&#34;&gt;
+                &lt;div class=&#34;font-bold text-lg text-blue-600 mb-3&#34;&gt;17. 試分析第四段在描寫荷葉荷花時，運用了哪些感官描寫？各有甚麼作用？（4分）&lt;/div&gt;
+                &lt;textarea class=&#34;textarea-input&#34; id=&#34;q17&#34; placeholder=&#34;請在此輸入你的答案...&#34;&gt;&lt;/textarea&gt;
+                &lt;button class=&#34;show-answer-btn mt-3&#34; onclick=&#34;toggleAnswer(&#39;a17&#39;)&#34;&gt;
+                    &lt;i class=&#34;fas fa-eye mr-2&#34;&gt;&lt;/i&gt;查看參考答案
+                &lt;/button&gt;
+                &lt;div class=&#34;reference-answer&#34; id=&#34;a17&#34;&gt;
+                    &lt;div class=&#34;font-bold text-blue-600 mb-2&#34;&gt;參考答案：&lt;/div&gt;
+                    &lt;p class=&#34;mb-2&#34;&gt;運用了視覺描寫和嗅覺描寫。(1分) 視覺描寫如「田田的葉子」、「白花」等，具體描繪荷塘景象；(1分) 嗅覺描寫如「送來縷縷清香」，表現荷花的芳香；(1分) 多感官描寫使景物更加生動真實，增強感染力。(1分)&lt;/p&gt;
+                    &lt;div class=&#34;mt-3 text-sm text-gray-600&#34;&gt;
+                        &lt;strong&gt;評分要點：&lt;/strong&gt;指出感官類型1分，舉例說明2分，分析作用1分。
+                    &lt;/div&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+
+        &lt;div class=&#34;section-divider&#34;&gt;&lt;/div&gt;
+
+        &lt;!-- 第四部分：比較評估層次 --&gt;
+        &lt;div class=&#34;bg-white rounded-lg card-shadow p-6 mb-6&#34;&gt;
+            &lt;h3 class=&#34;text-2xl font-semibold text-gray-800 mb-4 flex items-center&#34;&gt;
+                &lt;i class=&#34;fas fa-balance-scale text-purple-500 mr-3&#34;&gt;&lt;/i&gt;第四部分：比較評估&lt;span class=&#34;score-badge&#34;&gt;共15分&lt;/span&gt;
+            &lt;/h3&gt;
+
+            &lt;!-- 題目18 --&gt;
+            &lt;div class=&#34;question-card&#34;&gt;
+                &lt;div class=&#34;font-bold text-lg text-blue-600 mb-3&#34;&gt;18. 作者寫「酣眠固不可少，小睡也別有風味的」，你認為這個比喻是否恰當？試說明你的看法。（5分）&lt;/div&gt;
+                &lt;textarea class=&#34;textarea-input&#34; id=&#34;q18&#34; placeholder=&#34;請在此輸入你的答案...&#34;&gt;&lt;/textarea&gt;
+                &lt;button class=&#34;show-answer-btn mt-3&#34; onclick=&#34;toggleAnswer(&#39;a18&#39;)&#34;&gt;
+                    &lt;i class=&#34;fas fa-eye mr-2&#34;&gt;&lt;/i&gt;查看參考答案
+                &lt;/button&gt;
+                &lt;div class=&#34;reference-answer&#34; id=&#34;a18&#34;&gt;
+                    &lt;div class=&#34;font-bold text-blue-600 mb-2&#34;&gt;參考答案：&lt;/div&gt;
+                    &lt;p class=&#34;mb-2&#34;&gt;這個比喻十分恰當。(1分) 作者以「酣眠」喻滿月朗照，以「小睡」喻淡雲遮月，(2分) 形象地說明了朦朧月色的美感，(1分) 表現了作者對這種若隱若現、含蓄朦朧之美的欣賞。(1分)&lt;/p&gt;
+                    &lt;div class=&#34;mt-3 text-sm text-gray-600&#34;&gt;
+                        &lt;strong&gt;評分要點：&lt;/strong&gt;明確表態1分，解釋比喻內容2分，分析效果2分。言之成理即可給分。
+                    &lt;/div&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+
+            &lt;!-- 題目19 --&gt;
+            &lt;div class=&#34;question-card&#34;&gt;
+                &lt;div class=&#34;font-bold text-lg text-blue-600 mb-3&#34;&gt;19. 有人認為文章結尾「但熱鬧是牠們的，我甚麼也沒有」過於消極。你是否同意這個看法？試說明理由。（5分）&lt;/div&gt;
+                &lt;textarea class=&#34;textarea-input&#34; id=&#34;q19&#34; placeholder=&#34;請在此輸入你的答案...&#34;&gt;&lt;/textarea&gt;
+                &lt;button class=&#34;show-answer-btn mt-3&#34; onclick=&#34;toggleAnswer(&#39;a19&#39;)&#34;&gt;
+                    &lt;i class=&#34;fas fa-eye mr-2&#34;&gt;&lt;/i&gt;查看參考答案
+                &lt;/button&gt;
+                &lt;div class=&#34;reference-answer&#34; id=&#34;a19&#34;&gt;
+                    &lt;div class=&#34;font-bold text-blue-600 mb-2&#34;&gt;參考答案：&lt;/div&gt;
+                    &lt;p class=&#34;mb-2&#34;&gt;&lt;strong&gt;同意觀點：&lt;/strong&gt;這句話確實流露出消極情緒，(1分) 表現作者無法真正融入自然、擺脫煩惱，(2分) 反映了知識分子在當時社會的苦悶與迷茫。(2分)&lt;/p&gt;
+                    &lt;p class=&#34;mb-2&#34;&gt;&lt;strong&gt;不同意觀點：&lt;/strong&gt;這句話並非純粹消極，(1分) 而是真實地表達了作者內心的孤獨感受，(2分) 正是這種真實的情感流露，使文章更具深度和感染力。(2分)&lt;/p&gt;
+                    &lt;div class=&#34;mt-3 text-sm text-gray-600&#34;&gt;
+                        &lt;strong&gt;評分要點：&lt;/strong&gt;明確表態1分，說明理由4分。無論同意與否，言之成理即可給分。
+                    &lt;/div&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+
+            &lt;!-- 題目20 --&gt;
+            &lt;div class=&#34;question-card&#34;&gt;
+                &lt;div class=&#34;font-bold text-lg text-blue-600 mb-3&#34;&gt;20. 你認為《荷塘月色》最大的寫作特色是甚麼？試舉例說明。（5分）&lt;/div&gt;
+                &lt;textarea class=&#34;textarea-input&#34; id=&#34;q20&#34; placeholder=&#34;請在此輸入你的答案...&#34;&gt;&lt;/textarea&gt;
+                &lt;button class=&#34;show-answer-btn mt-3&#34; onclick=&#34;toggleAnswer(&#39;a20&#39;)&#34;&gt;
+                    &lt;i class=&#34;fas fa-eye mr-2&#34;&gt;&lt;/i&gt;查看參考答案
+                &lt;/button&gt;
+                &lt;div class=&#34;reference-answer&#34; id=&#34;a20&#34;&gt;
+                    &lt;div class=&#34;font-bold text-blue-600 mb-2&#34;&gt;參考答案：&lt;/div&gt;
+                    &lt;p class=&#34;mb-2&#34;&gt;&lt;strong&gt;特色一：&lt;/strong&gt;情景交融。(1分) 作者通過描寫荷塘月色的寧靜優美，(1分) 表達內心追求寧靜自由的心境，(1分) 如「我且受用這無邊的荷香月色好了」，景物描寫與情感表達完美結合。(2分)&lt;/p&gt;
+                    &lt;p class=&#34;mb-2&#34;&gt;&lt;strong&gt;特色二：&lt;/strong&gt;修辭手法豐富。(1分) 運用大量比喻、通感、擬人等修辭，(1分) 如以明珠、星星、美人喻荷花，(1分) 使景物描寫生動形象，富有藝術感染力。(2分)&lt;/p&gt;
+                    &lt;div class=&#34;mt-3 text-sm text-gray-600&#34;&gt;
+                        &lt;strong&gt;評分要點：&lt;/strong&gt;指出特色1分，舉例說明2分，分析效果2分。答出一個特色並充分說明即可得滿分。
+                    &lt;/div&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+
+        &lt;div class=&#34;section-divider&#34;&gt;&lt;/div&gt;
+
+        &lt;!-- 第五部分：延伸思考 --&gt;
+        &lt;div class=&#34;bg-white rounded-lg card-shadow p-6 mb-6&#34;&gt;
+            &lt;h3 class=&#34;text-2xl font-semibold text-gray-800 mb-4 flex items-center&#34;&gt;
+                &lt;i class=&#34;fas fa-brain text-red-500 mr-3&#34;&gt;&lt;/i&gt;第五部分：延伸思考&lt;span class=&#34;score-badge&#34;&gt;共20分&lt;/span&gt;
+            &lt;/h3&gt;
+
+            &lt;!-- 題目21 --&gt;
+            &lt;div class=&#34;question-card&#34;&gt;
+                &lt;div class=&#34;font-bold text-lg text-blue-600 mb-3&#34;&gt;21. 作者在文中追求獨處的自由與寧靜。在現代生活中，你認為「獨處」對我們有甚麼意義？（5分）&lt;/div&gt;
+                &lt;textarea class=&#34;textarea-input&#34; id=&#34;q21&#34; placeholder=&#34;請在此輸入你的答案...&#34;&gt;&lt;/textarea&gt;
+                &lt;button class=&#34;show-answer-btn mt-3&#34; onclick=&#34;toggleAnswer(&#39;a21&#39;)&#34;&gt;
+                    &lt;i class=&#34;fas fa-eye mr-2&#34;&gt;&lt;/i&gt;查看參考答案
+                &lt;/button&gt;
+                &lt;div class=&#34;reference-answer&#34; id=&#34;a21&#34;&gt;
+                    &lt;div class=&#34;font-bold text-blue-600 mb-2&#34;&gt;參考答案（開放題，言之成理即可）：&lt;/div&gt;
+                    &lt;p class=&#34;mb-2&#34;&gt;在現代繁忙的生活中，獨處能讓我們暫時遠離喧囂，(1分) 給自己一個安靜思考的空間，(1分) 重新審視自己的內心和生活，(1分) 調整心態，充電再出發，(1分) 對身心健康和個人成長都有重要意義。(1分)&lt;/p&gt;
+                    &lt;div class=&#34;mt-3 text-sm text-gray-600&#34;&gt;
+                        &lt;strong&gt;評分要點：&lt;/strong&gt;能結合現代生活實際，提出合理看法，層次清晰，言之成理即可給分。
+                    &lt;/div&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+
+            &lt;!-- 題目22 --&gt;
+            &lt;div class=&#34;question-card&#34;&gt;
+                &lt;div class=&#34;font-bold text-lg text-blue-600 mb-3&#34;&gt;22. 文章多處運用比喻、通感等修辭手法描寫景物。試模仿作者的寫作手法，用不少於80字描寫你熟悉的一處自然景物。（10分）&lt;/div&gt;
+                &lt;textarea class=&#34;textarea-input&#34; id=&#34;q22&#34; placeholder=&#34;請在此輸入你的創作...&#34; style=&#34;min-height: 150px;&#34;&gt;&lt;/textarea&gt;
+                &lt;button class=&#34;show-answer-btn mt-3&#34; onclick=&#34;toggleAnswer(&#39;a22&#39;)&#34;&gt;
+                    &lt;i class=&#34;fas fa-eye mr-2&#34;&gt;&lt;/i&gt;查看參考答案
+                &lt;/button&gt;
+                &lt;div class=&#34;reference-answer&#34; id=&#34;a22&#34;&gt;
+                    &lt;div class=&#34;font-bold text-blue-600 mb-2&#34;&gt;參考答案（創意寫作，以下為示範）：&lt;/div&gt;
+                    &lt;p class=&#34;mb-2&#34;&gt;&lt;strong&gt;示範一：描寫秋天的楓林&lt;/strong&gt;&lt;/p&gt;
+                    &lt;p class=&#34;mb-3&#34;&gt;秋日的楓林，層層疊疊的紅葉如燃燒的火焰，又如晚霞般絢爛。微風拂過，片片楓葉輕輕搖曳，彷彿是蝴蝶在空中翩翩起舞。陽光透過葉隙灑下，在地上投下斑駁的光影，像是大自然繪製的一幅抽象畫。踏在落葉鋪成的地毯上，沙沙的聲響如同秋天低吟的詩歌，訴說着季節更替的故事。&lt;/p&gt;
+                    &lt;p class=&#34;mb-2&#34;&gt;&lt;strong&gt;示範二：描寫春天的櫻花&lt;/strong&gt;&lt;/p&gt;
+                    &lt;p class=&#34;mb-3&#34;&gt;三月的櫻花如雲似霞，滿樹繁花像潔白的雪花落滿枝頭，又如新娘的面紗般輕柔飄逸。微風過處，花瓣紛紛揚揚地飄落，如同下了一場浪漫的花雨。淡淡的清香在空氣中流動，彷彿遠方傳來的輕音樂，令人陶醉。站在花樹下，恍如置身於夢幻的仙境，塵世的煩憂都被這片粉白的世界洗滌得乾乾淨淨。&lt;/p&gt;
+                    &lt;div class=&#34;mt-3 text-sm text-gray-600&#34;&gt;
+                        &lt;strong&gt;評分標準：&lt;/strong&gt;
+                        &lt;ul class=&#34;list-disc ml-6 mt-2&#34;&gt;
+                            &lt;li&gt;運用比喻、通感等修辭手法（4分）&lt;/li&gt;
+                            &lt;li&gt;景物描寫生動具體（3分）&lt;/li&gt;
+                            &lt;li&gt;語言優美流暢（2分）&lt;/li&gt;
+                            &lt;li&gt;字數符合要求（1分）&lt;/li&gt;
+                        &lt;/ul&gt;
+                    &lt;/div&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+
+            &lt;!-- 題目23 --&gt;
+            &lt;div class=&#34;question-card&#34;&gt;
+                &lt;div class=&#34;font-bold text-lg text-blue-600 mb-3&#34;&gt;23. 閱讀《荷塘月色》後，你對朱自清的散文風格有甚麼認識？（5分）&lt;/div&gt;
+                &lt;textarea class=&#34;textarea-input&#34; id=&#34;q23&#34; placeholder=&#34;請在此輸入你的答案...&#34;&gt;&lt;/textarea&gt;
+                &lt;button class=&#34;show-answer-btn mt-3&#34; onclick=&#34;toggleAnswer(&#39;a23&#39;)&#34;&gt;
+                    &lt;i class=&#34;fas fa-eye mr-2&#34;&gt;&lt;/i&gt;查看參考答案
+                &lt;/button&gt;
+                &lt;div class=&#34;reference-answer&#34; id=&#34;a23&#34;&gt;
+                    &lt;div class=&#34;font-bold text-blue-600 mb-2&#34;&gt;參考答案（開放題，言之成理即可）：&lt;/div&gt;
+                    &lt;p class=&#34;mb-2&#34;&gt;朱自清的散文語言優美精煉，(1分) 善於運用各種修辭手法描寫景物，(1分) 文字清新雅致，富有詩意，(1分) 情景交融，能通過景物描寫表達內心情感，(1分) 體現了中國現代散文的藝術魅力。(1分)&lt;/p&gt;
+                    &lt;div class=&#34;mt-3 text-sm text-gray-600&#34;&gt;
+                        &lt;strong&gt;評分要點：&lt;/strong&gt;能準確概括朱自清散文的風格特點，如語言優美、善用修辭、情景交融等，言之成理即可。
+                    &lt;/div&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+
+        &lt;!-- 總結與反思 --&gt;
+        &lt;div class=&#34;bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg card-shadow p-6 mb-6&#34;&gt;
+            &lt;h3 class=&#34;text-2xl font-semibold text-gray-800 mb-4 flex items-center&#34;&gt;
+                &lt;i class=&#34;fas fa-star text-yellow-500 mr-3&#34;&gt;&lt;/i&gt;學習總結與反思
+            &lt;/h3&gt;
+            &lt;div class=&#34;space-y-4&#34;&gt;
+                &lt;div class=&#34;bg-white p-4 rounded-lg&#34;&gt;
+                    &lt;h4 class=&#34;font-bold text-lg text-blue-600 mb-2&#34;&gt;📚 重點知識回顧&lt;/h4&gt;
+                    &lt;ul class=&#34;list-disc ml-6 text-gray-700 space-y-2&#34;&gt;
+                        &lt;li&gt;&lt;strong&gt;主題理解：&lt;/strong&gt;文章通過描寫荷塘月色，表達作者追求寧靜自由但又無法擺脫內心苦悶的複雜情感&lt;/li&gt;
+                        &lt;li&gt;&lt;strong&gt;結構特點：&lt;/strong&gt;情感變化脈絡清晰（不寧靜→自由→陶醉→孤獨），由近及遠的景物描寫層次分明&lt;/li&gt;
+                        &lt;li&gt;&lt;strong&gt;修辭手法：&lt;/strong&gt;大量運用比喻、通感、擬人等修辭，使景物描寫生動形象，富有藝術美感&lt;/li&gt;
+                        &lt;li&gt;&lt;strong&gt;寫作技巧：&lt;/strong&gt;情景交融，以景寫情，多感官描寫，語言優美精煉&lt;/li&gt;
+                    &lt;/ul&gt;
+                &lt;/div&gt;
+                
+                &lt;div class=&#34;bg-white p-4 rounded-lg&#34;&gt;
+                    &lt;h4 class=&#34;font-bold text-lg text-green-600 mb-2&#34;&gt;✍️ 寫作啟示&lt;/h4&gt;
+                    &lt;ul class=&#34;list-disc ml-6 text-gray-700 space-y-2&#34;&gt;
+                        &lt;li&gt;學習運用多種修辭手法（特別是比喻和通感）描寫景物&lt;/li&gt;
+                        &lt;li&gt;注意情景交融，通過景物描寫表達內心情感&lt;/li&gt;
+                        &lt;li&gt;運用多感官描寫（視覺、聽覺、嗅覺等）使文章更生動&lt;/li&gt;
+                        &lt;li&gt;安排合理的文章結構，由淺入深，層次分明&lt;/li&gt;
+                    &lt;/ul&gt;
+                &lt;/div&gt;
+
+                &lt;div class=&#34;bg-white p-4 rounded-lg&#34;&gt;
+                    &lt;h4 class=&#34;font-bold text-lg text-purple-600 mb-2&#34;&gt;🎯 學習建議&lt;/h4&gt;
+                    &lt;ul class=&#34;list-disc ml-6 text-gray-700 space-y-2&#34;&gt;
+                        &lt;li&gt;多閱讀朱自清的其他散文作品，如《背影》、《春》等&lt;/li&gt;
+                        &lt;li&gt;積累優美詞句，學習作者的語言表達技巧&lt;/li&gt;
+                        &lt;li&gt;嘗試觀察身邊的自然景物，運用所學修辭手法進行描寫練習&lt;/li&gt;
+                        &lt;li&gt;體會散文中情與景的關係，培養情感表達能力&lt;/li&gt;
+                    &lt;/ul&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+
+        &lt;!-- 評分說明 --&gt;
+        &lt;div class=&#34;bg-white rounded-lg card-shadow p-6 mb-6&#34;&gt;
+            &lt;h3 class=&#34;text-2xl font-semibold text-gray-800 mb-4 flex items-center&#34;&gt;
+                &lt;i class=&#34;fas fa-clipboard-check text-blue-500 mr-3&#34;&gt;&lt;/i&gt;評分說明
+            &lt;/h3&gt;
+            &lt;div class=&#34;grid grid-cols-1 md:grid-cols-2 gap-4&#34;&gt;
+                &lt;div class=&#34;border-l-4 border-blue-500 pl-4&#34;&gt;
+                    &lt;h4 class=&#34;font-bold text-gray-700 mb-2&#34;&gt;第一部分：主旨與立意（20分）&lt;/h4&gt;
+                    &lt;p class=&#34;text-sm text-gray-600&#34;&gt;考核對文章主題、段落大意、情感表達的理解&lt;/p&gt;
+                &lt;/div&gt;
+                &lt;div class=&#34;border-l-4 border-green-500 pl-4&#34;&gt;
+                    &lt;h4 class=&#34;font-bold text-gray-700 mb-2&#34;&gt;第二部分：結構層次（15分）&lt;/h4&gt;
+                    &lt;p class=&#34;text-sm text-gray-600&#34;&gt;考核對文章結構安排、段落關係的分析能力&lt;/p&gt;
+                &lt;/div&gt;
+                &lt;div class=&#34;border-l-4 border-pink-500 pl-4&#34;&gt;
+                    &lt;h4 class=&#34;font-bold text-gray-700 mb-2&#34;&gt;第三部分：手法層次（30分）&lt;/h4&gt;
+                    &lt;p class=&#34;text-sm text-gray-600&#34;&gt;考核對修辭手法、描寫方法的識別與鑑賞能力&lt;/p&gt;
+                &lt;/div&gt;
+                &lt;div class=&#34;border-l-4 border-purple-500 pl-4&#34;&gt;
+                    &lt;h4 class=&#34;font-bold text-gray-700 mb-2&#34;&gt;第四部分：比較評估（15分）&lt;/h4&gt;
+                    &lt;p class=&#34;text-sm text-gray-600&#34;&gt;考核批判思考與評價鑑賞能力&lt;/p&gt;
+                &lt;/div&gt;
+                &lt;div class=&#34;border-l-4 border-red-500 pl-4 md:col-span-2&#34;&gt;
+                    &lt;h4 class=&#34;font-bold text-gray-700 mb-2&#34;&gt;第五部分：延伸思考（20分）&lt;/h4&gt;
+                    &lt;p class=&#34;text-sm text-gray-600&#34;&gt;考核聯繫生活、創意表達和綜合運用能力&lt;/p&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+            &lt;div class=&#34;mt-4 p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded&#34;&gt;
+                &lt;p class=&#34;text-gray-700&#34;&gt;&lt;strong&gt;總分：100分&lt;/strong&gt;&lt;/p&gt;
+                &lt;p class=&#34;text-sm text-gray-600 mt-2&#34;&gt;建議完成時間：90-120分鐘&lt;/p&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+
+        &lt;!-- 教師使用指引 --&gt;
+        &lt;div class=&#34;bg-gradient-to-r from-indigo-50 to-blue-50 rounded-lg card-shadow p-6&#34;&gt;
+            &lt;h3 class=&#34;text-2xl font-semibold text-gray-800 mb-4 flex items-center&#34;&gt;
+                &lt;i class=&#34;fas fa-chalkboard-teacher text-indigo-500 mr-3&#34;&gt;&lt;/i&gt;教師使用指引
+            &lt;/h3&gt;
+            &lt;div class=&#34;space-y-3 text-gray-700&#34;&gt;
+                &lt;p&gt;&lt;strong&gt;📌 教學建議：&lt;/strong&gt;&lt;/p&gt;
+                &lt;ul class=&#34;list-disc ml-6 space-y-2&#34;&gt;
+                    &lt;li&gt;建議先帶領學生朗讀全文，感受語言的韻律美和意境美&lt;/li&gt;
+                    &lt;li&gt;重點講解文中的修辭手法（特別是比喻和通感），引導學生理解其表達效果&lt;/li&gt;
+                    &lt;li&gt;引導學生分析作者的情感變化軌跡，理解情景交融的寫作手法&lt;/li&gt;
+                    &lt;li&gt;鼓勵學生模仿文章的寫作技巧，進行景物描寫練習&lt;/li&gt;
+                    &lt;li&gt;開放性問題答案多元，重視學生的個人見解，只要言之成理即可給分&lt;/li&gt;
+                &lt;/ul&gt;
+                &lt;p class=&#34;mt-4&#34;&gt;&lt;strong&gt;📌 評分注意事項：&lt;/strong&gt;&lt;/p&gt;
+                &lt;ul class=&#34;list-disc ml-6 space-y-2&#34;&gt;
+                    &lt;li&gt;參考答案僅供參考，學生答案只要意思正確、言之成理即可給分&lt;/li&gt;
+                    &lt;li&gt;鼓勵學生用自己的語言表達，不必完全按照參考答案&lt;/li&gt;
+                    &lt;li&gt;創意寫作題（第22題）重視修辭運用和語言表達，不必拘泥於字數&lt;/li&gt;
+                    &lt;li&gt;開放性問題注重思考深度和邏輯性，有理有據即可&lt;/li&gt;
+                &lt;/ul&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;!-- JavaScript功能 --&gt;
+    &lt;script&gt;
+        // 顯示/隱藏參考答案
+        function toggleAnswer(answerId) {
+            const answerDiv = document.getElementById(answerId);
+            answerDiv.classList.toggle(&#39;show&#39;);
+            
+            const btn = event.target.closest(&#39;button&#39;);
+            if (answerDiv.classList.contains(&#39;show&#39;)) {
+                btn.innerHTML = &#39;&lt;i class=&#34;fas fa-eye-slash mr-2&#34;&gt;&lt;/i&gt;隱藏參考答案&#39;;
+            } else {
+                btn.innerHTML = &#39;&lt;i class=&#34;fas fa-eye mr-2&#34;&gt;&lt;/i&gt;查看參考答案&#39;;
+            }
+        }
+
+        // 詞彙提示功能已整合在CSS中（hover效果）
+        
+        // 打印功能
+        function printExercise() {
+            window.print();
+        }
+
+        // 頁面載入完成提示
+        window.addEventListener(&#39;load&#39;, function() {
+            console.log(&#39;《荷塘月色》閱讀理解練習已載入完成&#39;);
+        });
+
+        // 平滑滾動
+        document.querySelectorAll(&#39;a[href^=&#34;#&#34;]&#39;).forEach(anchor =&gt; {
+            anchor.addEventListener(&#39;click&#39;, function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute(&#39;href&#39;));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: &#39;smooth&#39;,
+                        block: &#39;start&#39;
+                    });
+                }
+            });
+        });
+    &lt;/script&gt;
+
+    &lt;!-- 打印按鈕（固定在右下角） --&gt;
+    &lt;div style=&#34;position: fixed; bottom: 2rem; right: 2rem; z-index: 100;&#34;&gt;
+        &lt;button onclick=&#34;printExercise()&#34; class=&#34;bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-full shadow-lg transition-all duration-300 hover:scale-110&#34;&gt;
+            &lt;i class=&#34;fas fa-print mr-2&#34;&gt;&lt;/i&gt;打印練習
+        &lt;/button&gt;
+    &lt;/div&gt;
+
+&lt;/body&gt;&lt;/html&gt;" class="submission-iframe"></iframe>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>-</td>
+                    <td>
+                        <a href="/grade_submission/1" class="grade-btn">
+                            Grade
+                        </a>
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+</div>
+
+
+<script>
+function showSubmissionModal(submissionId) {
+    document.getElementById('modal-' + submissionId).style.display = 'block';
+}
+
+function closeSubmissionModal(submissionId) {
+    document.getElementById('modal-' + submissionId).style.display = 'none';
+}
+
+// Close modal when clicking outside of it
+window.onclick = function(event) {
+    if (event.target.classList.contains('submission-modal')) {
+        event.target.style.display = 'none';
+    }
+}
+</script>
+
+<style>
+.assignment-submissions {
+    max-width: 1200px;
+    margin: 0 auto;
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.assignment-info {
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+.assignment-status {
+    padding: 5px 10px;
+    border-radius: 4px;
+    background-color: #4a6fa5;
+    color: white;
+    font-size: 12px;
+    margin-left: 10px;
+}
+
+.submissions-table {
+    margin-bottom: 20px;
+}
+
+.submissions-table h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #4a6fa5;
+}
+
+.submissions-table table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.submissions-table th,
+.submissions-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.submissions-table th {
+    background-color: #4a6fa5;
+    color: white;
+    font-weight: bold;
+}
+
+.submissions-table tr:hover {
+    background-color: #f5f5f5;
+}
+
+.submission-preview {
+    position: relative;
+}
+
+.preview-btn {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.preview-btn:hover {
+    background-color: #218838;
+}
+
+/* Modal Styles */
+.submission-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.4);
+    overflow: auto;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 2% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 90%;
+    max-width: 1000px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover,
+.close:focus {
+    color: #000;
+}
+
+.submission-html-content {
+    margin-top: 20px;
+}
+
+.submission-iframe {
+    width: 100%;
+    height: 600px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+}
+
+.grade-btn {
+    display: inline-block;
+    padding: 5px 10px;
+    background-color: #4a6fa5;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.grade-btn:hover {
+    background-color: #3a5a85;
+}
+
+.no-submissions, .error-message {
+    text-align: center;
+    padding: 30px;
+    background-color: #f5f5f5;
+    border-radius: 8px;
+    margin: 20px 0;
+}
+
+.error-message a {
+    color: #4a6fa5;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.error-message a:hover {
+    text-decoration: underline;
+}
+</style>
+
+    </div>
+</body>
+</html>

@@ -1,0 +1,243 @@
+﻿﻿﻿﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Assignment Management System</title>
+    <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #ffffff;
+            color: #333333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1 {
+            color: #4a6fa5;
+            margin-bottom: 20px;
+        }
+        
+        /* Navigation bar */
+        .navbar {
+            background-color: #4a6fa5;
+            color: white;
+            padding: 10px 20px;
+            margin-bottom: 20px;
+        }
+        
+        .navbar ul {
+            list-style-type: none;
+            display: flex;
+            gap: 20px;
+        }
+        
+        .navbar li {
+            display: inline;
+        }
+        
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+        }
+        
+        .navbar a:hover {
+            background-color: #3a5a85;
+        }
+        
+        /* Form styles */
+        form {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        
+        input[type="text"],
+        input[type="password"],
+        input[type="email"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        button {
+            background-color: #4a6fa5;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        
+        button:hover {
+            background-color: #3a5a85;
+        }
+        
+        /* Link styles */
+        a {
+            color: #4a6fa5;
+            text-decoration: none;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        /* Flash messages */
+        .flash {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        
+        .flash.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .flash.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .flash.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        /* Browser dark mode override - stronger version */
+        @media (prefers-color-scheme: dark) {
+            /* Reset all elements to light mode */
+            :root {
+                --bg-color: #ffffff;
+                --text-color: #333333;
+                --card-bg: #f9f9f9;
+                --border-color: #ddd;
+                --navbar-bg: #4a6fa5;
+                --navbar-text: #ffffff;
+            }
+            
+            * {
+                background-color: var(--bg-color) !important;
+                color: var(--text-color) !important;
+                border-color: var(--border-color) !important;
+            }
+            
+            body {
+                background-color: var(--bg-color) !important;
+                color: var(--text-color) !important;
+            }
+            
+            .navbar {
+                background-color: var(--navbar-bg) !important;
+            }
+            
+            .navbar a {
+                color: var(--navbar-text) !important;
+            }
+            
+            form {
+                background-color: var(--card-bg) !important;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
+            }
+            
+            input[type="text"],
+            input[type="password"],
+            input[type="email"] {
+                background-color: var(--bg-color) !important;
+                color: var(--text-color) !important;
+                border: 1px solid var(--border-color) !important;
+            }
+            
+            /* Ensure form elements don't inherit unwanted styles */
+            input::placeholder {
+                color: #999 !important;
+            }
+            
+            button {
+                background-color: var(--navbar-bg) !important;
+                color: var(--navbar-text) !important;
+            }
+            
+            /* Flash messages */
+            .flash.success {
+                background-color: #d4edda !important;
+                color: #155724 !important;
+                border: 1px solid #c3e6cb !important;
+            }
+            
+            .flash.error {
+                background-color: #f8d7da !important;
+                color: #721c24 !important;
+                border: 1px solid #f5c6cb !important;
+            }
+            
+            .flash.info {
+                background-color: #d1ecf1 !important;
+                color: #0c5460 !important;
+                border: 1px solid #bee5eb !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <ul>
+            
+                <li><a href="/">Home</a></li>
+                <li><a href="/login">Login</a></li>
+                <li><a href="/register">Register</a></li>
+            
+        </ul>
+    </nav>
+    
+    <div class="container">
+        <!-- Flash Messages -->
+        
+            
+                
+                    <div class="flash message">Please log in to access this page.</div>
+                
+            
+        
+        
+        
+<h1>Login</h1>
+<form action="/login" method="POST">
+    <input type="text" name="username" placeholder="Username" required>
+    <input type="password" name="password" placeholder="Password" required>
+    <button type="submit">Login</button>
+</form>
+<div style="margin-top: 15px; text-align: center;">
+    <a href="/forgot_password">Forgot Password?</a>
+</div>
+
+    </div>
+</body>
+</html>

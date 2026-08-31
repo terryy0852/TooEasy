@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: too-easy-web
+    env: python
+    plan: free
+    region: oregon
+    autoDeploy: true
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT
+    healthCheckPath: /health
+    disk:
+      name: uploads-disk
+      mountPath: /opt/render/project/src/uploads
+      sizeGB: 1
+    envVars:
+      - key: SECRET_KEY
+        value: your-permanent-secret-key-here
+      - key: DATABASE_URL
+        value: "postgresql://postgres:n5jTtilYoz2S1LwO@db.xqjscxsvcespsrkyoekf.supabase.co:5432/postgres"
+      - key: UPLOAD_FOLDER
+        value: /opt/render/project/src/uploads

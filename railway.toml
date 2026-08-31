@@ -1,0 +1,22 @@
+[build]
+builder = "nixpacks"
+
+[deploy]
+startCommand = "gunicorn app:app --bind 0.0.0.0:$PORT"
+healthcheckPath = "/health"
+healthcheckTimeout = 300
+
+[[services]]
+name = "web"
+
+[[services.env]]
+name = "SECRET_KEY"
+value = "your-permanent-secret-key-here"
+
+[[services.env]]
+name = "DATABASE_URL"
+value = "postgresql://postgres:n5jTtilYoz2S1LwO@db.xqjscxsvcespsrkyoekf.supabase.co:5432/postgres"
+
+[[services.env]]
+name = "UPLOAD_FOLDER"
+value = "/uploads"
