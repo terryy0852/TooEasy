@@ -12,15 +12,20 @@ import logging
 import sys
 from sqlalchemy import text
 
-# Set up logging (early to capture all errors)
+# Set up logging (early to capture all errors) - stdout only for Railway
+handlers_list = [logging.StreamHandler(sys.stdout)]
+try:
+    log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logs')
+    os.makedirs(log_dir, exist_ok=True)
+    handlers_list.append(logging.FileHandler(os.path.join(log_dir, 'app.log')))
+    handlers_list.append(logging.FileHandler(os.path.join(log_dir, 'error.log'), mode='a'))
+except Exception as log_err:
+    pass  # Skip file logs if filesystem is read-only (Railway container)
+
 logging.basicConfig(
-    level=logging.DEBUG,  # Changed to DEBUG for more detailed logging
+    level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(sys.stdout),
-        logging.FileHandler('app.log'),
-        logging.FileHandler('error.log', mode='a')  # Separate error log
-    ]
+    handlers=handlers_list
 )
 logger = logging.getLogger(__name__)
 
@@ -41,8 +46,8 @@ app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hour
 # Initialize CSRF protection
 csrf = CSRFProtect(app)
 
-# Babel configuration
-babel = Babel(app)
+# Babel configuration (init_app deferred to after locale_selector defined below)
+babel = Babel()
 app.config['BABEL_DEFAULT_LOCALE'] = 'en'
 app.config['BABEL_TRANSLATION_DIRECTORIES'] = './translations'
 
@@ -1083,10 +1088,58 @@ def view_submission_content(submission_id):
     
     return html_content
 
-# Start the application
-if __name__ == '__main__':
+# ======================================================
+# Database initialization - runs for BOTH gunicorn AND dev server
+# ======================================================
+_db_initialized = False
+try:
+    logger.info("Running module-level database initialization (for Railway gunicorn)...")
     with app.app_context():
         init_database()
+        _db_initialized = True
+        logger.info("✅ Module-level DB init SUCCESS")
+except Exception as db_err:
+    logger.error(f"❌ Module-level DB init FAILED: {db_err}")
+    logger.exception("Detailed DB init traceback:")
+    # Don't raise - let workers start; they can retry in before_first_request
+
+# Fallback: ensure DB is initialized before the first request hits any route
+# (Flask 3.x removed before_first_request, so use before_request + flag)
+_first_request_done = False
+
+@app.before_request
+def _ensure_db_ready():
+    global _first_request_done, _db_initialized
+    if _first_request_done or _db_initialized:
+        return
+    _first_request_done = True
+    try:
+        logger.info("Retrying DB init on first request...")
+        with app.app_context():
+            init_database()
+            _db_initialized = True
+            logger.info("✅ First-request DB init SUCCESS")
+    except Exception as retry_err:
+        logger.error(f"❌ First-request DB init FAILED: {retry_err}")
+        logger.exception("DB init on request traceback:")
+
+# Gunicorn hook: create DB tables after workers fork (best practice for gunicorn)
+def post_fork(server, worker):
+    """Called by gunicorn after forking each worker process."""
+    try:
+        logger.info(f"[gunicorn post_fork] Worker pid={os.getpid()} initializing DB...")
+        with app.app_context():
+            init_database()
+            logger.info(f"[gunicorn post_fork] Worker pid={os.getpid()} DB init SUCCESS")
+    except Exception as pf_err:
+        logger.error(f"[gunicorn post_fork] Worker DB init FAILED: {pf_err}")
+        # Do not raise - worker can still serve the health check
+
+# Start the application (dev server only; gunicorn uses app:app directly)
+if __name__ == '__main__':
+    if not _db_initialized:
+        with app.app_context():
+            init_database()
     
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=True)
