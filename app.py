@@ -181,7 +181,15 @@ def login():
             logger.error(f"Login error: {login_err}")
             flash('Login error. Please try again.')
     
-    return render_template('login.html')
+    # TEMPORARY: Return JSON to avoid template not found error
+    # TODO: Replace with render_template('login.html') when template is added
+    if request.method == 'GET':
+        return jsonify({
+            "message": "Login page - template not yet implemented",
+            "note": "Send POST with username and password to /login",
+            "status": "placeholder"
+        }), 200
+    return jsonify({"error": "Login failed"}), 400
 
 @app.route('/logout')
 @login_required
@@ -221,7 +229,15 @@ def register():
             logger.error(f"Registration error: {reg_err}")
             flash('Registration failed. Please try again.')
     
-    return render_template('register.html')
+    # TEMPORARY: Return JSON to avoid template not found error
+    # TODO: Replace with render_template('register.html') when template is added
+    if request.method == 'GET':
+        return jsonify({
+            "message": "Register page - template not yet implemented",
+            "note": "Send POST with username, email, password, and role to /register",
+            "status": "placeholder"
+        }), 200
+    return jsonify({"error": "Registration failed"}), 400
 
 @app.route('/student_dashboard')
 @login_required
@@ -243,9 +259,14 @@ def student_dashboard():
             # Get submissions for this student
             submissions = Submission.query.filter_by(student_id=current_user.id).all()
             
-            return render_template('student_dashboard.html', 
-                                 assignments=student_assignments,
-                                 submissions=submissions)
+            # TEMPORARY: Return JSON to avoid template not found error
+            # TODO: Replace with render_template('student_dashboard.html', ...) when template is added
+            return jsonify({
+                "message": "Student Dashboard - template not yet implemented",
+                "user": current_user.username,
+                "assignments": [{"id": a.id, "title": a.title, "description": a.description} for a in student_assignments],
+                "submissions": [{"id": s.id, "assignment_id": s.assignment_id, "submitted_at": s.submitted_at.isoformat()} for s in submissions]
+            }), 200
         
         elif current_user.role == 'teacher' or current_user.role == 'admin':
             # Get all students
@@ -257,10 +278,15 @@ def student_dashboard():
             # Get all submissions
             submissions = Submission.query.all()
             
-            return render_template('teacher_dashboard.html',
-                                 students=students,
-                                 assignments=assignments,
-                                 submissions=submissions)
+            # TEMPORARY: Return JSON to avoid template not found error
+            # TODO: Replace with render_template('teacher_dashboard.html', ...) when template is added
+            return jsonify({
+                "message": "Teacher Dashboard - template not yet implemented",
+                "user": current_user.username,
+                "students": [{"id": s.id, "username": s.username, "email": s.email} for s in students],
+                "assignments": [{"id": a.id, "title": a.title, "description": a.description} for a in assignments],
+                "submission_count": len(submissions)
+            }), 200
     
     except Exception as e:
         logger.error(f"Dashboard error: {e}")
@@ -314,7 +340,12 @@ def create_assignment():
     # GET request - show form
     try:
         students = User.query.filter_by(role='student').all()
-        return render_template('create_assignment.html', students=students)
+        # TEMPORARY: Return JSON to avoid template not found error
+        # TODO: Replace with render_template('create_assignment.html', students=students) when template is added
+        return jsonify({
+            "message": "Create Assignment - template not yet implemented",
+            "students": [{"id": s.id, "username": s.username, "email": s.email} for s in students]
+        }), 200
     except Exception as e:
         logger.error(f"Create assignment form error: {e}")
         flash('Error loading form')
@@ -372,7 +403,16 @@ def submit_assignment(assignment_id):
             else:
                 flash('Please upload an HTML file')
         
-        return render_template('submit_assignment.html', assignment=assignment)
+        # TEMPORARY: Return JSON to avoid template not found error
+        # TODO: Replace with render_template('submit_assignment.html', assignment=assignment) when template is added
+        return jsonify({
+            "message": "Submit Assignment - template not yet implemented",
+            "assignment": {
+                "id": assignment.id,
+                "title": assignment.title,
+                "description": assignment.description
+            }
+        }), 200
         
     except Exception as e:
         logger.error(f"Assignment submission error: {e}")
@@ -404,11 +444,21 @@ def view_submission(submission_id):
                 logger.error(f"Error reading submission file: {e}")
                 html_content = "Error reading submission file"
         
-        return render_template('view_submission.html',
-                             submission=submission,
-                             assignment=assignment,
-                             student=student,
-                             html_content=html_content)
+        # TEMPORARY: Return JSON to avoid template not found error
+        # TODO: Replace with render_template('view_submission.html', ...) when template is added
+        return jsonify({
+            "message": "View Submission - template not yet implemented",
+            "submission": {
+                "id": submission.id,
+                "assignment_id": submission.assignment_id,
+                "student": student.username if student else "Unknown",
+                "submitted_at": submission.submitted_at.isoformat()
+            },
+            "assignment": {
+                "id": assignment.id if assignment else None,
+                "title": assignment.title if assignment else None
+            }
+        }), 200
     
     except Exception as e:
         logger.error(f"View submission error: {e}")
@@ -460,12 +510,12 @@ def delete_assignment(assignment_id):
 # Error handlers
 @app.errorhandler(404)
 def not_found_error(error):
-    return render_template('404.html'), 404
+    return jsonify({"error": "Not found"}), 404
 
 @app.errorhandler(500)
 def internal_error(error):
     db.session.rollback()
-    return render_template('500.html'), 500
+    return jsonify({"error": "Internal server error"}), 500
 
 # Context processors
 @app.context_processor
@@ -476,3 +526,4 @@ def inject_now():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
+
