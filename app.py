@@ -206,45 +206,81 @@ def serve_uploaded_file(filename):
         logger.error(f"Error serving file {filename}: {e}")
         return "File not found", 404
 
-# Database initialization function
+_db_init_completed = False
+
 def init_database():
-    with app.app_context():
+    """Safely init DB. Returns True on success, False on failure. NEVER raises."""
+    global _db_init_completed
+    if _db_init_completed:
+        return True
+    try:
+        logger.info("Initializing database (safe mode)...")
+        # Step 1: Verify engine can connect (use engine.connect() directly - NO raw session queries)
         try:
-            logger.info("Initializing database...")
-            # Test connection first using text() for raw SQL
-            db.session.execute(text('SELECT 1'))
-            logger.info("Database connection successful")
-            
-            # Import inspect to check if tables exist
+            with db.engine.connect() as conn:
+                conn.commit()
+            logger.info("Database engine connection OK")
+        except Exception as conn_err:
+            logger.error(f"DB engine connect test skipped/failed (continuing anyway): {conn_err}")
+
+        # Step 2: Check existing tables via inspect (safe)
+        try:
             from sqlalchemy import inspect
             inspector = inspect(db.engine)
             existing_tables = inspector.get_table_names()
-            
-            # Only create tables if they don't exist
-            if not existing_tables:
-                logger.info("Creating database tables...")
+        except Exception as insp_err:
+            logger.warning(f"Could not inspect tables ({insp_err}), assuming none and running create_all")
+            existing_tables = []
+
+        # Step 3: create_all (idempotent, no-op if tables exist)
+        if not existing_tables:
+            logger.info("Running db.create_all()...")
+            try:
                 db.create_all()
-                logger.info("Database tables created successfully")
-            else:
-                logger.info("Database tables already exist, preserving data")
-            
-            # Create admin user if it doesn't exist
+                logger.info("db.create_all() completed")
+            except Exception as ca_err:
+                logger.error(f"db.create_all() failed: {ca_err}")
+                return False
+        else:
+            logger.info(f"DB has {len(existing_tables)} tables already; preserving data")
+
+        # Step 4: Create admin user if missing (wrapped in fresh session + rollback on fail)
+        try:
             admin_user = User.query.filter_by(username='admin').first()
             if not admin_user:
-                logger.info("Creating admin user...")
+                logger.info("Creating default admin user...")
                 admin_user = User(username='admin', email='admin@example.com', role='admin')
-                admin_user.set_password('admin123')  # Use a secure password in production
+                admin_user.set_password('admin123')
                 db.session.add(admin_user)
                 db.session.commit()
-                logger.info("Admin user created successfully")
-            
-            logger.info("Database initialization complete")
-            return True
-            
-        except Exception as e:
-            logger.critical(f"Failed to initialize database: {e}")
-            logger.exception("Detailed error:")
-            return False
+                logger.info("Admin user created")
+        except Exception as admin_err:
+            db.session.rollback()
+            logger.warning(f"Admin user creation skipped: {admin_err}")
+
+        _db_init_completed = True
+        logger.info("✅ Database initialization complete (safe mode)")
+        return True
+    except Exception as e:
+        logger.critical(f"init_database() FAILED (caught at outer level): {e}")
+        logger.exception("Detailed DB init error:")
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+        return False
+
+
+def ensure_db_ready():
+    """Small helper: try to init DB exactly once per request-context that needs it.
+    Never raises. Logs only."""
+    global _db_init_completed
+    if _db_init_completed:
+        return True
+    ok = init_database()
+    if not ok:
+        logger.warning("ensure_db_ready() -> init returned False. App may run with limited DB functionality.")
+    return ok
 
 # Routes and application logic
 @app.route('/')
@@ -254,22 +290,28 @@ def index():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        
-        user = User.query.filter_by(username=username).first()
-        if user and user.check_password(password):
-            login_user(user, remember=True)
-            session.permanent = True  # Make session permanent
-            flash(_('Login successful!'))
-            # Redirect based on user role
-            if user.role == 'admin' or user.role == 'teacher':
-                return redirect(url_for('student_dashboard'))
+        # Initialise DB ONLY when user actually tries to log in
+        ensure_db_ready()
+        try:
+            username = request.form['username']
+            password = request.form['password']
+
+            user = User.query.filter_by(username=username).first()
+            if user and user.check_password(password):
+                login_user(user, remember=True)
+                session.permanent = True
+                flash(_('Login successful!'))
+                if user.role == 'admin' or user.role == 'teacher':
+                    return redirect(url_for('student_dashboard'))
+                else:
+                    return redirect(url_for('student_dashboard'))
             else:
-                return redirect(url_for('student_dashboard'))
-        else:
-            flash(_('Invalid username or password'))
-    
+                flash(_('Invalid username or password'))
+        except Exception as login_err:
+            logger.error(f"Login POST error: {login_err}")
+            flash(_('Login error. Please try again.'))
+
+    # GET /login: NEVER TOUCHES DB. Worker-safe.
     return render_template('login.html')
 
 @app.route('/logout')
@@ -282,37 +324,40 @@ def logout():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        username = request.form['username']
-        email = request.form['email']
-        password = request.form['password']
-        role = request.form.get('role', 'student')
-        
-        # Check if user exists
-        if User.query.filter_by(username=username).first():
-            flash(_('Username already exists'))
-            return redirect(url_for('register'))
-        
-        if User.query.filter_by(email=email).first():
-            flash(_('Email already registered'))
-            return redirect(url_for('register'))
-        
-        # Create new user
-        new_user = User(username=username, email=email, role=role)
-        new_user.set_password(password)
-        
+        ensure_db_ready()
         try:
+            username = request.form['username']
+            email = request.form['email']
+            password = request.form['password']
+            role = request.form.get('role', 'student')
+
+            if User.query.filter_by(username=username).first():
+                flash(_('Username already exists'))
+                return redirect(url_for('register'))
+
+            if User.query.filter_by(email=email).first():
+                flash(_('Email already registered'))
+                return redirect(url_for('register'))
+
+            new_user = User(username=username, email=email, role=role)
+            new_user.set_password(password)
+
             db.session.add(new_user)
             db.session.commit()
             flash(_('Registration successful! Please login.'))
             return redirect(url_for('login'))
-        except:
+        except Exception as reg_err:
+            db.session.rollback()
+            logger.error(f"Register POST error: {reg_err}")
             flash(_('Registration failed. Please try again.'))
-    
+
+    # GET /register: no DB
     return render_template('register.html')
 
 @app.route('/student_dashboard')
 @login_required
 def student_dashboard():
+    ensure_db_ready()
     logger.debug(f"Accessing student_dashboard - User: {current_user.username}, Role: {current_user.role}")
     
     try:
@@ -1116,44 +1161,36 @@ def view_submission_content(submission_id):
     return html_content
 
 # ======================================================
-# Database initialization - LAZY (happens AFTER gunicorn forks workers)
-# NO module-level DB access = no broken forked connections = no crashes.
+# Database initialization - TRULY LAZY.
+# - NO before_request hooks (those would run on GET /login and crash worker)
+# - NO module-level DB access
+# - ensure_db_ready() is called ONLY inside routes that ACTUALLY touch the DB
+#   (login POST, register POST, dashboard handlers, etc.)
+# This guarantees GET /login works even when DB is unreachable.
 # ======================================================
-_db_ready_flag = False
-
+_handlers_added = False
 @app.before_request
-def _lazy_init():
-    global _db_ready_flag
-    if _db_ready_flag:
+def _add_file_loggers_only_once():
+    """BEFORE_REQUEST: this is the ONLY thing we do on every request.
+    Adds file log handlers once, AFTER gunicorn has forked. Never touches DB."""
+    global _handlers_added
+    if _handlers_added:
         return
-    # Mark as attempted BEFORE running (prevent infinite retry on permanent failure)
-    _db_ready_flag = True
+    _handlers_added = True
     try:
-        logger.info("[Lazy Init] First request received: initializing application...")
-        # 1) Try to add file log handlers now that we're in a forked & writable context
-        try:
-            log_dir = os.path.join(BASE_DIR, 'logs')
-            os.makedirs(log_dir, exist_ok=True)
-            root_logger = logging.getLogger()
-            fh1 = logging.FileHandler(os.path.join(log_dir, 'app.log'))
-            fh2 = logging.FileHandler(os.path.join(log_dir, 'error.log'), mode='a')
-            formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-            fh1.setFormatter(formatter)
-            fh2.setFormatter(formatter)
-            root_logger.addHandler(fh1)
-            root_logger.addHandler(fh2)
-        except Exception as log_add_err:
-            # Not fatal; keep using stdout
-            pass
-
-        # 2) Init DB tables & admin user
-        with app.app_context():
-            init_database()
-        logger.info("[Lazy Init] Application initialization complete ✅")
-    except Exception as lazy_err:
-        logger.error(f"[Lazy Init] FAILED: {lazy_err}")
-        logger.exception("Lazy init full traceback:")
-        # Do NOT raise - health check must still work!
+        log_dir = os.path.join(BASE_DIR, 'logs')
+        os.makedirs(log_dir, exist_ok=True)
+        root_logger = logging.getLogger()
+        fh1 = logging.FileHandler(os.path.join(log_dir, 'app.log'))
+        fh2 = logging.FileHandler(os.path.join(log_dir, 'error.log'), mode='a')
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        fh1.setFormatter(formatter)
+        fh2.setFormatter(formatter)
+        root_logger.addHandler(fh1)
+        root_logger.addHandler(fh2)
+    except Exception:
+        # stdout-only is fine
+        pass
 
 # Dev server entry point
 if __name__ == '__main__':
