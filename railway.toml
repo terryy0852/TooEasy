@@ -11,7 +11,7 @@ name = "web"
 
 [[services.env]]
 name = "SECRET_KEY"
-value = "change-this-to-a-long-random-string-in-production-2026"
+value = "too-easy-production-static-secret-key-2026-change-me-via-railway-service-vars"
 
 [[services.env]]
 name = "DATABASE_URL"
@@ -20,3 +20,11 @@ value = "postgresql://postgres:n5jTtilYoz2S1LwO@db.xqjscxsvcespsrkyoekf.supabase
 [[services.env]]
 name = "UPLOAD_FOLDER"
 value = "/app/uploads"
+
+[[services.env]]
+name = "WEB_CONCURRENCY"
+value = "1"
+
+[[services.env]]
+name = "MAX_WORKERS"
+value = "1"

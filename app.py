@@ -33,19 +33,45 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER') or os.path.join(BASE_DIR, 'uploads')
 
 # ──────────────────────────────────────────────────────────────
+# Force single Gunicorn worker (CSRF depends on one SECRET_KEY across all requests)
+# Railway Nixpacks sets WEB_CONCURRENCY=cpu_count which breaks CSRF/sessions
+# ──────────────────────────────────────────────────────────────
+os.environ.setdefault('WEB_CONCURRENCY', '1')
+os.environ.setdefault('MAX_WORKERS', '1')
+
+# ──────────────────────────────────────────────────────────────
 # Initialize Flask app
 # ──────────────────────────────────────────────────────────────
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-change-me-2026')
+
+# Secret key MUST be EXPLICITLY set via env. Random key per worker = CSRF chaos
+PRODUCTION_SECRET = os.environ.get('SECRET_KEY')
+if PRODUCTION_SECRET and len(PRODUCTION_SECRET) > 20:
+    app.secret_key = PRODUCTION_SECRET
+    logger.info(f"Using SECRET_KEY from env ({len(PRODUCTION_SECRET)} chars)")
+else:
+    # Fallback - STATICALLY defined (NOT random per worker)
+    # Critical for Gunicorn workers to share CSRF/session validation
+    app.secret_key = 'too-easy-production-static-secret-key-2026-please-override-via-env'
+    if PRODUCTION_SECRET:
+        logger.warning(f"SECRET_KEY too short ({len(PRODUCTION_SECRET)}), using static fallback")
+    else:
+        logger.warning("SECRET_KEY not set via env — using static fallback (set env var for real security!)")
+
 app.config['PROPAGATE_EXCEPTIONS'] = False
 app.config['DEBUG'] = False
 app.config['TESTING'] = False
 
-# Session
+# Session + CSRF configuration
+app.config['WTF_CSRF_ENABLED'] = True
+app.config['WTF_CSRF_TIME_LIMIT'] = 3600  # 1 hour token validity
+app.config['WTF_CSRF_SSL_CHECKS'] = False  # Railway terminates SSL at edge
+app.config['WTF_CSRF_METHODS'] = ['POST', 'PUT', 'PATCH', 'DELETE']
+app.config['SESSION_COOKIE_NAME'] = 'tooeasy_session'
 app.config['SESSION_COOKIE_SECURE'] = False
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-app.config['PERMANENT_SESSION_LIFETIME'] = 3600
+app.config['PERMANENT_SESSION_LIFETIME'] = 86400  # 24 hours for stability
 
 # Uploads
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -60,6 +86,20 @@ except Exception as e:
 
 # CSRF
 csrf = CSRFProtect(app)
+
+@app.errorhandler(400)
+def bad_request_error(error):
+    logger.error(f"400 Bad Request: {error} — path={request.path} method={request.method}")
+    logger.error(f"  session keys: {list(session.keys()) if session else 'EMPTY'}")
+    logger.error(f"  form keys: {list(request.form.keys()) if request.form else 'EMPTY'}")
+    logger.error(f"  form has csrf_token: {'csrf_token' in request.form if request.form else 'N/A'}")
+    logger.error(f"  cookies: {list(request.cookies.keys()) if request.cookies else 'NONE'}")
+    logger.error(f"  Referer: {request.headers.get('Referer', 'none')}")
+    flash(f'CSRF or form validation failed. Please refresh the page and try again. [{str(error)[:60]}]')
+    if request.method == 'POST' and 'csrf_token' in str(error):
+        # Redirect back to GET of same route to regenerate fresh CSRF token
+        return redirect(request.path)
+    return render_template('error.html', error=f"Bad Request: {error}"), 400
 
 # ──────────────────────────────────────────────────────────────
 # FIX 3: Babel initialized ONCE, with locale_selector at init
@@ -297,6 +337,13 @@ def handle_exception(error):
 # ──────────────────────────────────────────────────────────────
 # Routes
 # ──────────────────────────────────────────────────────────────
+# CRITICAL: Flask routes already have an app_context and request context.
+# NEVER use `with app.app_context():` inside a route — it pushes a NEW context
+# with a FRESH scoped db.session, causing "Instance not bound to session" errors
+# when models become DETACHED after the inner context exits.
+# Use db queries directly in the route body; they'll use the existing scoped session.
+# ──────────────────────────────────────────────────────────────
+
 @app.route('/')
 def index():
     return redirect(url_for('login'))
@@ -309,21 +356,24 @@ def login():
         if request.method == 'POST':
             username = request.form.get('username', '').strip()
             password = request.form.get('password', '')
+            logger.info(f"[login] POST received — user='{username}' csrf_in_form={'csrf_token' in request.form} session_cookie_present={'tooeasy_session' in request.cookies}")
             if not username or not password:
                 flash(_('Username and password are required'))
                 return render_template('login.html')
 
-            with app.app_context():
-                user = User.query.filter_by(username=username).first()
-                if user and user.check_password(password):
-                    login_user(user, remember=True)
-                    session.permanent = True
-                    flash(_('Login successful!'))
-                    return redirect(url_for('student_dashboard'))
-                else:
-                    flash(_('Invalid username or password'))
+            user = User.query.filter_by(username=username).first()
+            logger.info(f"[login] query result: user={('found id='+str(user.id)+' role='+user.role) if user else 'NOT FOUND'}")
+            if user and user.check_password(password):
+                login_user(user, remember=True)
+                session.permanent = True
+                logger.info(f"[login] SUCCESS — user={username} logged in, redirecting to dashboard")
+                flash(_('Login successful!'))
+                return redirect(url_for('student_dashboard'))
+            else:
+                logger.warning(f"[login] FAIL — invalid credentials for username='{username}'")
+                flash(_('Invalid username or password'))
     except Exception as e:
-        logger.error(f"login route error: {e}", exc_info=True)
+        logger.error(f"[login] ROUTE ERROR: {type(e).__name__}: {e}", exc_info=True)
         flash(_('Login failed. Please try again.'))
     return render_template('login.html')
 
@@ -345,29 +395,41 @@ def register():
             email = request.form.get('email', '').strip()
             password = request.form.get('password', '')
             role = request.form.get('role', 'student')
+            logger.info(f"[register] POST — user='{username}' email='{email}' role='{role}' csrf_in_form={'csrf_token' in request.form}")
 
             if not username or not email or not password:
                 flash(_('All fields are required'))
                 return render_template('register.html')
 
-            with app.app_context():
-                if User.query.filter_by(username=username).first():
-                    flash(_('Username already exists'))
-                    return render_template('register.html')
-                if User.query.filter_by(email=email).first():
-                    flash(_('Email already registered'))
-                    return render_template('register.html')
+            logger.debug(f"[register] checking duplicate username '{username}'...")
+            if User.query.filter_by(username=username).first():
+                logger.warning(f"[register] username already exists: {username}")
+                flash(_('Username already exists'))
+                return render_template('register.html')
+            logger.debug(f"[register] checking duplicate email '{email}'...")
+            if User.query.filter_by(email=email).first():
+                logger.warning(f"[register] email already registered: {email}")
+                flash(_('Email already registered'))
+                return render_template('register.html')
 
-                new_user = User(username=username, email=email, role=role)
-                new_user.set_password(password)
-                db.session.add(new_user)
-                db.session.commit()
+            logger.info(f"[register] creating User model...")
+            new_user = User(username=username, email=email, role=role)
+            new_user.set_password(password)
+            logger.info(f"[register] password hashed, adding to session...")
+            db.session.add(new_user)
+            logger.info(f"[register] calling db.session.commit()...")
+            db.session.commit()
+            logger.info(f"[register] ✅ COMMIT OK — new user id={new_user.id}")
 
             flash(_('Registration successful! Please login.'))
             return redirect(url_for('login'))
     except Exception as e:
-        logger.error(f"register route error: {e}", exc_info=True)
-        db.session.rollback()
+        logger.error(f"[register] ❌ ROUTE ERROR: {type(e).__name__}: {e}", exc_info=True)
+        try:
+            db.session.rollback()
+            logger.info("[register] session rolled back")
+        except Exception as rb:
+            logger.error(f"[register] rollback failed: {rb}")
         flash(_('Registration failed. Please try again.'))
     return render_template('register.html')
 
@@ -377,32 +439,31 @@ def register():
 def student_dashboard():
     try:
         init_database()
-        logger.debug(f"student_dashboard: {current_user.username} ({current_user.role})")
-        with app.app_context():
-            if current_user.role == 'student':
-                assignments = Assignment.query.join(
-                    student_assignment,
-                    Assignment.id == student_assignment.c.assignment_id
-                ).filter(
-                    student_assignment.c.student_id == current_user.id,
-                    Assignment.is_active == True
-                ).all()
-                assignment_submissions = {}
-                for a in assignments:
-                    sub = Submission.query.filter_by(
-                        assignment_id=a.id, student_id=current_user.id
-                    ).first()
-                    assignment_submissions[a.id] = sub
-                return render_template(
-                    'student_dashboard.html',
-                    assignments=assignments,
-                    assignment_submissions=assignment_submissions
-                )
-            else:
-                assignments = Assignment.query.all()
-                return render_template('student_dashboard.html', assignments=assignments)
+        logger.debug(f"[dashboard] user={current_user.username} role={current_user.role}")
+        if current_user.role == 'student':
+            assignments = Assignment.query.join(
+                student_assignment,
+                Assignment.id == student_assignment.c.assignment_id
+            ).filter(
+                student_assignment.c.student_id == current_user.id,
+                Assignment.is_active == True
+            ).all()
+            assignment_submissions = {}
+            for a in assignments:
+                sub = Submission.query.filter_by(
+                    assignment_id=a.id, student_id=current_user.id
+                ).first()
+                assignment_submissions[a.id] = sub
+            return render_template(
+                'student_dashboard.html',
+                assignments=assignments,
+                assignment_submissions=assignment_submissions
+            )
+        else:
+            assignments = Assignment.query.all()
+            return render_template('student_dashboard.html', assignments=assignments)
     except Exception as e:
-        logger.error(f"student_dashboard error: {e}", exc_info=True)
+        logger.error(f"[dashboard] ERROR: {type(e).__name__}: {e}", exc_info=True)
         flash(_('Error loading dashboard'))
         return redirect(url_for('login'))
 
@@ -416,8 +477,7 @@ def create_assignment():
 
     try:
         init_database()
-        with app.app_context():
-            students = User.query.filter_by(role='student').all()
+        students = User.query.filter_by(role='student').all()
 
         if request.method == 'POST':
             title = request.form.get('title', '').strip()
@@ -438,55 +498,51 @@ def create_assignment():
                 except ValueError:
                     pass
 
-            with app.app_context():
-                new_assignment = Assignment(
-                    title=title,
-                    description=description,
-                    created_by=current_user.id,
-                    due_date=due_date,
-                    is_active=is_active
-                )
-                db.session.add(new_assignment)
-                db.session.flush()
+            new_assignment = Assignment(
+                title=title,
+                description=description,
+                created_by=current_user.id,
+                due_date=due_date,
+                is_active=is_active
+            )
+            db.session.add(new_assignment)
+            db.session.flush()
 
-                # HTML file handling
-                if html_file and html_file.filename:
-                    if html_file.filename.lower().endswith('.html'):
-                        filename = f"assignment_{new_assignment.id}_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}.html"
-                        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                        try:
-                            html_file.save(filepath)
-                            with open(filepath, 'r', encoding='utf-8') as f:
-                                new_assignment.html_content = f.read()
-                            new_assignment.html_filename = filename
-                        except Exception as e:
-                            logger.error(f"HTML file save error: {e}")
-                            flash(_('Could not save HTML file'))
-                            db.session.rollback()
-                            return render_template('create_assignment.html', students=students)
-                    else:
-                        flash(_('Only HTML files are allowed'))
+            if html_file and html_file.filename:
+                if html_file.filename.lower().endswith('.html'):
+                    filename = f"assignment_{new_assignment.id}_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}.html"
+                    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                    try:
+                        html_file.save(filepath)
+                        with open(filepath, 'r', encoding='utf-8') as f:
+                            new_assignment.html_content = f.read()
+                        new_assignment.html_filename = filename
+                    except Exception as e:
+                        logger.error(f"[create_assignment] HTML save error: {e}")
+                        flash(_('Could not save HTML file'))
+                        db.session.rollback()
                         return render_template('create_assignment.html', students=students)
-
-                # Assign students
-                if selected_student_ids:
-                    for sid in selected_student_ids:
-                        student = User.query.get(int(sid))
-                        if student and student.role == 'student':
-                            new_assignment.assigned_students.append(student)
                 else:
-                    for s in students:
-                        new_assignment.assigned_students.append(s)
+                    flash(_('Only HTML files are allowed'))
+                    return render_template('create_assignment.html', students=students)
 
-                db.session.commit()
+            if selected_student_ids:
+                for sid in selected_student_ids:
+                    student = User.query.get(int(sid))
+                    if student and student.role == 'student':
+                        new_assignment.assigned_students.append(student)
+            else:
+                for s in students:
+                    new_assignment.assigned_students.append(s)
+
+            db.session.commit()
             flash(_('Assignment created successfully'))
             return redirect(url_for('student_dashboard'))
     except Exception as e:
-        logger.error(f"create_assignment error: {e}", exc_info=True)
+        logger.error(f"[create_assignment] ERROR: {type(e).__name__}: {e}", exc_info=True)
         db.session.rollback()
         flash(_('Failed to create assignment'))
-        with app.app_context():
-            students = User.query.filter_by(role='student').all()
+        students = User.query.filter_by(role='student').all()
     return render_template('create_assignment.html', students=students)
 
 
@@ -495,31 +551,30 @@ def create_assignment():
 def view_assignment(assignment_id):
     try:
         init_database()
-        with app.app_context():
-            assignment = Assignment.query.get_or_404(assignment_id)
+        assignment = Assignment.query.get_or_404(assignment_id)
 
-            if current_user.role == 'student':
-                assigned = db.session.query(student_assignment).filter(
-                    student_assignment.c.assignment_id == assignment_id,
-                    student_assignment.c.student_id == current_user.id
-                ).first()
-                if not assigned:
-                    flash(_('Access denied - this assignment is not assigned to you'))
-                    return redirect(url_for('student_dashboard'))
+        if current_user.role == 'student':
+            assigned = db.session.query(student_assignment).filter(
+                student_assignment.c.assignment_id == assignment_id,
+                student_assignment.c.student_id == current_user.id
+            ).first()
+            if not assigned:
+                flash(_('Access denied - this assignment is not assigned to you'))
+                return redirect(url_for('student_dashboard'))
 
-            submission = None
-            if current_user.role == 'student':
-                submission = Submission.query.filter_by(
-                    assignment_id=assignment_id,
-                    student_id=current_user.id
-                ).first()
+        submission = None
+        if current_user.role == 'student':
+            submission = Submission.query.filter_by(
+                assignment_id=assignment_id,
+                student_id=current_user.id
+            ).first()
         return render_template(
             'interactive_assignment.html',
             assignment=assignment,
             submission=submission
         )
     except Exception as e:
-        logger.error(f"view_assignment {assignment_id} error: {e}", exc_info=True)
+        logger.error(f"[view_assignment {assignment_id}] ERROR: {type(e).__name__}: {e}", exc_info=True)
         flash(_('Error loading assignment'))
         return redirect(url_for('student_dashboard'))
 
@@ -531,60 +586,58 @@ def submit_html_assignment(assignment_id):
         return redirect(url_for('view_assignment', assignment_id=assignment_id))
     try:
         init_database()
-        with app.app_context():
-            assignment = Assignment.query.get_or_404(assignment_id)
-            if current_user.role == 'student':
-                assigned = db.session.query(student_assignment).filter(
-                    student_assignment.c.assignment_id == assignment_id,
-                    student_assignment.c.student_id == current_user.id
-                ).first()
-                if not assigned:
-                    flash(_('Access denied'))
-                    return redirect(url_for('student_dashboard'))
-
-            existing = Submission.query.filter_by(
-                assignment_id=assignment_id,
-                student_id=current_user.id
+        assignment = Assignment.query.get_or_404(assignment_id)
+        if current_user.role == 'student':
+            assigned = db.session.query(student_assignment).filter(
+                student_assignment.c.assignment_id == assignment_id,
+                student_assignment.c.student_id == current_user.id
             ).first()
-            if existing:
-                flash(_('You have already submitted this assignment'))
-                return redirect(url_for('view_assignment', assignment_id=assignment_id))
+            if not assigned:
+                flash(_('Access denied'))
+                return redirect(url_for('student_dashboard'))
 
-            content = request.form.get('content', '').strip()
-            if not content:
-                flash(_('Please provide your HTML content'))
-                return redirect(url_for('view_assignment', assignment_id=assignment_id))
+        existing = Submission.query.filter_by(
+            assignment_id=assignment_id,
+            student_id=current_user.id
+        ).first()
+        if existing:
+            flash(_('You have already submitted this assignment'))
+            return redirect(url_for('view_assignment', assignment_id=assignment_id))
 
-            # Screenshot
-            screenshot_filename = None
-            if 'screenshot' in request.files:
-                shot = request.files['screenshot']
-                if shot and shot.filename:
-                    ext = shot.filename.split('.')[-1].lower()
-                    if ext in ('png', 'jpg', 'jpeg', 'gif'):
-                        screenshot_filename = (
-                            f"screenshot_{assignment_id}_{current_user.id}_"
-                            f"{datetime.utcnow().strftime('%Y%m%d%H%M%S')}.{ext}"
-                        )
-                        try:
-                            shot.save(os.path.join(app.config['UPLOAD_FOLDER'], screenshot_filename))
-                        except Exception as e:
-                            logger.error(f"Screenshot save error: {e}")
-                            screenshot_filename = None
+        content = request.form.get('content', '').strip()
+        if not content:
+            flash(_('Please provide your HTML content'))
+            return redirect(url_for('view_assignment', assignment_id=assignment_id))
 
-            new_submission = Submission(
-                assignment_id=assignment_id,
-                student_id=current_user.id,
-                content=content,
-                screenshot_filename=screenshot_filename,
-                submitted_at=datetime.utcnow()
-            )
-            db.session.add(new_submission)
-            db.session.commit()
+        screenshot_filename = None
+        if 'screenshot' in request.files:
+            shot = request.files['screenshot']
+            if shot and shot.filename:
+                ext = shot.filename.split('.')[-1].lower()
+                if ext in ('png', 'jpg', 'jpeg', 'gif'):
+                    screenshot_filename = (
+                        f"screenshot_{assignment_id}_{current_user.id}_"
+                        f"{datetime.utcnow().strftime('%Y%m%d%H%M%S')}.{ext}"
+                    )
+                    try:
+                        shot.save(os.path.join(app.config['UPLOAD_FOLDER'], screenshot_filename))
+                    except Exception as e:
+                        logger.error(f"[submit_html] Screenshot save error: {e}")
+                        screenshot_filename = None
+
+        new_submission = Submission(
+            assignment_id=assignment_id,
+            student_id=current_user.id,
+            content=content,
+            screenshot_filename=screenshot_filename,
+            submitted_at=datetime.utcnow()
+        )
+        db.session.add(new_submission)
+        db.session.commit()
         flash(_('HTML assignment submitted successfully!'))
         return redirect(url_for('student_dashboard'))
     except Exception as e:
-        logger.error(f"submit_html_assignment {assignment_id} error: {e}", exc_info=True)
+        logger.error(f"[submit_html {assignment_id}] ERROR: {type(e).__name__}: {e}", exc_info=True)
         db.session.rollback()
         flash(_('Failed to submit assignment'))
         return redirect(url_for('view_assignment', assignment_id=assignment_id))
@@ -600,17 +653,16 @@ def submit_assignment(assignment_id):
             if not content:
                 flash(_('Content is required'))
                 return redirect(url_for('view_assignment', assignment_id=assignment_id))
-            with app.app_context():
-                new_submission = Submission(
-                    assignment_id=assignment_id,
-                    student_id=current_user.id,
-                    content=content
-                )
-                db.session.add(new_submission)
-                db.session.commit()
+            new_submission = Submission(
+                assignment_id=assignment_id,
+                student_id=current_user.id,
+                content=content
+            )
+            db.session.add(new_submission)
+            db.session.commit()
             return render_template('assignment_submitted.html', assignment_id=assignment_id)
     except Exception as e:
-        logger.error(f"submit_assignment {assignment_id} error: {e}", exc_info=True)
+        logger.error(f"[submit_assignment {assignment_id}] ERROR: {type(e).__name__}: {e}", exc_info=True)
         db.session.rollback()
         flash(_('Failed to submit assignment'))
     return redirect(url_for('view_assignment', assignment_id=assignment_id))
@@ -624,16 +676,15 @@ def view_submissions(assignment_id):
         return redirect(url_for('student_dashboard'))
     try:
         init_database()
-        with app.app_context():
-            assignment = Assignment.query.get_or_404(assignment_id)
-            submissions = Submission.query.filter_by(assignment_id=assignment_id).all()
+        assignment = Assignment.query.get_or_404(assignment_id)
+        submissions = Submission.query.filter_by(assignment_id=assignment_id).all()
         return render_template(
             'view_submissions.html',
             submissions=submissions,
             assignment=assignment
         )
     except Exception as e:
-        logger.error(f"view_submissions {assignment_id} error: {e}", exc_info=True)
+        logger.error(f"[view_submissions {assignment_id}] ERROR: {type(e).__name__}: {e}", exc_info=True)
         flash(_('Error loading submissions'))
         return redirect(url_for('student_dashboard'))
 
@@ -646,26 +697,24 @@ def grade_submission(submission_id):
         return redirect(url_for('student_dashboard'))
     try:
         init_database()
-        with app.app_context():
-            submission = Submission.query.get_or_404(submission_id)
-            if request.method == 'POST':
-                grade_str = request.form.get('grade', '')
-                feedback = request.form.get('feedback', '')
-                try:
-                    submission.grade = float(grade_str) if grade_str else None
-                    submission.feedback = feedback
-                    db.session.commit()
-                    flash(_('Submission graded successfully'))
-                    return redirect(url_for('view_submissions', assignment_id=submission.assignment_id))
-                except (ValueError, Exception) as e:
-                    logger.error(f"grade error: {e}")
-                    flash(_('Invalid grade or failed to save'))
+        submission = Submission.query.get_or_404(submission_id)
+        if request.method == 'POST':
+            grade_str = request.form.get('grade', '')
+            feedback = request.form.get('feedback', '')
+            try:
+                submission.grade = float(grade_str) if grade_str else None
+                submission.feedback = feedback
+                db.session.commit()
+                flash(_('Submission graded successfully'))
+                return redirect(url_for('view_submissions', assignment_id=submission.assignment_id))
+            except (ValueError, Exception) as e:
+                logger.error(f"[grade {submission_id}] save error: {e}")
+                flash(_('Invalid grade or failed to save'))
     except Exception as e:
-        logger.error(f"grade_submission {submission_id} error: {e}", exc_info=True)
+        logger.error(f"[grade_submission {submission_id}] ERROR: {type(e).__name__}: {e}", exc_info=True)
         db.session.rollback()
         flash(_('Error grading submission'))
-        with app.app_context():
-            submission = Submission.query.get_or_404(submission_id)
+        submission = Submission.query.get_or_404(submission_id)
     return render_template('grade_submission.html', submission=submission)
 
 
@@ -694,16 +743,15 @@ def change_password():
             if not current_password or not new_password:
                 flash(_('Both passwords are required'))
                 return render_template('change_password.html')
-            with app.app_context():
-                if current_user.check_password(current_password):
-                    current_user.set_password(new_password)
-                    db.session.commit()
-                    flash(_('Password changed successfully'))
-                    return redirect(url_for('student_dashboard'))
-                else:
-                    flash(_('Current password is incorrect'))
+            if current_user.check_password(current_password):
+                current_user.set_password(new_password)
+                db.session.commit()
+                flash(_('Password changed successfully'))
+                return redirect(url_for('student_dashboard'))
+            else:
+                flash(_('Current password is incorrect'))
     except Exception as e:
-        logger.error(f"change_password error: {e}", exc_info=True)
+        logger.error(f"[change_password] ERROR: {type(e).__name__}: {e}", exc_info=True)
         db.session.rollback()
         flash(_('Failed to change password'))
     return render_template('change_password.html')
@@ -717,11 +765,10 @@ def admin_users():
         return redirect(url_for('student_dashboard'))
     try:
         init_database()
-        with app.app_context():
-            users = User.query.all()
+        users = User.query.all()
         return render_template('admin_users.html', users=users)
     except Exception as e:
-        logger.error(f"admin_users error: {e}", exc_info=True)
+        logger.error(f"[admin_users] ERROR: {type(e).__name__}: {e}", exc_info=True)
         flash(_('Error loading users'))
         return redirect(url_for('student_dashboard'))
 
@@ -734,24 +781,22 @@ def admin_edit_user(user_id):
         return redirect(url_for('student_dashboard'))
     try:
         init_database()
-        with app.app_context():
-            user = User.query.get_or_404(user_id)
-            if request.method == 'POST':
-                user.username = request.form.get('username', user.username)
-                user.email = request.form.get('email', user.email)
-                user.role = request.form.get('role', user.role)
-                new_pw = request.form.get('password', '')
-                if new_pw:
-                    user.set_password(new_pw)
-                db.session.commit()
-                flash(_('User updated successfully'))
-                return redirect(url_for('admin_users'))
+        user = User.query.get_or_404(user_id)
+        if request.method == 'POST':
+            user.username = request.form.get('username', user.username)
+            user.email = request.form.get('email', user.email)
+            user.role = request.form.get('role', user.role)
+            new_pw = request.form.get('password', '')
+            if new_pw:
+                user.set_password(new_pw)
+            db.session.commit()
+            flash(_('User updated successfully'))
+            return redirect(url_for('admin_users'))
     except Exception as e:
-        logger.error(f"admin_edit_user {user_id} error: {e}", exc_info=True)
+        logger.error(f"[admin_edit_user {user_id}] ERROR: {type(e).__name__}: {e}", exc_info=True)
         db.session.rollback()
         flash(_('Failed to update user'))
-        with app.app_context():
-            user = User.query.get_or_404(user_id)
+        user = User.query.get_or_404(user_id)
     return render_template('admin_edit_user.html', user=user)
 
 
@@ -763,16 +808,15 @@ def admin_delete_user(user_id):
         return redirect(url_for('student_dashboard'))
     try:
         init_database()
-        with app.app_context():
-            user = User.query.get_or_404(user_id)
-            if user.id == current_user.id:
-                flash(_('Cannot delete your own account'))
-                return redirect(url_for('admin_users'))
-            db.session.delete(user)
-            db.session.commit()
+        user = User.query.get_or_404(user_id)
+        if user.id == current_user.id:
+            flash(_('Cannot delete your own account'))
+            return redirect(url_for('admin_users'))
+        db.session.delete(user)
+        db.session.commit()
         flash(_('User deleted successfully'))
     except Exception as e:
-        logger.error(f"admin_delete_user {user_id} error: {e}", exc_info=True)
+        logger.error(f"[admin_delete_user {user_id}] ERROR: {type(e).__name__}: {e}", exc_info=True)
         db.session.rollback()
         flash(_('Failed to delete user'))
     return redirect(url_for('admin_users'))
@@ -786,23 +830,22 @@ def delete_assignment(assignment_id):
         return redirect(url_for('student_dashboard'))
     try:
         init_database()
-        with app.app_context():
-            assignment = Assignment.query.get_or_404(assignment_id)
-            if current_user.role != 'admin' and assignment.created_by != current_user.id:
-                flash(_('You can only delete assignments that you created'))
-                return redirect(url_for('student_dashboard'))
+        assignment = Assignment.query.get_or_404(assignment_id)
+        if current_user.role != 'admin' and assignment.created_by != current_user.id:
+            flash(_('You can only delete assignments that you created'))
+            return redirect(url_for('student_dashboard'))
 
-            Submission.query.filter_by(assignment_id=assignment_id).delete()
-            db.session.execute(
-                student_assignment.delete().where(
-                    student_assignment.c.assignment_id == assignment_id
-                )
+        Submission.query.filter_by(assignment_id=assignment_id).delete()
+        db.session.execute(
+            student_assignment.delete().where(
+                student_assignment.c.assignment_id == assignment_id
             )
-            db.session.delete(assignment)
-            db.session.commit()
+        )
+        db.session.delete(assignment)
+        db.session.commit()
         flash(_('Assignment deleted successfully'))
     except Exception as e:
-        logger.error(f"delete_assignment {assignment_id} error: {e}", exc_info=True)
+        logger.error(f"[delete_assignment {assignment_id}] ERROR: {type(e).__name__}: {e}", exc_info=True)
         db.session.rollback()
         flash(_('Failed to delete assignment'))
     return redirect(url_for('student_dashboard'))
@@ -816,14 +859,13 @@ def view_submission_content(submission_id):
         return redirect(url_for('student_dashboard'))
     try:
         init_database()
-        with app.app_context():
-            submission = Submission.query.get_or_404(submission_id)
-            safe_content = submission.content.replace('"', '&quot;')
-            safe_username = submission.user.username.replace("'", "\\'") if submission.user else 'unknown'
-            safe_title = submission.assignment.title.replace("'", "\\'") if submission.assignment else 'unknown'
-            submission_date = submission.submitted_at.strftime('%Y-%m-%d_%H-%M') if submission.submitted_at else ''
-            grade_display = f'{submission.grade}' if submission.grade else 'Not graded'
-            feedback_display = submission.feedback if submission.feedback else ''
+        submission = Submission.query.get_or_404(submission_id)
+        safe_content = submission.content.replace('"', '&quot;')
+        safe_username = submission.user.username.replace("'", "\\'") if submission.user else 'unknown'
+        safe_title = submission.assignment.title.replace("'", "\\'") if submission.assignment else 'unknown'
+        submission_date = submission.submitted_at.strftime('%Y-%m-%d_%H-%M') if submission.submitted_at else ''
+        grade_display = f'{submission.grade}' if submission.grade else 'Not graded'
+        feedback_display = submission.feedback if submission.feedback else ''
         html_doc = f"""
 <!DOCTYPE html>
 <html lang="en">
@@ -872,7 +914,7 @@ function downloadIt() {{
 """
         return html_doc
     except Exception as e:
-        logger.error(f"view_submission_content {submission_id} error: {e}", exc_info=True)
+        logger.error(f"[view_submission_content {submission_id}] ERROR: {type(e).__name__}: {e}", exc_info=True)
         flash(_('Error loading submission'))
         return redirect(url_for('student_dashboard'))
 
