@@ -257,7 +257,11 @@ class Submission(db.Model):
     student_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     content = db.Column(db.Text, nullable=False)
     submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
-    grade = db.Column(db.Float, nullable=True)
+    # NOTE: grade column used to be db.Float.  We now accept letter grades
+    # (A, B+, C-, F), numeric strings ("85", "92.5"), and "Pass/Fail".
+    # Column type is String(32).  Retro-migration in init_database()
+    # ALTERs any existing FLOAT-grade `submission` tables to TEXT/VARCHAR.
+    grade = db.Column(db.String(32), nullable=True)
     feedback = db.Column(db.Text, nullable=True)
     screenshot_filename = db.Column(db.String(255), nullable=True)
 
@@ -294,7 +298,7 @@ def load_user(user_id):
 _db_initialized = False
 
 def init_database():
-    """Ensure tables exist and admin is seeded. Engine is already validated."""
+    """Ensure tables exist, admin is seeded, and Submission.grade column is TEXT/STRING."""
     global _db_initialized
     if _db_initialized:
         return
@@ -305,11 +309,82 @@ def init_database():
             inspector = inspect(db.engine)
             existing_tables = inspector.get_table_names()
             if not existing_tables:
-                logger.info("[db_init] Creating tables...")
+                logger.info("[db_init] Creating tables (grade column now STRING(32) for letter grades)...")
                 db.create_all()
                 logger.info("[db_init] Tables created")
             else:
                 logger.info(f"[db_init] Tables exist: {existing_tables}")
+                # ── Retro-migration: submission.grade FLOAT/REAL -> TEXT/VARCHAR ──
+                # Old deployments created grade as db.Float; this prevents saving
+                # letter grades ("A", "C", "B+") because SQLAlchemy's compiled
+                # to_float processor ValueError's any non-numeric value during flush.
+                # Conversion is driver-specific.
+                if 'submission' in existing_tables:
+                    try:
+                        cols = inspector.get_columns('submission')
+                        grade_col = next((c for c in cols if c['name'] == 'grade'), None)
+                        current_type = None
+                        if grade_col is not None:
+                            t = grade_col['type']
+                            current_type = str(t).lower() if t is not None else None
+                        logger.info(f"[db_init] submission.grade column type: {current_type!r}")
+                        needs_change = (
+                            current_type is None
+                            or any(k in current_type for k in ['float', 'real', 'numeric', 'double'])
+                        )
+                        if needs_change:
+                            if FINAL_DB_IS_PG:
+                                # PostgreSQL: one-shot ALTER COLUMN ... TYPE VARCHAR(32) USING grade::text
+                                logger.info("[db_init] Postgres: ALTER COLUMN submission.grade -> VARCHAR(32)")
+                                db.session.execute(text(
+                                    "ALTER TABLE submission "
+                                    "ALTER COLUMN grade TYPE VARCHAR(32) "
+                                    "USING grade::text"
+                                ))
+                                db.session.commit()
+                                logger.info("[db_init] submission.grade converted to VARCHAR(32) on Postgres")
+                            else:
+                                # SQLite: no ALTER COLUMN TYPE, so:
+                                #   1) BEGIN
+                                #   2) create tmp_submission NEW schema (grade TEXT)
+                                #   3) copy rows old->new (CAST grade AS TEXT)
+                                #   4) DROP old; rename new->submission
+                                #   5) COMMIT
+                                logger.info("[db_init] SQLite: rebuild submission table with grade TEXT")
+                                db.session.execute(text("BEGIN"))
+                                db.session.execute(text(
+                                    "CREATE TABLE submission_new ("
+                                    "id INTEGER PRIMARY KEY, "
+                                    "assignment_id INTEGER NOT NULL, "
+                                    "student_id INTEGER NOT NULL, "
+                                    "content TEXT NOT NULL, "
+                                    "submitted_at DATETIME, "
+                                    "grade TEXT, "
+                                    "feedback TEXT, "
+                                    "screenshot_filename VARCHAR(255), "
+                                    "FOREIGN KEY(assignment_id) REFERENCES assignment(id), "
+                                    "FOREIGN KEY(student_id) REFERENCES user(id))"
+                                ))
+                                db.session.execute(text(
+                                    "INSERT INTO submission_new "
+                                    "(id, assignment_id, student_id, content, submitted_at, "
+                                    " grade, feedback, screenshot_filename) "
+                                    "SELECT id, assignment_id, student_id, content, submitted_at, "
+                                    "       CAST(grade AS TEXT), feedback, screenshot_filename "
+                                    "FROM submission"
+                                ))
+                                db.session.execute(text("DROP TABLE submission"))
+                                db.session.execute(text("ALTER TABLE submission_new RENAME TO submission"))
+                                db.session.commit()
+                                logger.info("[db_init] submission table rebuilt on SQLite with grade TEXT")
+                        else:
+                            logger.info("[db_init] submission.grade already TEXT/VARCHAR; no migration needed")
+                    except Exception as me:
+                        logger.error(f"[db_init] grade migration SKIPPED due to error: {me}", exc_info=True)
+                        try:
+                            db.session.rollback()
+                        except Exception:
+                            pass
 
             admin_user = User.query.filter_by(username='admin').first()
             if not admin_user:
@@ -329,6 +404,7 @@ def init_database():
     except Exception as e:
         logger.critical(f"[db_init] ❌ FAILED: {e}", exc_info=True)
         raise
+
 
 @app.before_request
 def ensure_db_ready():
