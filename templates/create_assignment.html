@@ -19,19 +19,24 @@
         </div>
         
         <div class="form-group">
-            <label for="html_file">{{ _('HTML File') }}</label>
+            <label for="html_file">{{ _('Student Worksheet (HTML File)') }}</label>
             <input type="file" id="html_file" name="html_file" accept=".html" required>
-            <small style="color: #666; font-size: 0.9em;">{{ _('Upload an HTML file for interactive assignment') }}</small>
+            <small style="color: #666; font-size: 0.9em;">{{ _('Upload the HTML file that students will complete.') }}</small>
         </div>
         
         <div class="form-group">
-            <label for="answer_key">{{ _('Answer Key (for AI Auto-Grading)') }}</label>
-            <textarea id="answer_key" name="answer_key" rows="8" placeholder="Enter the expected answers here. For each question, write:
+            <label for="answer_key_file">{{ _('Marking Scheme / Teacher Answer File') }}</label>
+            <input type="file" id="answer_key_file" name="answer_key_file" accept=".html,.txt,.md">
+            <small style="color: #666; font-size: 0.9em;">{{ _('Upload the teacher-completed version of the worksheet (HTML with filled answers) or a plain-text marking scheme. The AI will extract correct answers automatically.') }}</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="answer_key">{{ _('Answer Key (optional text override)') }}</label>
+            <textarea id="answer_key" name="answer_key" rows="6" placeholder="Or type answers here manually. This will override any uploaded file.
 Q1: expected answer
 Q2: expected answer
-...
-Or paste a full answer key document."></textarea>
-            <small style="color: #666; font-size: 0.9em;">{{ _('AI will use this to auto-grade student submissions. Leave blank to grade manually only.') }}</small>
+..."></textarea>
+            <small style="color: #666; font-size: 0.9em;">{{ _('Type answers here ONLY if you are not uploading a file above. If both are provided, this text takes priority.') }}</small>
         </div>
         
         <div class="form-group">

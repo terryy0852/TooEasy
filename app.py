@@ -291,6 +291,7 @@ class Assignment(db.Model):
     html_content = db.Column(db.Text, nullable=True)
     # ── AI Grading fields ────────────────────────────────────────
     answer_key = db.Column(db.Text, nullable=True)
+    answer_key_filename = db.Column(db.String(255), nullable=True)
     ai_grading_enabled = db.Column(db.Boolean, default=False)
     grading_config = db.Column(db.Text, nullable=True)  # JSON config for future use
 
@@ -474,6 +475,7 @@ def init_database():
             # ── Retro-migrate AI columns ────────────────────────────────
             if 'assignment' in existing_tables:
                 _migrate_add_column('assignment', 'answer_key', 'TEXT')
+                _migrate_add_column('assignment', 'answer_key_filename', 'VARCHAR(255)')
                 _migrate_add_column('assignment', 'ai_grading_enabled', 'BOOLEAN DEFAULT FALSE')
                 _migrate_add_column('assignment', 'grading_config', 'TEXT')
             if 'submission' in existing_tables:
@@ -770,6 +772,80 @@ def student_dashboard():
         return redirect(url_for('login'))
 
 
+
+# ── Answer Key Extraction Helper ───────────────────────────────
+def _extract_answer_key_from_html(html_text: str) -> str:
+    """
+    Extract filled-in answers from a teacher's completed HTML worksheet.
+    Parses input values, selected options, checked boxes, and textarea content.
+    """
+    from html.parser import HTMLParser
+
+    class AnswerExtractor(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.answers = []
+            self.current_tag = None
+            self.current_attrs = {}
+            self.in_textarea = False
+            self.textarea_content = []
+
+        def handle_starttag(self, tag, attrs):
+            self.current_tag = tag
+            self.current_attrs = dict(attrs)
+
+            if tag == 'input':
+                input_type = self.current_attrs.get('type', 'text')
+                name = self.current_attrs.get('name', '')
+                value = self.current_attrs.get('value', '')
+                checked = 'checked' in self.current_attrs
+
+                if input_type in ('checkbox', 'radio'):
+                    if checked:
+                        self.answers.append(f"{name}: [CHECKED] {value}")
+                elif value.strip():
+                    self.answers.append(f"{name}: {value}")
+
+            elif tag == 'select':
+                self.current_select_name = self.current_attrs.get('name', '')
+                self.select_options = []
+
+            elif tag == 'option':
+                selected = 'selected' in self.current_attrs
+                value = self.current_attrs.get('value', '')
+                if selected and value:
+                    self.answers.append(f"{getattr(self, 'current_select_name', '')}: {value}")
+
+            elif tag == 'textarea':
+                self.in_textarea = True
+                self.textarea_name = self.current_attrs.get('name', '')
+                self.textarea_content = []
+
+        def handle_endtag(self, tag):
+            if tag == 'textarea' and self.in_textarea:
+                content = ''.join(self.textarea_content).strip()
+                if content:
+                    self.answers.append(f"{self.textarea_name}: {content}")
+                self.in_textarea = False
+
+        def handle_data(self, data):
+            if self.in_textarea:
+                self.textarea_content.append(data)
+
+    try:
+        parser = AnswerExtractor()
+        parser.feed(html_text)
+        if parser.answers:
+            return "\n".join(parser.answers)
+    except Exception:
+        pass
+
+    # Fallback: if no structured answers found, return first 8000 chars as plain text
+    plain = re.sub(r'<[^>]+>', ' ', html_text)
+    plain = re.sub(r'\s+', ' ', plain).strip()
+    return plain[:8000]
+
+
 @app.route('/create_assignment', methods=['GET', 'POST'])
 @login_required
 def create_assignment():
@@ -802,6 +878,24 @@ def create_assignment():
 
             answer_key = request.form.get('answer_key', '').strip()
             ai_grading_enabled = 'ai_grading_enabled' in request.form
+            answer_key_file = request.files.get('answer_key_file')
+            answer_key_filename = None
+
+            # If teacher uploaded a marking scheme / answer file, extract answers
+            if answer_key_file and answer_key_file.filename:
+                try:
+                    key_content = answer_key_file.read().decode('utf-8')
+                    if answer_key_file.filename.lower().endswith('.html'):
+                        extracted = _extract_answer_key_from_html(key_content)
+                        if extracted:
+                            answer_key = extracted
+                            answer_key_filename = answer_key_file.filename
+                    else:
+                        # Plain text / markdown — use as-is (truncated)
+                        answer_key = key_content.strip()[:12000]
+                        answer_key_filename = answer_key_file.filename
+                except Exception as e:
+                    logger.warning(f"[create_assignment] Could not read answer key file: {e}")
 
             new_assignment = Assignment(
                 title=title,
@@ -810,6 +904,7 @@ def create_assignment():
                 due_date=due_date,
                 is_active=is_active,
                 answer_key=answer_key,
+                answer_key_filename=answer_key_filename,
                 ai_grading_enabled=ai_grading_enabled
             )
             db.session.add(new_assignment)

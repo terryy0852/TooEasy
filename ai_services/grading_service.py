@@ -21,6 +21,7 @@ Your task is to grade a student's submission by comparing it against the teacher
 3. Be fair but consistent. Minor spelling errors in non-language subjects may be penalized lightly.
 4. For open-ended/essay questions, evaluate based on coverage of key points from the answer key.
 5. If the answer key is empty or says "subjective", assign a tentative grade with "subjective": true.
+6. The answer key may be extracted from a teacher-completed HTML worksheet (showing filled-in form values). Match questions by name/label/position.
 
 ## Output Format (strict JSON)
 {
@@ -54,16 +55,7 @@ class AIGradingService(BaseAIService):
     def __init__(self, client: Optional[KimiClient] = None):
         self.client = client or KimiClient()
 
-    # ── BaseAIService contract ────────────────────────────────────
-
     def execute(self, **kwargs) -> AIServiceResult:
-        """
-        Expected kwargs:
-          - answer_key (str): teacher's answer key / expected answers
-          - student_html (str): the serialized HTML submission
-          - max_score (int|str): optional maximum score (default 100)
-          - assignment_title (str): optional context
-        """
         answer_key = kwargs.get('answer_key', '')
         student_html = kwargs.get('student_html', '')
         max_score = kwargs.get('max_score', 100)
@@ -96,12 +88,9 @@ class AIGradingService(BaseAIService):
             )
             parsed = self.client.extract_json(resp)
 
-            # Normalize grade to string
             grade = str(parsed.get('overall_grade', '')).strip()
             feedback = parsed.get('overall_feedback', '')
             confidence = parsed.get('grading_confidence', 'medium')
-
-            # Build per-question detail for storage
             questions = parsed.get('questions', [])
 
             usage = resp.get('usage', {})
@@ -130,8 +119,6 @@ class AIGradingService(BaseAIService):
     def health_check(self) -> bool:
         return self.client.health_check()
 
-    # ── Internals ─────────────────────────────────────────────────
-
     def _build_messages(
         self,
         answer_key: str,
@@ -139,8 +126,6 @@ class AIGradingService(BaseAIService):
         max_score: Any,
         assignment_title: str,
     ) -> list:
-        # Truncate extremely large HTML to avoid token limits
-        # Rough heuristic: 1 token ≈ 4 chars for English, 1-2 for CJK
         max_html_chars = 12000
         if len(student_html) > max_html_chars:
             student_html = student_html[:max_html_chars] + "\n...[truncated for length]"
