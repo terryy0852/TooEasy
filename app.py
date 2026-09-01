@@ -386,6 +386,44 @@ def init_database():
                         except Exception:
                             pass
 
+            # ── Seed test users (never lost on new containers) ────────────
+            # Railway containers have ephemeral filesystems: on each deploy,
+            #   /app/instance/assignments.db is a brand-new SQLite file, so
+            #   users manually registered last deploy are lost.
+            # We solve this with DETERMINISTIC RE-SEEDING: each fresh DB boot
+            #   recreates the users listed below if they don't already exist.
+            # New students/teachers you add via /register still have to be
+            #   added here if you want them to survive deploy rebuilds, OR
+            #   use persistent storage (see instructions after this block).
+            SEED_USERS = [
+                # dict keys match User constructor args + password plaintext
+                dict(username='admin', email='admin@example.com', role='admin', password='admin123'),
+                dict(username='SY',    email='youngsteve0212@gmail.com', role='student', password='password123'),
+                dict(username='tutor1',email='tutor1@example.com',       role='teacher', password='teacher123'),
+            ]
+            created = 0
+            for u in SEED_USERS:
+                exists = User.query.filter_by(username=u['username']).first()
+                if exists is None:
+                    try:
+                        user = User(
+                            username=u['username'],
+                            email=u['email'],
+                            role=u['role'],
+                        )
+                        user.set_password(u['password'])
+                        db.session.add(user)
+                        db.session.commit()
+                        created += 1
+                        logger.info(
+                            f"[db_init] Seed user: u={u['username']} role={u['role']} p={u['password']}"
+                        )
+                    except Exception as se:
+                        db.session.rollback()
+                        logger.warning(f"[db_init] seed {u['username']} failed: {se}")
+            if created > 0:
+                logger.info(f"[db_init] Re-seeded {created} user(s) on fresh DB boot")
+            # Also: always guarantee admin exists even if not in SEED_USERS (belt & suspenders)
             admin_user = User.query.filter_by(username='admin').first()
             if not admin_user:
                 try:
