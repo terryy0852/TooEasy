@@ -205,7 +205,86 @@
             padding: 10px;
             margin-top: 10px;
         }
-        
+
+        .submission-rendered {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 15px;
+            text-align: left;
+        }
+
+        .submission-rendered h4, .submission-content h4 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        .iframe-wrapper {
+            width: 100%;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow: auto;
+            min-height: 500px;
+        }
+
+        .submitted-iframe {
+            width: 100%;
+            min-height: 600px;
+            border: none;
+            display: block;
+            background-color: white;
+        }
+
+        .submission-grade.pending {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+
+        .submission-grade.pending h4 {
+            color: #856404;
+            margin: 0;
+        }
+
+        .submission-grade:not(.pending) {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .submission-grade:not(.pending) h4 {
+            color: #155724;
+            margin: 0;
+        }
+
+        .submission-feedback-block {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 4px;
+            padding: 12px 15px;
+            margin-top: 10px;
+            text-align: left;
+        }
+
+        .submission-feedback-block h4 {
+            margin: 0 0 8px 0;
+            color: #0c5460;
+        }
+
+        .submission-feedback-block p {
+            margin: 0;
+            color: #333;
+            line-height: 1.5;
+        }
+
+        .existing-submission .submission-actions {
+            margin-top: 20px;
+            justify-content: center;
+            display: flex;
+        }
+
         .hidden-form {
             display: none;
         }
@@ -248,28 +327,46 @@
     
     {% if submission %}
     <div class="existing-submission">
-        <h3>✅ Assignment Already Submitted</h3>
-        <p>You have completed this assignment. Your submission is shown below.</p>
-        
+        <h3>Assignment Already Submitted</h3>
+        <p>You have completed this assignment. Your rendered work is shown below, followed by the source code and your grade.</p>
+
+        <div class="submission-rendered">
+            <h4>Rendered HTML Preview:</h4>
+            <div class="iframe-wrapper">
+                <iframe class="submitted-iframe"
+                        srcdoc="{{ submission.content|e }}"
+                        sandbox="allow-scripts allow-forms allow-same-origin allow-modals allow-popups">
+                </iframe>
+            </div>
+        </div>
+
         <div class="submission-content">
-            <h4>Your Submitted Work:</h4>
+            <h4>HTML Source Code:</h4>
             <div style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; background-color: #f9f9f9;">
                 <pre style="margin: 0; white-space: pre-wrap;">{{ submission.content }}</pre>
             </div>
         </div>
-        
-        {% if submission.grade %}
+
+        {% if submission.grade is not none %}
         <div class="submission-grade">
             <h4>Grade: {{ submission.grade }}</h4>
         </div>
-        {% endif %}
-        
-        {% if submission.feedback %}
-        <div class="submission-feedback">
-            <h4>Teacher Feedback:</h4>
-            <p>{{ submission.feedback }}</p>
+        {% else %}
+        <div class="submission-grade pending">
+            <h4>Grade: Pending</h4>
         </div>
         {% endif %}
+
+        {% if submission.feedback %}
+        <div class="submission-feedback-block">
+            <h4>Teacher Feedback:</h4>
+            <p style="white-space: pre-wrap;">{{ submission.feedback }}</p>
+        </div>
+        {% endif %}
+
+        <div class="submission-actions">
+            <a href="{{ url_for('student_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+        </div>
     </div>
     {% else %}
     <div class="main-container">

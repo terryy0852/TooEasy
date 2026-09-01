@@ -511,11 +511,35 @@ def student_dashboard():
                 Assignment.is_active == True
             ).all()
             assignment_submissions = {}
+            # Pass plain dicts (not ORM proxy objects) to the template.
+            # Jinja's `{% if sub.grade is not none %}` sometimes mis-fires when
+            # grade is a SQLAlchemy ColumnProperty loaded lazily via scoped session
+            # descriptor; flat Python dict values avoid that ambiguity entirely.
             for a in assignments:
                 sub = Submission.query.filter_by(
                     assignment_id=a.id, student_id=current_user.id
                 ).first()
-                assignment_submissions[a.id] = sub
+                if sub is not None:
+                    try:
+                        grade_val = float(sub.grade) if sub.grade is not None else None
+                    except (ValueError, TypeError):
+                        grade_val = None
+                    sub_dict = {
+                        'id': sub.id,
+                        'assignment_id': sub.assignment_id,
+                        'content': sub.content,
+                        'submitted_at': sub.submitted_at,
+                        'grade': grade_val,
+                        'feedback': sub.feedback,
+                    }
+                    assignment_submissions[a.id] = sub_dict
+                    logger.info(
+                        f"[dashboard] student={current_user.username} "
+                        f"assignment_id={a.id} sub_id={sub.id} "
+                        f"grade={grade_val!r} feedback_len={len(sub.feedback or '')}"
+                    )
+                else:
+                    assignment_submissions[a.id] = None
             return render_template(
                 'student_dashboard.html',
                 assignments=assignments,
@@ -773,7 +797,12 @@ def grade_submission(submission_id):
                 submission.feedback = feedback
                 logger.info(f"[grade {submission_id}] calling db.session.commit()...")
                 db.session.commit()
-                logger.info(f"[grade {submission_id}] ✅ COMMIT OK — grade saved: {parsed_grade}")
+                # Force reload from DB so any trigger/column default round-trips are in the object
+                db.session.refresh(submission)
+                logger.info(
+                    f"[grade {submission_id}] ✅ COMMIT + REFRESH OK — "
+                    f"grade in DB={submission.grade!r} student={submission.user.username}"
+                )
                 flash(_('Submission graded successfully'))
                 return redirect(url_for('view_submissions', assignment_id=submission.assignment_id))
             except ValueError as ve:
