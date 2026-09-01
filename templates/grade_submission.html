@@ -47,7 +47,7 @@
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="form-group">
                 <label for="grade">{{ _('Grade:') }}</label>
-                <input type="text" name="grade" class="form-control" placeholder="Enter grade (e.g., 90 or A)" required>
+                <input type="text" name="grade" class="form-control" placeholder="e.g. 85, A+, B, C-, F (leave empty for pending)">
             </div>
             <div class="form-group">
                 <label for="feedback">{{ _('Feedback (optional):') }}</label>

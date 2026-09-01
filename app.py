@@ -520,10 +520,15 @@ def student_dashboard():
                     assignment_id=a.id, student_id=current_user.id
                 ).first()
                 if sub is not None:
-                    try:
-                        grade_val = float(sub.grade) if sub.grade is not None else None
-                    except (ValueError, TypeError):
+                    # Grade column stored as string ("A", "B+", "85", "C-") OR
+                    # legacy float (85.0, 0.0). Normalize to str-or-None plain value
+                    # so Jinja `{% if grade is not none %}` is always unambiguous.
+                    if sub.grade is None:
                         grade_val = None
+                    else:
+                        grade_val = str(sub.grade).strip()
+                        if grade_val == '':
+                            grade_val = None
                     sub_dict = {
                         'id': sub.id,
                         'assignment_id': sub.assignment_id,
@@ -786,36 +791,55 @@ def grade_submission(submission_id):
         submission = Submission.query.get_or_404(submission_id)
         logger.info(f"[grade {submission_id}] user={current_user.username} role={current_user.role} method={request.method} student={submission.user.username} assignment_id={submission.assignment_id}")
         if request.method == 'POST':
-            grade_str = request.form.get('grade', '')
-            feedback = request.form.get('feedback', '')
+            grade_raw = (request.form.get('grade', '') or '').strip()
+            feedback = request.form.get('feedback', '') or ''
             csrf_ok = 'csrf_token' in request.form
-            logger.info(f"[grade {submission_id}] POST — grade='{grade_str}' feedback_len={len(feedback)} csrf_in_form={csrf_ok}")
-            try:
-                parsed_grade = float(grade_str) if grade_str else None
-                logger.info(f"[grade {submission_id}] parsed grade={parsed_grade}, updating submission...")
-                submission.grade = parsed_grade
-                submission.feedback = feedback
-                logger.info(f"[grade {submission_id}] calling db.session.commit()...")
-                db.session.commit()
-                # Force reload from DB so any trigger/column default round-trips are in the object
-                db.session.refresh(submission)
-                logger.info(
-                    f"[grade {submission_id}] ✅ COMMIT + REFRESH OK — "
-                    f"grade in DB={submission.grade!r} student={submission.user.username}"
-                )
-                flash(_('Submission graded successfully'))
-                return redirect(url_for('view_submissions', assignment_id=submission.assignment_id))
-            except ValueError as ve:
-                logger.error(f"[grade {submission_id}] ValueError (non-numeric grade): {ve}")
-                db.session.rollback()
-                flash(_('Invalid grade — please enter a number, e.g. 90'))
-            except Exception as e:
-                logger.error(f"[grade {submission_id}] save error: {type(e).__name__}: {e}", exc_info=True)
+            logger.info(f"[grade {submission_id}] POST — grade='{grade_raw}' feedback_len={len(feedback)} csrf_in_form={csrf_ok}")
+
+            # ── Validation FIRST (before any session mutations) ─────────────
+            # Accept: numbers (0-100, decimals), letter grades (A-F), with +/-
+            #   examples: 85, 92.5, A, B+, C-, F, P, Pass
+            # Reject: empty after strip cannot be graded (leave as pending);
+            #         > 20 chars is likely garbage
+            validation_errors = []
+            if grade_raw == '':
+                normalized_grade = None
+            elif len(grade_raw) > 20:
+                validation_errors.append(f"Grade too long ({len(grade_raw)} > 20 chars)")
+            else:
+                normalized_grade = grade_raw
+
+            if validation_errors:
+                for msg in validation_errors:
+                    logger.warning(f"[grade {submission_id}] VALIDATION FAIL: {msg}")
+                    flash(_(f"Invalid grade: {validation_errors[0]}"))
+            else:
+                # ── Commit once ─────────────────────────────────────────────
                 try:
-                    db.session.rollback()
-                except Exception:
-                    pass
-                flash(_('Invalid grade or failed to save'))
+                    submission.grade = normalized_grade
+                    submission.feedback = feedback
+                    logger.info(
+                        f"[grade {submission_id}] persisting grade={normalized_grade!r} "
+                        f"feedback_len={len(feedback)}"
+                    )
+                    db.session.commit()
+                    db.session.refresh(submission)
+                    logger.info(
+                        f"[grade {submission_id}] ✅ COMMIT + REFRESH OK — "
+                        f"grade_in_DB={submission.grade!r} student={submission.user.username}"
+                    )
+                    flash(_('Submission graded successfully'))
+                    return redirect(url_for('view_submissions', assignment_id=submission.assignment_id))
+                except Exception as e:
+                    logger.error(
+                        f"[grade {submission_id}] DB commit FAIL: {type(e).__name__}: {e}",
+                        exc_info=True,
+                    )
+                    try:
+                        db.session.rollback()
+                    except Exception:
+                        pass
+                    flash(_('Failed to save grade — please try again'))
     except Exception as e:
         logger.error(f"[grade_submission {submission_id}] ERROR: {type(e).__name__}: {e}", exc_info=True)
         try:
