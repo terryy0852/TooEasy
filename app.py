@@ -148,7 +148,33 @@ if DATABASE_URL and DATABASE_URL.startswith('postgres://'):
 DB_USED_FALLBACK = False
 FINAL_DB_URI = None
 
-def _probe_db_uri(uri, is_pg):
+def _probe_db_uri(uri, is_pg, retries=3, delay=2):
+    """Try to connect with retries; return True on success."""
+    from sqlalchemy import create_engine, text as _text
+    import time
+    ca = {'connect_timeout': 15} if is_pg else {}
+    last_err = None
+    for attempt in range(1, retries + 1):
+        try:
+            eng = create_engine(uri, connect_args=ca, future=True, pool_pre_ping=False)
+            with eng.connect() as conn:
+                conn.execute(_text('SELECT 1'))
+            try:
+                eng.dispose()
+            except Exception:
+                pass
+            logger.info(f"[db_probe] ✅ Connected on attempt {attempt}")
+            return True, None
+        except Exception as e:
+            last_err = e
+            try:
+                eng.dispose()
+            except Exception:
+                pass
+            if attempt < retries:
+                logger.warning(f"[db_probe] Attempt {attempt} failed, retrying in {delay}s...")
+                time.sleep(delay)
+    return False, last_err
     """Try to connect once (5s timeout); return True on success."""
     from sqlalchemy import create_engine, text as _text
     ca = {'connect_timeout': 5} if is_pg else {}
@@ -169,6 +195,29 @@ def _probe_db_uri(uri, is_pg):
         return False, e
 
 if DATABASE_URL:
+    # Try to reach the remote DATABASE_URL before committing to it
+    # Railway internal DNS can be slow on first boot; allow override to trust it.
+    is_pg = DATABASE_URL.startswith('postgresql')
+    if os.environ.get('TRUST_DATABASE_URL', '').lower() in ('1', 'true', 'yes'):
+        logger.info("[db_probe] TRUST_DATABASE_URL set — skipping probe, using configured URL")
+        FINAL_DB_URI = DATABASE_URL
+        app.config['SQLALCHEMY_DATABASE_URI'] = FINAL_DB_URI
+        logger.info("[db_probe] ✅ Using PostgreSQL (trusted)")
+    else:
+        logger.info(f"[db_probe] Testing remote DATABASE_URL: {DATABASE_URL[:40]}...")
+        probe_ok, probe_err = _probe_db_uri(DATABASE_URL, is_pg)
+        if probe_ok:
+            FINAL_DB_URI = DATABASE_URL
+            app.config['SQLALCHEMY_DATABASE_URI'] = FINAL_DB_URI
+            logger.info("[db_probe] ✅ Remote DB reachable, using PostgreSQL")
+        else:
+            logger.warning(
+                f"[db_probe] ⚠️  Remote DB probe FAILED: {type(probe_err).__name__}: "
+                f"{str(probe_err)[:200]} — falling back to SQLite"
+            )
+            DB_USED_FALLBACK = True
+            FINAL_DB_URI = f'sqlite:///{os.path.join(instance_dir, "assignments.db")}'
+            app.config['SQLALCHEMY_DATABASE_URI'] = FINAL_DB_URI
     # Try to reach the remote DATABASE_URL before committing to it
     is_pg = DATABASE_URL.startswith('postgresql')
     logger.info(f"[db_probe] Testing remote DATABASE_URL: {DATABASE_URL[:40]}...")
