@@ -12,6 +12,7 @@ import logging
 import sys
 from sqlalchemy import text
 
+
 # ── AI Services ────────────────────────────────────────────────
 from ai_services import AIGradingService, AIServiceResult
 
@@ -249,26 +250,8 @@ class Assignment(db.Model):
         secondary=student_assignment,
         backref='assigned_assignments',
         lazy='dynamic'
+
     )
-    __tablename__ = 'assignment'
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(200), nullable=False)
-    description = db.Column(db.Text, nullable=False)
-    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    due_date = db.Column(db.DateTime, nullable=True)
-    is_active = db.Column(db.Boolean, default=True)
-    html_filename = db.Column(db.String(255), nullable=True)
-    html_content = db.Column(db.Text, nullable=True)
-
-    assigned_students = db.relationship(
-        'User',
-        secondary=student_assignment,
-        backref='assigned_assignments',
-        lazy='dynamic'
-    )
-
-
 class Submission(db.Model):
     __tablename__ = 'submission'
     id = db.Column(db.Integer, primary_key=True)
@@ -292,26 +275,7 @@ class Submission(db.Model):
 
     assignment = db.relationship('Assignment', backref='submissions', lazy=True)
     user = db.relationship('User', backref='submissions', lazy=True)
-    __tablename__ = 'submission'
-    id = db.Column(db.Integer, primary_key=True)
-    assignment_id = db.Column(db.Integer, db.ForeignKey('assignment.id'), nullable=False)
-    student_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    content = db.Column(db.Text, nullable=False)
-    submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
-    # NOTE: grade column used to be db.Float.  We now accept letter grades
-    # (A, B+, C-, F), numeric strings ("85", "92.5"), and "Pass/Fail".
-    # Column type is String(32).  Retro-migration in init_database()
-    # ALTERs any existing FLOAT-grade `submission` tables to TEXT/VARCHAR.
-    grade = db.Column(db.String(32), nullable=True)
-    feedback = db.Column(db.Text, nullable=True)
-    screenshot_filename = db.Column(db.String(255), nullable=True)
 
-    assignment = db.relationship('Assignment', backref='submissions', lazy=True)
-    user = db.relationship('User', backref='submissions', lazy=True)
-
-# ──────────────────────────────────────────────────────────────
-# FIX 5: Flask-Login
-# ──────────────────────────────────────────────────────────────
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
@@ -337,6 +301,37 @@ def load_user(user_id):
 #       No runtime switching needed here — just tables + seed.
 # ──────────────────────────────────────────────────────────────
 _db_initialized = False
+
+
+# ── AI Column Retro-Migration Helper ───────────────────────────
+def _column_exists(table: str, col: str) -> bool:
+    from sqlalchemy import inspect
+    inspector = inspect(db.engine)
+    return any(c['name'] == col for c in inspector.get_columns(table))
+
+
+def _migrate_add_column(table: str, col: str, col_def: str):
+    """Idempotently add a column if it doesn't exist."""
+    try:
+        if not _column_exists(table, col):
+            if FINAL_DB_IS_PG:
+                db.session.execute(text(f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {col} {col_def}"))
+            else:
+                try:
+                    db.session.execute(text(f"ALTER TABLE {table} ADD COLUMN {col} {col_def}"))
+                except Exception:
+                    pass
+            db.session.commit()
+            logger.info(f"[db_init] Added column {table}.{col}")
+        else:
+            logger.info(f"[db_init] Column {table}.{col} already exists")
+    except Exception as e:
+        logger.warning(f"[db_init] Column migration {table}.{col} skipped: {e}")
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+
 
 def init_database():
     """Ensure tables exist, admin is seeded, and Submission.grade column is TEXT/STRING."""
@@ -426,6 +421,18 @@ def init_database():
                             db.session.rollback()
                         except Exception:
                             pass
+
+            # ── Retro-migrate AI columns ────────────────────────────────
+            if 'assignment' in existing_tables:
+                _migrate_add_column('assignment', 'answer_key', 'TEXT')
+                _migrate_add_column('assignment', 'ai_grading_enabled', 'BOOLEAN DEFAULT FALSE')
+                _migrate_add_column('assignment', 'grading_config', 'TEXT')
+            if 'submission' in existing_tables:
+                _migrate_add_column('submission', 'ai_grade', 'VARCHAR(32)')
+                _migrate_add_column('submission', 'ai_feedback', 'TEXT')
+                _migrate_add_column('submission', 'ai_graded_at', 'DATETIME')
+                _migrate_add_column('submission', 'ai_grade_status', 'VARCHAR(20)')
+                _migrate_add_column('submission', 'ai_raw_response', 'TEXT')
 
             # ── Seed test users (never lost on new containers) ────────────
             # Railway containers have ephemeral filesystems: on each deploy,
@@ -744,12 +751,17 @@ def create_assignment():
                 except ValueError:
                     pass
 
+            answer_key = request.form.get('answer_key', '').strip()
+            ai_grading_enabled = 'ai_grading_enabled' in request.form
+
             new_assignment = Assignment(
                 title=title,
                 description=description,
                 created_by=current_user.id,
                 due_date=due_date,
-                is_active=is_active
+                is_active=is_active,
+                answer_key=answer_key,
+                ai_grading_enabled=ai_grading_enabled
             )
             db.session.add(new_assignment)
             db.session.flush()
@@ -1208,6 +1220,163 @@ function downloadIt() {{
 
 
 # ──────────────────────────────────────────────────────────────
+
+# ═══════════════════════════════════════════════════════════════
+# AI GRADING ROUTES
+# ═══════════════════════════════════════════════════════════════
+
+@app.route('/api/grade_submission/<int:submission_id>', methods=['POST'])
+@login_required
+def api_grade_submission(submission_id):
+    """Trigger AI grading for a single submission."""
+    if current_user.role not in ['admin', 'teacher']:
+        return jsonify({'success': False, 'error': 'Access denied'}), 403
+    try:
+        init_database()
+        submission = Submission.query.get_or_404(submission_id)
+        assignment = submission.assignment
+
+        if not assignment.ai_grading_enabled:
+            return jsonify({'success': False, 'error': 'AI grading not enabled for this assignment'}), 400
+        if not assignment.answer_key:
+            return jsonify({'success': False, 'error': 'No answer key set for this assignment'}), 400
+
+        submission.ai_grade_status = 'pending'
+        db.session.commit()
+
+        service = AIGradingService()
+        result = service.execute(
+            answer_key=assignment.answer_key,
+            student_html=submission.content,
+            max_score=100,
+            assignment_title=assignment.title,
+        )
+
+        if result.success:
+            submission.ai_grade = result.data.get('grade', '')
+            submission.ai_feedback = result.data.get('feedback', '')
+            submission.ai_graded_at = datetime.utcnow()
+            submission.ai_grade_status = 'graded'
+            submission.ai_raw_response = result.raw_response
+            db.session.commit()
+            logger.info(f"[ai_grade] submission_id={submission_id} grade={submission.ai_grade}")
+            return jsonify({
+                'success': True,
+                'grade': submission.ai_grade,
+                'feedback': submission.ai_feedback,
+                'confidence': result.data.get('confidence', 'medium'),
+                'tokens_used': result.tokens_used,
+            })
+        else:
+            submission.ai_grade_status = 'failed'
+            db.session.commit()
+            logger.error(f"[ai_grade] submission_id={submission_id} failed: {result.error}")
+            return jsonify({'success': False, 'error': result.error}), 500
+
+    except Exception as e:
+        logger.error(f"[api_grade_submission {submission_id}] ERROR: {e}", exc_info=True)
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/grade_assignment/<int:assignment_id>', methods=['POST'])
+@login_required
+def api_grade_assignment(assignment_id):
+    """Batch AI-grade all ungraded submissions for an assignment."""
+    if current_user.role not in ['admin', 'teacher']:
+        return jsonify({'success': False, 'error': 'Access denied'}), 403
+    try:
+        init_database()
+        assignment = Assignment.query.get_or_404(assignment_id)
+        if not assignment.ai_grading_enabled:
+            return jsonify({'success': False, 'error': 'AI grading not enabled'}), 400
+        if not assignment.answer_key:
+            return jsonify({'success': False, 'error': 'No answer key'}), 400
+
+        submissions = Submission.query.filter_by(
+            assignment_id=assignment_id,
+            ai_grade_status=None,
+        ).all()
+
+        service = AIGradingService()
+        graded_count = 0
+        failed_count = 0
+
+        for sub in submissions:
+            sub.ai_grade_status = 'pending'
+            db.session.commit()
+            result = service.execute(
+                answer_key=assignment.answer_key,
+                student_html=sub.content,
+                max_score=100,
+                assignment_title=assignment.title,
+            )
+            if result.success:
+                sub.ai_grade = result.data.get('grade', '')
+                sub.ai_feedback = result.data.get('feedback', '')
+                sub.ai_graded_at = datetime.utcnow()
+                sub.ai_grade_status = 'graded'
+                sub.ai_raw_response = result.raw_response
+                graded_count += 1
+            else:
+                sub.ai_grade_status = 'failed'
+                failed_count += 1
+            db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'graded': graded_count,
+            'failed': failed_count,
+        })
+    except Exception as e:
+        logger.error(f"[api_grade_assignment {assignment_id}] ERROR: {e}", exc_info=True)
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/accept_ai_grade/<int:submission_id>', methods=['POST'])
+@login_required
+def api_accept_ai_grade(submission_id):
+    """Teacher accepts the AI-generated grade as the final grade."""
+    if current_user.role not in ['admin', 'teacher']:
+        return jsonify({'success': False, 'error': 'Access denied'}), 403
+    try:
+        init_database()
+        submission = Submission.query.get_or_404(submission_id)
+        if submission.ai_grade_status != 'graded':
+            return jsonify({'success': False, 'error': 'No AI grade available'}), 400
+
+        submission.grade = submission.ai_grade
+        submission.feedback = submission.ai_feedback
+        db.session.commit()
+        logger.info(f"[accept_ai_grade] submission_id={submission_id} accepted")
+        return jsonify({'success': True})
+    except Exception as e:
+        logger.error(f"[accept_ai_grade {submission_id}] ERROR: {e}", exc_info=True)
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/ai_health', methods=['GET'])
+@login_required
+def ai_health():
+    """Check AI service connectivity."""
+    try:
+        service = AIGradingService()
+        ok = service.health_check()
+        return jsonify({'healthy': ok, 'service': 'AIGradingService'})
+    except Exception as e:
+        return jsonify({'healthy': False, 'error': str(e)}), 500
+
 # __main__ — dev server only. Gunicorn never runs this.
 # ──────────────────────────────────────────────────────────────
 if __name__ == '__main__':

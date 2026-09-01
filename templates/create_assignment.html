@@ -25,6 +25,24 @@
         </div>
         
         <div class="form-group">
+            <label for="answer_key">{{ _('Answer Key (for AI Auto-Grading)') }}</label>
+            <textarea id="answer_key" name="answer_key" rows="8" placeholder="Enter the expected answers here. For each question, write:
+Q1: expected answer
+Q2: expected answer
+...
+Or paste a full answer key document."></textarea>
+            <small style="color: #666; font-size: 0.9em;">{{ _('AI will use this to auto-grade student submissions. Leave blank to grade manually only.') }}</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="ai_grading_enabled" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" id="ai_grading_enabled" name="ai_grading_enabled" style="transform: scale(1.2); margin: 0;">
+                <span>{{ _('Enable AI Auto-Grading') }}</span>
+            </label>
+            <small style="color: #666; font-size: 0.9em;">{{ _('When enabled, Kimi AI will automatically generate draft grades for each submission. Teachers can review and accept or override.') }}</small>
+        </div>
+        
+        <div class="form-group">
             <label for="due_date">{{ _('Due Date (Optional)') }}</label>
             <input type="datetime-local" id="due_date" name="due_date">
         </div>

@@ -64,6 +64,19 @@
                         <p>{{ sub.feedback }}</p>
                     </div>
                     {% endif %}
+                    <!-- Show AI feedback if available and no final grade yet -->
+                    {% if sub.ai_feedback and not sub.grade %}
+                    <div class="submission-feedback ai-feedback">
+                        <strong>{{ _('AI Draft Feedback:') }}</strong>
+                        <p>{{ sub.ai_feedback }}</p>
+                        <span class="ai-note">{{ _('Awaiting teacher confirmation') }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="submission-feedback">
+                        <strong>{{ _('Feedback:') }}</strong>
+                        <p>{{ sub.feedback }}</p>
+                    </div>
+                    {% endif %}
                     <!-- Re-open assignment to view submitted work -->
                     <a href="{{ url_for('view_assignment', assignment_id=assignment.id) }}?v=2" class="view-btn html-btn" target="_blank" onclick="openHTMLAssignment(event, {{ assignment.id }})" data-assignment-id="{{ assignment.id }}">
                         {{ _('View Submitted Assignment') }}
@@ -299,6 +312,24 @@
 }
 
 .submission-feedback p {
+    margin: 0;
+    color: #333;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.ai-feedback {
+    background-color: #e8eaf6;
+    border-left-color: #667eea;
+}
+
+.ai-note {
+    display: block;
+    margin-top: 6px;
+    font-size: 12px;
+    color: #667eea;
+    font-style: italic;
+}
     margin: 0;
     color: #333;
     white-space: pre-wrap;

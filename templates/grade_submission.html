@@ -22,6 +22,49 @@
             <strong>{{ _('Current Grade:') }}</strong> {{ submission.grade if submission.grade else _('Not graded yet') }}
         </div>
         
+        <!-- AI Grade Section -->
+        {% if submission.assignment.ai_grading_enabled %}
+        <div class="ai-grade-section">
+            <h3>{{ _('AI Auto-Grading') }}</h3>
+            {% if submission.ai_grade_status == 'graded' %}
+            <div class="ai-grade-card">
+                <div class="ai-grade-header">
+                    <span class="ai-badge">{{ _('AI Draft') }}</span>
+                    <span class="ai-grade-value">{{ submission.ai_grade }}</span>
+                </div>
+                <div class="ai-feedback">
+                    <strong>{{ _('AI Feedback:') }}</strong>
+                    <p>{{ submission.ai_feedback }}</p>
+                </div>
+                <div class="ai-actions">
+                    <button type="button" class="accept-ai-btn" onclick="acceptAIGrade({{ submission.id }})">
+                        {{ _('Accept AI Grade') }}
+                    </button>
+                    <span class="ai-hint">{{ _('Or edit manually below') }}</span>
+                </div>
+            </div>
+            {% elif submission.ai_grade_status == 'pending' %}
+            <div class="ai-status pending">
+                <span class="spinner"></span> {{ _('AI grading in progress...') }}
+            </div>
+            {% elif submission.ai_grade_status == 'failed' %}
+            <div class="ai-status failed">
+                {{ _('AI grading failed. Please grade manually.') }}
+                <button type="button" class="retry-ai-btn" onclick="gradeWithAI({{ submission.id }})">
+                    {{ _('Retry AI Grade') }}
+                </button>
+            </div>
+            {% else %}
+            <div class="ai-status">
+                <button type="button" class="ai-grade-btn" onclick="gradeWithAI({{ submission.id }})">
+                    {{ _('Grade with AI') }}
+                </button>
+                <span class="ai-hint">{{ _('Kimi AI will analyze the submission against the answer key') }}</span>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+        
         <div class="submission-content">
             <strong>{{ _('Student\'s Completed HTML Assignment:') }}</strong>
             <div class="html-preview-container">
@@ -47,11 +90,13 @@
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="form-group">
                 <label for="grade">{{ _('Grade:') }}</label>
-                <input type="text" name="grade" class="form-control" placeholder="e.g. 85, A+, B, C-, F (leave empty for pending)">
+                <input type="text" name="grade" id="grade" class="form-control" 
+                       value="{{ submission.grade or '' }}"
+                       placeholder="e.g. 85, A+, B, C-, F (leave empty for pending)">
             </div>
             <div class="form-group">
                 <label for="feedback">{{ _('Feedback (optional):') }}</label>
-                <textarea name="feedback" class="form-control" rows="4" placeholder="Enter feedback for the student"></textarea>
+                <textarea name="feedback" id="feedback" class="form-control" rows="4" placeholder="Enter feedback for the student">{{ submission.feedback or '' }}</textarea>
             </div>
             <div class="form-actions">
                 <button type="submit" class="submit-btn">{{ _('Save Grade') }}</button>
@@ -60,6 +105,64 @@
         </form>
     </div>
 </div>
+
+<script>
+function gradeWithAI(submissionId) {
+    if (!confirm('{{ _("Start AI grading? This may take a few seconds.") }}')) return;
+    
+    const btn = document.querySelector('.ai-grade-btn, .retry-ai-btn');
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = '{{ _("Grading...") }}';
+    }
+    
+    fetch(`/api/grade_submission/${submissionId}`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token() }}' }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            alert('{{ _("AI grading complete!") }}\\n{{ _("Grade:") }} ' + data.grade);
+            location.reload();
+        } else {
+            alert('{{ _("AI grading failed:") }} ' + (data.error || 'Unknown error'));
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = '{{ _("Retry AI Grade") }}';
+            }
+        }
+    })
+    .catch(err => {
+        alert('{{ _("Error:") }} ' + err.message);
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = '{{ _("Retry AI Grade") }}';
+        }
+    });
+}
+
+function acceptAIGrade(submissionId) {
+    if (!confirm('{{ _("Accept AI grade as final grade?") }}')) return;
+    
+    fetch(`/api/accept_ai_grade/${submissionId}`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token() }}' }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            alert('{{ _("AI grade accepted!") }}');
+            location.reload();
+        } else {
+            alert('{{ _("Failed:") }} ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(err => {
+        alert('{{ _("Error:") }} ' + err.message);
+    });
+}
+</script>
 {% else %}
 <div class="error-message">
     <p>{{ _('Submission not found.') }}</p>
@@ -95,6 +198,137 @@
 .detail-item {
     margin-bottom: 10px;
     font-size: 16px;
+}
+
+/* AI Grade Section */
+.ai-grade-section {
+    margin: 20px 0;
+    padding: 15px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 8px;
+    color: white;
+}
+
+.ai-grade-section h3 {
+    margin: 0 0 12px 0;
+    font-size: 1.1em;
+}
+
+.ai-grade-card {
+    background: rgba(255,255,255,0.95);
+    color: #333;
+    padding: 15px;
+    border-radius: 6px;
+}
+
+.ai-grade-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.ai-badge {
+    background: #667eea;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.ai-grade-value {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #667eea;
+}
+
+.ai-feedback {
+    background: #f8f9fa;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+
+.ai-feedback p {
+    margin: 5px 0 0 0;
+    line-height: 1.5;
+}
+
+.ai-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.accept-ai-btn, .ai-grade-btn, .retry-ai-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.accept-ai-btn {
+    background: #28a745;
+    color: white;
+}
+
+.accept-ai-btn:hover {
+    background: #218838;
+}
+
+.ai-grade-btn {
+    background: #667eea;
+    color: white;
+}
+
+.ai-grade-btn:hover {
+    background: #5a6fd6;
+}
+
+.retry-ai-btn {
+    background: #ffc107;
+    color: #333;
+}
+
+.retry-ai-btn:hover {
+    background: #e0a800;
+}
+
+.ai-hint {
+    font-size: 13px;
+    opacity: 0.9;
+}
+
+.ai-status {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.ai-status.pending {
+    color: #fff;
+}
+
+.ai-status.failed {
+    color: #ffcccb;
+}
+
+.spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
 }
 
 .html-preview-container {
@@ -224,6 +458,11 @@
     
     .form-actions {
         flex-direction: column;
+    }
+    
+    .ai-actions {
+        flex-direction: column;
+        align-items: flex-start;
     }
 }
 </style>

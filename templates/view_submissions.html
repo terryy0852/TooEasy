@@ -10,7 +10,20 @@
     <div class="assignment-info">
         <h2>{{ _('Assignment:') }} {{ assignment.title }}</h2>
         <span class="assignment-status">{{ _('Active') if assignment.is_active else _('Inactive') }}</span>
+        {% if assignment.ai_grading_enabled %}
+        <span class="ai-badge">{{ _('AI Grading On') }}</span>
+        {% endif %}
     </div>
+    
+    <!-- Batch AI Grade Button -->
+    {% if assignment.ai_grading_enabled and assignment.answer_key %}
+    <div class="batch-actions">
+        <button type="button" class="batch-ai-btn" onclick="batchGradeAssignment({{ assignment.id }})">
+            {{ _('AI Grade All Ungraded') }}
+        </button>
+        <span class="batch-hint">{{ _('Automatically grades all submissions without an AI grade') }}</span>
+    </div>
+    {% endif %}
     
     {% if submissions %}
     <div class="submissions-table">
@@ -21,7 +34,8 @@
                     <th>{{ _('Student') }}</th>
                     <th>{{ _('Submission Date') }}</th>
                     <th>{{ _('Answer Preview') }}</th>
-                    <th>{{ _('Grade') }}</th>
+                    <th>{{ _('Final Grade') }}</th>
+                    <th>{{ _('AI Grade') }}</th>
                     <th>{{ _('Actions') }}</th>
                 </tr>
             </thead>
@@ -45,6 +59,17 @@
                         </div>
                     </td>
                     <td>{{ submission.grade if submission.grade else '-' }}</td>
+                    <td>
+                        {% if submission.ai_grade_status == 'graded' %}
+                        <span class="ai-grade-cell">{{ submission.ai_grade }}</span>
+                        {% elif submission.ai_grade_status == 'pending' %}
+                        <span class="ai-status-pending">{{ _('Grading...') }}</span>
+                        {% elif submission.ai_grade_status == 'failed' %}
+                        <span class="ai-status-failed">{{ _('Failed') }}</span>
+                        {% else %}
+                        <span class="ai-status-none">-</span>
+                        {% endif %}
+                    </td>
                     <td>
                         <a href="{{ url_for('grade_submission', submission_id=submission.id) }}" class="grade-btn">
                             {{ _('Grade') }}
@@ -83,6 +108,35 @@ window.onclick = function(event) {
         event.target.style.display = 'none';
     }
 }
+
+function batchGradeAssignment(assignmentId) {
+    if (!confirm('{{ _("AI grade all ungraded submissions? This may take a minute.") }}')) return;
+    
+    const btn = document.querySelector('.batch-ai-btn');
+    btn.disabled = true;
+    btn.textContent = '{{ _("Grading...") }}';
+    
+    fetch(`/api/grade_assignment/${assignmentId}`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token() }}' }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            alert(`{{ _("Done!") }} ${data.graded} {{ _("graded, ") }} ${data.failed} {{ _("failed.") }}`);
+            location.reload();
+        } else {
+            alert('{{ _("Failed:") }} ' + (data.error || 'Unknown error'));
+            btn.disabled = false;
+            btn.textContent = '{{ _("AI Grade All Ungraded") }}';
+        }
+    })
+    .catch(err => {
+        alert('{{ _("Error:") }} ' + err.message);
+        btn.disabled = false;
+        btn.textContent = '{{ _("AI Grade All Ungraded") }}';
+    });
+}
 </script>
 
 <style>
@@ -98,6 +152,10 @@ window.onclick = function(event) {
     margin-bottom: 20px;
     padding-bottom: 10px;
     border-bottom: 1px solid #ddd;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
 }
 
 .assignment-status {
@@ -106,7 +164,48 @@ window.onclick = function(event) {
     background-color: #4a6fa5;
     color: white;
     font-size: 12px;
-    margin-left: 10px;
+}
+
+.ai-badge {
+    padding: 5px 10px;
+    border-radius: 4px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.batch-actions {
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.batch-ai-btn {
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.batch-ai-btn:hover {
+    opacity: 0.9;
+}
+
+.batch-ai-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.batch-hint {
+    color: #666;
+    font-size: 13px;
 }
 
 .submissions-table {
@@ -141,6 +240,29 @@ window.onclick = function(event) {
 
 .submissions-table tr:hover {
     background-color: #f5f5f5;
+}
+
+.ai-grade-cell {
+    background: #e8f5e9;
+    color: #2e7d32;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-weight: bold;
+    font-size: 13px;
+}
+
+.ai-status-pending {
+    color: #f57c00;
+    font-size: 13px;
+}
+
+.ai-status-failed {
+    color: #c62828;
+    font-size: 13px;
+}
+
+.ai-status-none {
+    color: #999;
 }
 
 .submission-preview {
