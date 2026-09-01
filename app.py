@@ -12,11 +12,9 @@ import logging
 import sys
 from sqlalchemy import text
 
-# ──────────────────────────────────────────────────────────────
-# FIX 1: Logging — stdout ONLY (no file writes on Railway!)
-# Railway filesystem is read-only except under /app
-# File logging causes Gunicorn workers to crash at startup
-# ──────────────────────────────────────────────────────────────
+# ── AI Services ────────────────────────────────────────────────
+from ai_services import AIGradingService, AIServiceResult
+
 logging.basicConfig(
     level=logging.DEBUG,
     format='[%(asctime)s] %(levelname)s %(name)s: %(message)s',
@@ -241,6 +239,27 @@ class Assignment(db.Model):
     is_active = db.Column(db.Boolean, default=True)
     html_filename = db.Column(db.String(255), nullable=True)
     html_content = db.Column(db.Text, nullable=True)
+    # ── AI Grading fields ────────────────────────────────────────
+    answer_key = db.Column(db.Text, nullable=True)
+    ai_grading_enabled = db.Column(db.Boolean, default=False)
+    grading_config = db.Column(db.Text, nullable=True)  # JSON config for future use
+
+    assigned_students = db.relationship(
+        'User',
+        secondary=student_assignment,
+        backref='assigned_assignments',
+        lazy='dynamic'
+    )
+    __tablename__ = 'assignment'
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    due_date = db.Column(db.DateTime, nullable=True)
+    is_active = db.Column(db.Boolean, default=True)
+    html_filename = db.Column(db.String(255), nullable=True)
+    html_content = db.Column(db.Text, nullable=True)
 
     assigned_students = db.relationship(
         'User',
@@ -251,6 +270,28 @@ class Assignment(db.Model):
 
 
 class Submission(db.Model):
+    __tablename__ = 'submission'
+    id = db.Column(db.Integer, primary_key=True)
+    assignment_id = db.Column(db.Integer, db.ForeignKey('assignment.id'), nullable=False)
+    student_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
+    # NOTE: grade column used to be db.Float.  We now accept letter grades
+    # (A, B+, C-, F), numeric strings ("85", "92.5"), and "Pass/Fail".
+    # Column type is String(32).  Retro-migration in init_database()
+    # ALTERs any existing FLOAT-grade `submission` tables to TEXT/VARCHAR.
+    grade = db.Column(db.String(32), nullable=True)
+    feedback = db.Column(db.Text, nullable=True)
+    screenshot_filename = db.Column(db.String(255), nullable=True)
+    # ── AI Grading fields ────────────────────────────────────────
+    ai_grade = db.Column(db.String(32), nullable=True)
+    ai_feedback = db.Column(db.Text, nullable=True)
+    ai_graded_at = db.Column(db.DateTime, nullable=True)
+    ai_grade_status = db.Column(db.String(20), nullable=True, default=None)  # pending/graded/failed
+    ai_raw_response = db.Column(db.Text, nullable=True)  # full JSON for debugging
+
+    assignment = db.relationship('Assignment', backref='submissions', lazy=True)
+    user = db.relationship('User', backref='submissions', lazy=True)
     __tablename__ = 'submission'
     id = db.Column(db.Integer, primary_key=True)
     assignment_id = db.Column(db.Integer, db.ForeignKey('assignment.id'), nullable=False)
