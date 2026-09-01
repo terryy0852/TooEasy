@@ -14,10 +14,6 @@ name = "SECRET_KEY"
 value = "too-easy-production-static-secret-key-2026-change-me-via-railway-service-vars"
 
 [[services.env]]
-name = "DATABASE_URL"
-value = "postgresql://postgres:n5jTtilYoz2S1LwO@db.xqjscxsvcespsrkyoekf.supabase.co:5432/postgres"
-
-[[services.env]]
 name = "UPLOAD_FOLDER"
 value = "/app/uploads"
 

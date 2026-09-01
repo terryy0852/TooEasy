@@ -145,9 +145,40 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     'pool_pre_ping': True,
     'pool_recycle': 300,
+    'connect_args': {
+        'connect_timeout': 10,  # seconds - fail fast on DNS/network errors
+    } if DATABASE_URL and DATABASE_URL.startswith('postgresql') else {},
 }
 
 db = SQLAlchemy(app)
+
+# ──────────────────────────────────────────────────────────────
+# Helper: Rebuild SQLAlchemy engine for a new URL (runtime fallback)
+# Used when remote DATABASE_URL (Supabase) is unreachable at init time
+# ──────────────────────────────────────────────────────────────
+def switch_to_sqlite_fallback():
+    fallback_path = f'sqlite:///{os.path.join(instance_dir, "assignments.db")}'
+    logger.warning(f"⚠️  REMOTE DB DOWN — falling back to SQLite at: {fallback_path}")
+    app.config['SQLALCHEMY_DATABASE_URI'] = fallback_path
+    # Dispose any existing pooled connections to the dead remote DB
+    try:
+        db.session.remove()
+        db.engine.dispose()
+    except Exception:
+        pass
+    # Rebind metadata and recreate engine
+    from sqlalchemy import create_engine
+    new_engine = create_engine(fallback_path, future=True)
+    db.engine = new_engine
+    db.session.configure(bind=new_engine)
+    try:
+        with new_engine.connect() as conn:
+            conn.execute(text('SELECT 1'))
+            logger.info("✅ SQLite fallback connection OK")
+    except Exception as ie:
+        logger.error(f"SQLite fallback also failed: {ie}", exc_info=True)
+        raise
+    return fallback_path
 
 # ──────────────────────────────────────────────────────────────
 # Models
@@ -222,8 +253,8 @@ login_manager.session_protection = 'basic'  # relaxed from 'strong' for Railway 
 @login_manager.user_loader
 def load_user(user_id):
     try:
-        with app.app_context():
-            return User.query.get(int(user_id))
+        # Already inside a request context (Flask-Login calls this during request handling)
+        return User.query.get(int(user_id))
     except Exception as e:
         logger.error(f"load_user error: {e}")
         return None
@@ -231,47 +262,102 @@ def load_user(user_id):
 # ──────────────────────────────────────────────────────────────
 # FIX 6: Lazy database init — runs ONCE on first request, safe
 # __main__ block never runs under Gunicorn, so we use before_request
+#
+# NEW: On first request:
+#   - Try DATABASE_URL (Supabase) with timeout
+#   - If ANY error (DNS, auth, network, SSL) -> fall back to LOCAL SQLite
+#   - Set _db_initialized only on SUCCESS so failed paths can retry fallback
 # ──────────────────────────────────────────────────────────────
 _db_initialized = False
+_db_used_fallback = False
+_fallback_attempted = False
 
-def init_database():
-    global _db_initialized
+def init_database(max_retries=2):
+    """Initialize DB with retry + SQLite fallback on remote DB failure."""
+    global _db_initialized, _db_used_fallback, _fallback_attempted
     if _db_initialized:
         return
+
+    # 1) Try remote DB with retries (if configured)
+    using_remote = bool(DATABASE_URL)
+    attempts = 0
+    last_error = None
+
+    if using_remote and not _fallback_attempted:
+        for attempt in range(1, max_retries + 1):
+            attempts = attempt
+            try:
+                logger.info(f"[db_init] Attempt {attempt}/{max_retries}: connecting to remote DB...")
+                with app.app_context():
+                    db.session.execute(text('SELECT 1'))
+                    from sqlalchemy import inspect
+                    inspector = inspect(db.engine)
+                    existing_tables = inspector.get_table_names()
+                    logger.info(f"[db_init] Remote DB OK — tables exist: {existing_tables}")
+                    if not existing_tables:
+                        logger.info("[db_init] Creating tables on remote DB...")
+                        db.create_all()
+                        logger.info("[db_init] Tables created on remote DB")
+
+                    admin_user = User.query.filter_by(username='admin').first()
+                    if not admin_user:
+                        try:
+                            admin_user = User(username='admin', email='admin@example.com', role='admin')
+                            admin_user.set_password('admin123')
+                            db.session.add(admin_user)
+                            db.session.commit()
+                            logger.info("[db_init] Admin user seeded")
+                        except Exception as se:
+                            db.session.rollback()
+                            logger.warning(f"[db_init] seed admin failed: {se}")
+                _db_initialized = True
+                _db_used_fallback = False
+                logger.info("[db_init] ✅ Remote database initialization complete")
+                return
+            except Exception as e:
+                last_error = e
+                logger.warning(f"[db_init] Remote attempt {attempt} FAILED: {type(e).__name__}: {str(e)[:200]}")
+                try:
+                    db.session.remove()
+                except Exception:
+                    pass
+                import time
+                time.sleep(1)
+        # If we get here, all remote attempts failed
+        logger.error(f"[db_init] All {attempts} remote DB attempts failed: {type(last_error).__name__}: {str(last_error)[:200]}")
+        _fallback_attempted = True
+
+    # 2) SQLite fallback (create engine, test, create tables)
     try:
+        switch_to_sqlite_fallback()
         with app.app_context():
-            # Test connection
-            db.session.execute(text('SELECT 1'))
             from sqlalchemy import inspect
             inspector = inspect(db.engine)
             existing_tables = inspector.get_table_names()
             if not existing_tables:
-                logger.info("Creating database tables...")
+                logger.info("[db_init] Creating SQLite tables...")
                 db.create_all()
-                logger.info("Tables created")
+                logger.info("[db_init] SQLite tables created")
             else:
-                logger.info(f"Tables exist: {existing_tables}")
+                logger.info(f"[db_init] SQLite tables exist: {existing_tables}")
 
-            # Seed admin user if missing (safe)
             admin_user = User.query.filter_by(username='admin').first()
             if not admin_user:
                 try:
-                    admin_user = User(
-                        username='admin',
-                        email='admin@example.com',
-                        role='admin'
-                    )
+                    admin_user = User(username='admin', email='admin@example.com', role='admin')
                     admin_user.set_password('admin123')
                     db.session.add(admin_user)
                     db.session.commit()
-                    logger.info("Admin user seeded (change password!)")
-                except Exception as e:
+                    logger.info("[db_init] SQLite Admin user seeded (u=admin / p=admin123)")
+                except Exception as se:
                     db.session.rollback()
-                    logger.warning(f"Seed admin failed (may already exist): {e}")
+                    logger.warning(f"[db_init] seed admin failed: {se}")
         _db_initialized = True
-        logger.info("Database initialization complete")
-    except Exception as e:
-        logger.critical(f"FAILED to init database: {e}", exc_info=True)
+        _db_used_fallback = True
+        logger.info("[db_init] ✅ SQLite fallback database initialization complete")
+    except Exception as fallback_e:
+        logger.critical(f"[db_init] ❌ BOTH remote and SQLite FAILED: {fallback_e}", exc_info=True)
+        raise
 
 @app.before_request
 def ensure_db_ready():
@@ -286,18 +372,23 @@ def health_check():
         init_database()
         with app.app_context():
             db.session.execute(text('SELECT 1'))
+        db_uri = app.config.get('SQLALCHEMY_DATABASE_URI', '')
+        db_kind = 'postgresql' if db_uri.startswith('postgresql') else ('sqlite' if db_uri.startswith('sqlite') else 'unknown')
         return jsonify({
             'status': 'healthy',
             'timestamp': datetime.utcnow().isoformat(),
             'db': 'ok',
-            'version': '1.1-fixed'
+            'db_kind': db_kind,
+            'db_used_fallback': _db_used_fallback,
+            'version': '1.2-sqlite-fallback'
         }), 200
     except Exception as e:
         logger.error(f"Health check FAIL: {e}")
         return jsonify({
             'status': 'unhealthy',
             'error': str(e),
-            'version': '1.1-fixed'
+            'db_used_fallback': _db_used_fallback,
+            'version': '1.2-sqlite-fallback'
         }), 500
 
 # ──────────────────────────────────────────────────────────────
