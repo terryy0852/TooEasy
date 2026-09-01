@@ -8,6 +8,7 @@
 <div class="admin-edit-container">
     <div class="edit-form-container">
         <form method="POST" action="{{ url_for('admin_edit_user', user_id=user.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="form-group">
                 <label for="username">{{ _('Username') }}</label>
                 <input type="text" id="username" name="username" value="{{ user.username }}" required>

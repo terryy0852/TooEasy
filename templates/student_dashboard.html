@@ -67,7 +67,7 @@
                 </a>
                 {% if current_user.role in ['admin', 'teacher'] and (current_user.role == 'admin' or assignment.created_by == current_user.id) %}
                 <form action="{{ url_for('delete_assignment', assignment_id=assignment.id) }}" method="post" class="delete-form" onsubmit="return confirmDeleteAssignment()">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" class="delete-btn">{{ _('Delete Assignment') }}</button>
                 </form>
                 {% endif %}
