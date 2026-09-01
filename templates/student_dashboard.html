@@ -49,11 +49,25 @@
             </div>
             <div class="assignment-actions">
                 {% if current_user.role == 'student' %}
-                <!-- Student view: Show submission status -->
+                <!-- Student view: Show submission status + grade if available -->
                 {% if assignment_submissions and assignment_submissions[assignment.id] %}
-                    <!-- Assignment already submitted -->
+                    {% set sub = assignment_submissions[assignment.id] %}
                     <span class="submitted-badge">{{ _('Submitted') }}</span>
+                    {% if sub.grade is not none %}
+                    <span class="grade-badge graded">{{ _('Grade:') }} {{ sub.grade }}</span>
+                    {% else %}
                     <span class="submission-status">{{ _('Pending Grading') }}</span>
+                    {% endif %}
+                    {% if sub.feedback %}
+                    <div class="submission-feedback">
+                        <strong>{{ _('Feedback:') }}</strong>
+                        <p>{{ sub.feedback }}</p>
+                    </div>
+                    {% endif %}
+                    <!-- Re-open assignment to view submitted work -->
+                    <a href="{{ url_for('view_assignment', assignment_id=assignment.id) }}?v=2" class="view-btn html-btn" target="_blank" onclick="openHTMLAssignment(event, {{ assignment.id }})" data-assignment-id="{{ assignment.id }}">
+                        {{ _('View Submitted Assignment') }}
+                    </a>
                 {% else %}
                     <!-- Assignment not submitted yet -->
                     <a href="{{ url_for('view_assignment', assignment_id=assignment.id) }}?v=2" class="view-btn html-btn" target="_blank" onclick="openHTMLAssignment(event, {{ assignment.id }})" data-assignment-id="{{ assignment.id }}">
@@ -236,6 +250,59 @@
 
 .admin-btn:hover {
     background-color: #0b7dda;
+}
+
+.submitted-badge {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 4px;
+    background-color: #17a2b8;
+    color: white;
+    font-size: 13px;
+    font-weight: bold;
+    margin-right: 5px;
+}
+
+.submission-status {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 4px;
+    background-color: #ffc107;
+    color: #333;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.grade-badge.graded {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 4px;
+    background-color: #28a745;
+    color: white;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.submission-feedback {
+    width: 100%;
+    margin: 12px 0;
+    padding: 10px 14px;
+    background-color: #fff3cd;
+    border-left: 4px solid #ffc107;
+    border-radius: 4px;
+}
+
+.submission-feedback strong {
+    display: block;
+    margin-bottom: 4px;
+    color: #856404;
+}
+
+.submission-feedback p {
+    margin: 0;
+    color: #333;
+    white-space: pre-wrap;
+    word-wrap: break-word;
 }
 </style>
 {% endblock %}

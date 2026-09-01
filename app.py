@@ -760,21 +760,39 @@ def grade_submission(submission_id):
     try:
         init_database()
         submission = Submission.query.get_or_404(submission_id)
+        logger.info(f"[grade {submission_id}] user={current_user.username} role={current_user.role} method={request.method} student={submission.user.username} assignment_id={submission.assignment_id}")
         if request.method == 'POST':
             grade_str = request.form.get('grade', '')
             feedback = request.form.get('feedback', '')
+            csrf_ok = 'csrf_token' in request.form
+            logger.info(f"[grade {submission_id}] POST — grade='{grade_str}' feedback_len={len(feedback)} csrf_in_form={csrf_ok}")
             try:
-                submission.grade = float(grade_str) if grade_str else None
+                parsed_grade = float(grade_str) if grade_str else None
+                logger.info(f"[grade {submission_id}] parsed grade={parsed_grade}, updating submission...")
+                submission.grade = parsed_grade
                 submission.feedback = feedback
+                logger.info(f"[grade {submission_id}] calling db.session.commit()...")
                 db.session.commit()
+                logger.info(f"[grade {submission_id}] ✅ COMMIT OK — grade saved: {parsed_grade}")
                 flash(_('Submission graded successfully'))
                 return redirect(url_for('view_submissions', assignment_id=submission.assignment_id))
-            except (ValueError, Exception) as e:
-                logger.error(f"[grade {submission_id}] save error: {e}")
+            except ValueError as ve:
+                logger.error(f"[grade {submission_id}] ValueError (non-numeric grade): {ve}")
+                db.session.rollback()
+                flash(_('Invalid grade — please enter a number, e.g. 90'))
+            except Exception as e:
+                logger.error(f"[grade {submission_id}] save error: {type(e).__name__}: {e}", exc_info=True)
+                try:
+                    db.session.rollback()
+                except Exception:
+                    pass
                 flash(_('Invalid grade or failed to save'))
     except Exception as e:
         logger.error(f"[grade_submission {submission_id}] ERROR: {type(e).__name__}: {e}", exc_info=True)
-        db.session.rollback()
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
         flash(_('Error grading submission'))
         submission = Submission.query.get_or_404(submission_id)
     return render_template('grade_submission.html', submission=submission)
