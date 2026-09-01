@@ -49,7 +49,7 @@
             </div>
             <div class="assignment-actions">
                 {% if current_user.role == 'student' %}
-                <!-- Student view: Show submission status + grade if available -->
+                <!-- Student view -->
                 {% if assignment_submissions and assignment_submissions[assignment.id] %}
                     {% set sub = assignment_submissions[assignment.id] %}
                     <span class="submitted-badge">{{ _('Submitted') }}</span>
@@ -64,7 +64,6 @@
                         <p>{{ sub.feedback }}</p>
                     </div>
                     {% endif %}
-                    <!-- Show AI feedback if available and no final grade yet -->
                     {% if sub.ai_feedback and not sub.grade %}
                     <div class="submission-feedback ai-feedback">
                         <strong>{{ _('AI Draft Feedback:') }}</strong>
@@ -72,23 +71,16 @@
                         <span class="ai-note">{{ _('Awaiting teacher confirmation') }}</span>
                     </div>
                     {% endif %}
-                    <div class="submission-feedback">
-                        <strong>{{ _('Feedback:') }}</strong>
-                        <p>{{ sub.feedback }}</p>
-                    </div>
-                    {% endif %}
-                    <!-- Re-open assignment to view submitted work -->
                     <a href="{{ url_for('view_assignment', assignment_id=assignment.id) }}?v=2" class="view-btn html-btn" target="_blank" onclick="openHTMLAssignment(event, {{ assignment.id }})" data-assignment-id="{{ assignment.id }}">
                         {{ _('View Submitted Assignment') }}
                     </a>
                 {% else %}
-                    <!-- Assignment not submitted yet -->
                     <a href="{{ url_for('view_assignment', assignment_id=assignment.id) }}?v=2" class="view-btn html-btn" target="_blank" onclick="openHTMLAssignment(event, {{ assignment.id }})" data-assignment-id="{{ assignment.id }}">
                         {{ _('Complete HTML Assignment') }}
                     </a>
                 {% endif %}
                 {% else %}
-                <!-- Teacher/Admin view: Show management options -->
+                <!-- Teacher/Admin view -->
                 <a href="{{ url_for('view_submissions', assignment_id=assignment.id) }}" class="view-btn submissions-btn">
                     {{ _('View Submissions') }}
                 </a>
@@ -208,6 +200,7 @@
     gap: 10px;
     align-items: center;
     margin-top: 10px;
+    flex-wrap: wrap;
 }
 
 .delete-btn {
@@ -330,30 +323,15 @@
     color: #667eea;
     font-style: italic;
 }
-    margin: 0;
-    color: #333;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-}
 </style>
-{% endblock %}
 
 <script>
 function openHTMLAssignment(event, assignmentId) {
-    // Prevent default link behavior
     event.preventDefault();
-    
-    // Get the original href
     const originalHref = event.currentTarget.href;
-    
-    // Try to open in new tab with multiple approaches
     try {
-        // Method 1: Standard window.open
         const newWindow = window.open(originalHref, '_blank');
-        
-        // If window.open was blocked, try alternative methods
         if (!newWindow || newWindow.closed || typeof newWindow.closed == 'undefined') {
-            // Method 2: Create a temporary link and click it
             const tempLink = document.createElement('a');
             tempLink.href = originalHref;
             tempLink.target = '_blank';
@@ -361,36 +339,28 @@ function openHTMLAssignment(event, assignmentId) {
             document.body.appendChild(tempLink);
             tempLink.click();
             document.body.removeChild(tempLink);
-            
-            // If still not working, show a message
             setTimeout(() => {
                 if (!window.focus) {
                     alert('Please allow pop-ups for this site to open HTML assignments in new tabs.');
                 }
             }, 100);
         } else {
-            // Focus the new window
             newWindow.focus();
         }
     } catch (error) {
         console.error('Error opening HTML assignment:', error);
-        
-        // Fallback: Open in same tab with a message
         if (confirm('Unable to open in new tab. Would you like to open in this tab instead?')) {
             window.location.href = originalHref;
         }
     }
 }
 
-// Add click handler to all HTML assignment links on page load
 document.addEventListener('DOMContentLoaded', function() {
     const htmlLinks = document.querySelectorAll('.html-btn');
     htmlLinks.forEach(link => {
         link.addEventListener('click', function(event) {
-            // Get assignment ID from data attribute or parse from URL
             const assignmentId = this.getAttribute('data-assignment-id') || 
                                 this.href.match(/\/(\d+)$/)?.[1];
-            
             if (assignmentId) {
                 openHTMLAssignment(event, assignmentId);
             }
@@ -398,8 +368,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Confirmation function for assignment deletion
 function confirmDeleteAssignment() {
     return confirm('Are you sure you want to delete this assignment? This action cannot be undone and will also delete all associated submissions.');
 }
 </script>
+{% endblock %}
