@@ -153,31 +153,48 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
 db = SQLAlchemy(app)
 
 # ──────────────────────────────────────────────────────────────
-# Helper: Rebuild SQLAlchemy engine for a new URL (runtime fallback)
-# Used when remote DATABASE_URL (Supabase) is unreachable at init time
+# Helper: Runtime SQLite fallback for Flask-SQLAlchemy 3.x.
+# In FSAlch3, db.engine is a read-only @property that resolves from
+# app.config['SQLALCHEMY_DATABASE_URI'].  So we: (1) update config,
+# (2) clean up old sessions/engine, (3) re-call db.init_app(app) which
+# rebuilds Flask-SQLAlchemy's internal engine cache, (4) test the new
+# engine by letting the next access (or explicit connect) create it.
 # ──────────────────────────────────────────────────────────────
 def switch_to_sqlite_fallback():
     fallback_path = f'sqlite:///{os.path.join(instance_dir, "assignments.db")}'
     logger.warning(f"⚠️  REMOTE DB DOWN — falling back to SQLite at: {fallback_path}")
-    app.config['SQLALCHEMY_DATABASE_URI'] = fallback_path
-    # Dispose any existing pooled connections to the dead remote DB
+
+    # Clean up anything hanging from the dead remote engine
     try:
         db.session.remove()
-        db.engine.dispose()
     except Exception:
         pass
-    # Rebind metadata and recreate engine
-    from sqlalchemy import create_engine
-    new_engine = create_engine(fallback_path, future=True)
-    db.engine = new_engine
-    db.session.configure(bind=new_engine)
     try:
-        with new_engine.connect() as conn:
-            conn.execute(text('SELECT 1'))
-            logger.info("✅ SQLite fallback connection OK")
-    except Exception as ie:
-        logger.error(f"SQLite fallback also failed: {ie}", exc_info=True)
-        raise
+        old_engine = db.get_engine()
+        if old_engine is not None:
+            old_engine.dispose()
+    except Exception:
+        pass
+
+    # Reconfigure + re-init Flask-SQLAlchemy with the SQLite URI.
+    # init_app() clears FSAlch's per-app engine cache and the next
+    # db.session / db.engine access will build a fresh engine from the new URI.
+    app.config['SQLALCHEMY_DATABASE_URI'] = fallback_path
+    # Preserve any engine options (pre_ping, recycle, etc.) by re-assigning
+    app.config.setdefault('SQLALCHEMY_TRACK_MODIFICATIONS', False)
+    app.config.setdefault('SQLALCHEMY_ENGINE_OPTIONS', {})
+    db.init_app(app)
+
+    # Force-create and test the new SQLite engine inside an app context
+    with app.app_context():
+        try:
+            eng = db.get_engine()
+            with eng.connect() as conn:
+                conn.execute(text('SELECT 1'))
+            logger.info(f"✅ SQLite fallback engine OK: {eng.url}")
+        except Exception as ie:
+            logger.error(f"SQLite fallback connect FAILED: {ie}", exc_info=True)
+            raise
     return fallback_path
 
 # ──────────────────────────────────────────────────────────────
